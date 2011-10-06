@@ -1,0 +1,142 @@
+/*
+*************************************************************************************
+* Copyright 2011 Normation SAS
+*************************************************************************************
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU Affero General Public License as
+* published by the Free Software Foundation, either version 3 of the
+* License, or (at your option) any later version.
+*
+* In accordance with the terms of section 7 (7. Additional Terms.) of
+* the GNU Affero GPL v3, the copyright holders add the following
+* Additional permissions:
+* Notwithstanding to the terms of section 5 (5. Conveying Modified Source
+* Versions) and 6 (6. Conveying Non-Source Forms.) of the GNU Affero GPL v3
+* licence, when you create a Related Module, this Related Module is
+* not considered as a part of the work and may be distributed under the
+* license agreement of your choice.
+* A "Related Module" means a set of sources files including their
+* documentation that, without modification of the Source Code, enables
+* supplementary functions or services in addition to those offered by
+* the Software.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU Affero General Public License for more details.
+*
+* You should have received a copy of the GNU Affero General Public License
+* along with this program. If not, see <http://www.gnu.org/licenses/agpl.html>.
+*
+*************************************************************************************
+*/
+
+package com.normation.cfclerk.services
+
+import org.junit.runner.RunWith
+import org.specs2.mutable._
+import org.specs2.runner._
+import scala.collection._
+import com.normation.cfclerk.domain._
+import java.io.File
+import org.apache.commons.io.IOUtils
+import net.liftweb.common._
+import org.apache.commons.io.FileUtils
+import org.specs2.specification.AfterExample
+import org.specs2.specification.After
+import com.normation.cfclerk.xmlparsers._
+import com.normation.cfclerk.services.impl._
+
+@RunWith(classOf[JUnitRunner])
+class JGitPackageReaderTest extends Specification with Loggable {
+
+  val variableSpecParser = new VariableSpecParser 
+  val policyParser: PolicyParser = new PolicyParser(
+      variableSpecParser,
+      new SectionSpecParser(variableSpecParser),
+      new TmlParser,
+      new SystemVariableSpecServiceImpl
+  )
+
+  //copy the directory with testing policy templates lib in some temp place
+
+  val root = new File("/tmp/test-jgit", System.currentTimeMillis.toString)
+  
+  if(true == root.mkdirs) {
+    logger.info("Created a new directory to store a git repos: " + root.getPath)
+  } else sys.error("Can not create directory: " + root.getPath)
+  
+  FileUtils.copyDirectory(new File("src/test/resources/packagesRoot") , root)
+
+  val repo = new GitRepositoryProviderImpl(root.getAbsolutePath)
+  val reader = new GitPolicyPackagesReader(
+                policyParser
+              , new SimpleGitRevisionProvider("refs/heads/master", repo)
+              , repo
+              , "policy.xml"
+              , "category.xml"
+            )
+          
+  
+  val infos = reader.readPolicies
+  val § = RootPolicyPackageCategoryId
+  
+  "The test lib should have 5 valid categories" should { infos.subCategories.size === 5 }
+  
+  "The root category" should {
+    val rootCat = infos.rootCategory
+    "be named 'Root category'" in "Root category" === rootCat.name
+    "has no description" in "" === rootCat.description
+    "has one policy package..." in 1 === rootCat.packageIds.size
+    "...with name p_root_1" in "p_root_1" === rootCat.packageIds.head.name.value
+    "...with version 1.0" in "1.0" === rootCat.packageIds.head.version.toString
+    "has 1 valid subcategory (because cat has no category.xml descriptor)" in 1 === rootCat.subCategoryIds.size
+    "...with name cat1" in rootCat.subCategoryIds.head === rootCat.id / "cat1"
+  }
+
+  "cat1 sub category" should {
+    val cat1 = infos.subCategories( § / "cat1" )
+    val packages = cat1.packageIds.toSeq
+    val tmlId = TmlId(packages(0), "theTemplate")
+    "be named 'cat1'" in  cat1.name === "cat1"
+    "has no description" in cat1.description === "" 
+    "has two packages..." in cat1.packageIds.size === 2
+    "...with the same name p1_1" in cat1.packageIds.forall(id => "p1_1" === id.name.value)
+    "...and version 1.0" in packages(0).version === PolicyVersion("1.0")
+    "...and version 2.0" in packages(1).version === PolicyVersion("2.0")
+    "...with a template from which we can read 'The template content\\non two lines.'" in {
+      reader.getTemplateContent(tmlId){ 
+        case None => failure("Can not open an InputStream for " + tmlId.toString)
+        case Some(is) => IOUtils.toString(is) === "The template content\non two lines."
+      }
+    }
+  }
+
+  "cat1/cat1_1 sub category" should {
+    val cat1_1 = infos.subCategories( § / "cat1" / "cat1_1" )
+    "be named 'Category 1.1 name'" in  cat1_1.name === "Category 1.1 name"
+    "has description 'Category 1.1 description'" in cat1_1.description === "Category 1.1 description" 
+    "has 0 package " in cat1_1.packageIds.size === 0
+  }
+
+  "cat1/cat1_1/cat1_1_1 sub category" should {
+    val cat1_1_1 = infos.subCategories( § / "cat1" / "cat1_1" / "cat1_1_1" )
+    "be named 'Category 1.1 name'" in  cat1_1_1.name === "cat1_1_1"
+    "has no description" in cat1_1_1.description === "" 
+    "has two packages..." in cat1_1_1.packageIds.size === 2
+    "...with name p1_1_1_1 and p1_1_1_2" in {
+      Seq("p1_1_1_1", "p1_1_1_2").forall(name => cat1_1_1.packageIds.exists(id => id.name.value == name)) === true
+    }
+    "...and the same version 1.0" in {
+      cat1_1_1.packageIds.forall(id => id.version === PolicyVersion("1.0"))
+    }
+  }
+
+  
+  
+  step {
+    logger.info("Deleting directory " + root.getAbsoluteFile)
+    FileUtils.deleteDirectory(root)
+  }
+}
