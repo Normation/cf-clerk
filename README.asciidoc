@@ -1,7 +1,7 @@
 CF-Clerk: templating for CFEngine promises
 ------------------------------------------
 
-This project is part of Rudder - configuration management for the mass. 
+This project is part of Rudder - configuration management for the masses. 
  
 See: http://rudder-project.org for more information. 
 
