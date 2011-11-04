@@ -79,6 +79,11 @@ class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
     , SystemVariableSpec("COMMUNITY"      , "The Cfengine Community agent"
                                           , constraint = Constraint(mayBeEmpty=true)
       )
+    , SystemVariableSpec(
+        			"SHARED_FILES_FOLDER"       , "The path to the shared files folder"
+                                          , constraint = Constraint(mayBeEmpty=true)
+      )
+    
     
   )
   
