@@ -47,10 +47,30 @@ import org.specs2.specification.AfterExample
 import org.specs2.specification.After
 import com.normation.cfclerk.xmlparsers._
 import com.normation.cfclerk.services.impl._
+import org.specs2.specification.Step
+import org.specs2.specification.Fragments
+import org.eclipse.jgit.api.Git
 
-@RunWith(classOf[JUnitRunner])
-class JGitPackageReaderTest extends Specification with Loggable {
 
+/**
+ * Details of tests executed in each instances of
+ * the test. 
+ * To see values for gitRoot, ptLib, etc, see at the end 
+ * of that file. 
+ */
+trait JGitPackageReaderSpec extends Specification with Loggable {
+  
+  def gitRoot : File
+  def ptLib : File
+  def relativePathArg : Option[String]
+    
+  def deleteDir = {
+    logger.info("Deleting directory " + gitRoot.getAbsoluteFile)
+    FileUtils.deleteDirectory(gitRoot)
+  }
+  
+  override def map(fs: =>Fragments) = fs ^ Step(deleteDir)
+  
   val variableSpecParser = new VariableSpecParser 
   val policyParser: PolicyParser = new PolicyParser(
       variableSpecParser,
@@ -60,22 +80,24 @@ class JGitPackageReaderTest extends Specification with Loggable {
   )
 
   //copy the directory with testing policy templates lib in some temp place
-
-  val root = new File("/tmp/test-jgit", System.currentTimeMillis.toString)
+  //we use a different directory for git repos and ptlib
   
-  if(true == root.mkdirs) {
-    logger.info("Created a new directory to store a git repos: " + root.getPath)
-  } else sys.error("Can not create directory: " + root.getPath)
+  if(true == ptLib.mkdirs) {
+    logger.info("Created a new directory to store the policy template library: " + ptLib.getPath)
+    logger.info("Git repository will be in: " + gitRoot.getPath)
+  } else sys.error("Can not create directory: " + ptLib.getPath)
   
-  FileUtils.copyDirectory(new File("src/test/resources/packagesRoot") , root)
+  
+  FileUtils.copyDirectory(new File("src/test/resources/packagesRoot") , ptLib)
 
-  val repo = new GitRepositoryProviderImpl(root.getAbsolutePath)
+  val repo = new GitRepositoryProviderImpl(gitRoot.getAbsolutePath)
   val reader = new GitPolicyPackagesReader(
                 policyParser
               , new SimpleGitRevisionProvider("refs/heads/master", repo)
               , repo
               , "policy.xml"
               , "category.xml"
+              , relativePathArg
             )
           
   
@@ -131,12 +153,42 @@ class JGitPackageReaderTest extends Specification with Loggable {
     "...and the same version 1.0" in {
       cat1_1_1.packageIds.forall(id => id.version === PolicyVersion("1.0"))
     }
+  }  
+  
+  "if we modify policy cat1/p1_1/2.0, it" should {
+    val newPath = reader.canonizedRelativePath.map( _ + "/").getOrElse("") + "cat1/p1_1/2.0/newFile.st"
+    val newFile = new File(gitRoot.getAbsoluteFile + "/" + newPath)
+    FileUtils.writeStringToFile(newFile, "Some content for the new file")
+    val git = new Git(repo.db)
+    git.add.addFilepattern(newPath).call
+    git.commit.setMessage("Modify PT: cat1/p1_1/2.0").call
+    
+    "have update package" in {
+      reader.getModifiedPolicyPackages.size === 1
+    }
   }
 
-  
-  
-  step {
-    logger.info("Deleting directory " + root.getAbsoluteFile)
-    FileUtils.deleteDirectory(root)
-  }
+}
+
+
+/**
+ * A test case where git repos and pt lib root are the same
+ */
+@RunWith(classOf[JUnitRunner])
+class JGitPackageReader_SameRootTest extends JGitPackageReaderSpec {
+  lazy val gitRoot = new File("/tmp/test-jgit", System.currentTimeMillis.toString)
+  lazy val ptLib = gitRoot
+  lazy val relativePathArg = None
+}
+
+/**
+ * A test case where git repos is on a parent directory
+ * of pt lib root. 
+ */
+@RunWith(classOf[JUnitRunner])
+class JGitPackageReader_ChildRootTest extends JGitPackageReaderSpec {
+  lazy val gitRoot = new File("/tmp/test-jgit", System.currentTimeMillis.toString)
+  lazy val ptLibDirName = "policy-templates"
+  lazy val ptLib = new File(gitRoot, ptLibDirName)
+  lazy val relativePathArg = Some("  /" + ptLibDirName + "/  ")
 }

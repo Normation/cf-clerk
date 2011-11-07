@@ -155,13 +155,25 @@ class SimpleGitRevisionProvider(refPath:String,repo:GitRepositoryProvider) exten
  * A git filter that choose only file with the exact given name,
  * even if the file is in a sub-directory (the filter is
  * recursive). 
+ * 
+ * If given, the rootDirectory value must NOT start nor end with a
+ * slash ("/"). 
  */
-class FileTreeFilter(fileName: String) extends TreeFilter {
+class FileTreeFilter(rootDirectory:Option[String], fileName: String) extends TreeFilter {
   private[this] val fileRawPath = JConstants.encode("/" + fileName)
+
+  private[this] val rootFilter : TreeWalk => Boolean = {
+    rootDirectory match {
+      case None => (walker:TreeWalk) => true
+      case Some(path) => 
+        val raw = JConstants.encode(path)
+        (walker:TreeWalk) => (walker.isPathPrefix(raw,raw.size) < 1)
+    }
+  }
   
   override def include(walker:TreeWalk) : Boolean = {
-    walker.isSubtree ||
-    walker.isPathSuffix(fileRawPath, fileRawPath.size)
+    rootFilter(walker) &&
+    ( walker.isSubtree || walker.isPathSuffix(fileRawPath, fileRawPath.size) )
   }
 
   override val shouldBeRecursive = true
@@ -171,7 +183,7 @@ class FileTreeFilter(fileName: String) extends TreeFilter {
 
 /**
  * A filter for a revision tree walk that allows
- * to find only path endind by the given string, 
+ * to find only path ending by the given string, 
  * even if the file is in a sub-directory
  * (the filter is recursive)
  */
