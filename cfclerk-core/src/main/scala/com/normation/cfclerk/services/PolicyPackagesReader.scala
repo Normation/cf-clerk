@@ -35,10 +35,10 @@
 package com.normation.cfclerk.services
 
 import com.normation.cfclerk.domain._
-
 import java.io.InputStream
 import scala.collection.immutable.SortedMap
 import scala.collection.mutable.{ Map => MutMap }
+import com.normation.utils.HashcodeCaching
 
 
 case class PackagesInfo(
@@ -48,7 +48,7 @@ case class PackagesInfo(
   , packages: Map[PolicyPackageName, SortedMap[PolicyVersion, PolicyPackage]]
     //head of categories is the root category
   , subCategories: Map[SubPolicyPackageCategoryId, PolicyPackageCategory]
-)
+) extends HashcodeCaching 
 
 //a mutable version of PackagesInfo, for internal use only !
 private[services] class InternalPackagesInfo(

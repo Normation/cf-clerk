@@ -33,6 +33,7 @@
 */
 
 package com.normation.cfclerk.domain
+import com.normation.utils.HashcodeCaching
 
 /**
  * When comparing two version numbers, first the epoch of each are compared, then
@@ -109,7 +110,7 @@ object PolicyVersion {
   }
 }
 
-case class UpstreamVersion(s: String) extends Ordered[UpstreamVersion] {
+case class UpstreamVersion(s: String) extends Ordered[UpstreamVersion] with HashcodeCaching {
   checkValid(s)
 
   import scala.util.matching.Regex
@@ -191,7 +192,7 @@ case class UpstreamVersion(s: String) extends Ordered[UpstreamVersion] {
     }
   }
 
-  private case class CharVersion(c: Char) extends Ordered[CharVersion] {
+  private case class CharVersion(c: Char) extends Ordered[CharVersion] with HashcodeCaching {
     def compare(cv: CharVersion): Int = {
       if (c == cv.c) 0
       else if (c == '~' && cv.c != '~') -1

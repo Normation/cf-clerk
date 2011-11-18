@@ -248,4 +248,4 @@ case class ModifyCFCPolicyInstanceDiff(
   , removedVariables: Map[String, Seq[String]] = Map()
   , addedVariables: Map[String, Seq[String]] = Map()
   , changedVariables: Map[String, Seq[String]] = Map()
-)
+) extends HashcodeCaching

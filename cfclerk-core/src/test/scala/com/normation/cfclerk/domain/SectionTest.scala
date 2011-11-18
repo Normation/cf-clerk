@@ -50,6 +50,7 @@ import org.joda.time.{ Days => _, _ }
 import org.joda.time.format._
 import org.slf4j.{ Logger, LoggerFactory }
 import com.normation.cfclerk.exceptions.ParsingException
+import com.normation.utils.HashcodeCaching
 
 @RunWith(classOf[JUnitRunner])
 class SectionTest extends Specification {
@@ -218,7 +219,7 @@ class SectionTest extends Specification {
   
 }
 
-case class SectionParser(sectionSpecParser: SectionSpecParser) {
+case class SectionParser(sectionSpecParser: SectionSpecParser) extends HashcodeCaching  {
   val id = new PolicyPackageId(new PolicyPackageName("test-policyPackageId"), PolicyVersion("1.0"))
   val policyName = "test-policyName"
 

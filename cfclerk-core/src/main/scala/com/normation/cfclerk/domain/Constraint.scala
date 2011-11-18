@@ -36,6 +36,7 @@ package com.normation.cfclerk.domain
 
 import com.normation.utils.Utils
 import org.joda.time.format.ISODateTimeFormat
+import com.normation.utils.HashcodeCaching
 
 class ConstraintException(val msg: String) extends Exception(msg)
 
@@ -72,7 +73,7 @@ object Constraint {
   }
 }
 
-case class ConstraintImp(typeName: String, default: Option[String], mayBeEmpty: Boolean, regex: RegexConstraint) extends Constraint {
+case class ConstraintImp(typeName: String, default: Option[String], mayBeEmpty: Boolean, regex: RegexConstraint) extends Constraint with HashcodeCaching {
 
   def check(varValue: String, varName: String) = {
     //only check for non-empty variable

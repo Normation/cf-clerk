@@ -112,7 +112,7 @@ case class PolicyPackage(
 /**
  * The representation of a bundle name, used for the bundlesequence
  */
-case class Bundle(name : String)
+case class Bundle(name : String) extends HashcodeCaching
 
 object PolicyPackage {
   def normalizeName(name: String): String = {

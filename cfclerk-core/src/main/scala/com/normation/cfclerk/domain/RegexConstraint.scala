@@ -33,8 +33,9 @@
 */
 
 package com.normation.cfclerk.domain
+import com.normation.utils.HashcodeCaching
 
-case class RegexConstraint(pattern: String = "", errorMsg: String = "") {
+case class RegexConstraint(pattern: String = "", errorMsg: String = "") extends HashcodeCaching {
 
   /* throw a ConstraintException if the value doesn't match the pattern */
   def check(varValue: String, varName: String) =

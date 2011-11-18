@@ -43,7 +43,7 @@ case class OperatingSystem(name: String="", version: String="") extends Hashcode
   	else name + " " + version
 }
 
-case class Agent(name: String="", version: String="") {
+case class Agent(name: String="", version: String="") extends HashcodeCaching {
     override def toString = if (version == "") name 
   	else name + " " + version
 }

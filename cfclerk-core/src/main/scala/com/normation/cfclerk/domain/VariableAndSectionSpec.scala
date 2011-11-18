@@ -38,6 +38,7 @@ import com.normation.cfclerk.exceptions._
 import scala.xml._
 import net.liftweb.common._
 import com.normation.cfclerk.xmlparsers.CfclerkXmlConstants._
+import com.normation.utils.HashcodeCaching
 
 /**
  * This file define the model for metadata of object 
@@ -98,7 +99,7 @@ case class SectionSpec(
   , foldable: Boolean = false
   , description: String = ""
   , children: Seq[SectionChildSpec] = Seq()
-) extends SectionChildSpec {
+) extends SectionChildSpec with HashcodeCaching {
 
   lazy val getDirectVariables : Seq[VariableSpec] = {
     children.collect { case v:VariableSpec => v }
@@ -206,7 +207,9 @@ case class SystemVariableSpec(
   // we expect that by default the variable will be checked
   val checked: Boolean = true,
 
-  val constraint: Constraint = Constraint()) extends VariableSpec {
+  val constraint: Constraint = Constraint()
+  
+) extends VariableSpec with HashcodeCaching {
 
   override type T = SystemVariableSpec
   override type V = SystemVariable
@@ -217,7 +220,7 @@ case class SystemVariableSpec(
 
 case class TrackerVariableSpec(
   val boundingVariable: Option[String] = None
-) extends VariableSpec {
+) extends VariableSpec with HashcodeCaching {
 
   override type T = TrackerVariableSpec
   override type V = TrackerVariable
@@ -245,7 +248,7 @@ sealed trait SectionVariableSpec extends SectionChildSpec with VariableSpec {
   override type T <: SectionVariableSpec
 }
 
-case class ValueLabel(value: String, label: String) {
+case class ValueLabel(value: String, label: String) extends HashcodeCaching  {
   def tuple = (value, label)
   def reverse = ValueLabel(label, value)
 }
@@ -266,7 +269,9 @@ case class SelectVariableSpec(
   // we expect that by default the variable will be checked
   val checked: Boolean = true,
 
-  val constraint: Constraint = Constraint()) extends ValueLabelVariableSpec {
+  val constraint: Constraint = Constraint()
+  
+) extends ValueLabelVariableSpec with HashcodeCaching {
 
   override type T = SelectVariableSpec
   override type V = SelectVariable
@@ -286,7 +291,9 @@ case class SelectOneVariableSpec(
   // we expect that by default the variable will be checked
   val checked: Boolean = true,
 
-  val constraint: Constraint = Constraint()) extends ValueLabelVariableSpec {
+  val constraint: Constraint = Constraint()
+
+) extends ValueLabelVariableSpec with HashcodeCaching {
 
   override type T = SelectOneVariableSpec
   override type V = SelectOneVariable
@@ -307,7 +314,7 @@ case class InputVariableSpec(
 
   val constraint: Constraint = Constraint()
 
-) extends SectionVariableSpec {
+) extends SectionVariableSpec with HashcodeCaching {
 
   override type T = InputVariableSpec
   override type V = InputVariable

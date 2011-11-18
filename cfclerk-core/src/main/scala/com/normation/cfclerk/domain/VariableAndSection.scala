@@ -42,13 +42,13 @@ import org.joda.time.format._
 import com.normation.utils.XmlUtils._
 import net.liftweb.common._
 import mutable.Buffer
-
 import com.normation.utils.Control.bestEffort
+import com.normation.utils.HashcodeCaching
 
 /* A SectionChild is either a Variable or a Section*/
 sealed trait SectionChild
 
-case class Section(val spec: SectionSpec) extends SectionChild
+case class Section(val spec: SectionSpec) extends SectionChild with HashcodeCaching
 
 /**
  *
@@ -170,13 +170,13 @@ trait Variable extends Loggable {
 
 case class SystemVariable(
   override val spec: SystemVariableSpec,
-  protected val defaultValues: Seq[String] = Seq()) extends Variable {
+  protected val defaultValues: Seq[String] = Seq()) extends Variable with HashcodeCaching {
   type T = SystemVariableSpec
 }
 
 case class TrackerVariable(
   override val spec: TrackerVariableSpec,
-  protected val defaultValues: Seq[String] = Seq()) extends Variable {
+  protected val defaultValues: Seq[String] = Seq()) extends Variable with HashcodeCaching {
   type T = TrackerVariableSpec
 }
 
@@ -184,19 +184,19 @@ trait SectionVariable extends Variable with SectionChild
 
 case class InputVariable(
   override val spec: InputVariableSpec,
-  protected val defaultValues: Seq[String] = Seq()) extends SectionVariable {
+  protected val defaultValues: Seq[String] = Seq()) extends SectionVariable with HashcodeCaching {
   type T = InputVariableSpec
 }
 
 case class SelectVariable(
   override val spec: SelectVariableSpec,
-  protected val defaultValues: Seq[String] = Seq()) extends SectionVariable {
+  protected val defaultValues: Seq[String] = Seq()) extends SectionVariable with HashcodeCaching {
   type T = SelectVariableSpec
 }
 
 case class SelectOneVariable(
   override val spec: SelectOneVariableSpec,
-  protected val defaultValues: Seq[String] = Seq()) extends SectionVariable {
+  protected val defaultValues: Seq[String] = Seq()) extends SectionVariable with HashcodeCaching {
   type T = SelectOneVariableSpec
 }
 

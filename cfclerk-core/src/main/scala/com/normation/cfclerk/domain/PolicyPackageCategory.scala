@@ -176,7 +176,7 @@ case class RootPolicyPackageCategory(
   subCategoryIds: Set[SubPolicyPackageCategoryId] = Set(),
   packageIds : SortedSet[PolicyPackageId] = SortedSet(),
   isSystem : Boolean = false
-) extends PolicyPackageCategory {
+) extends PolicyPackageCategory with HashcodeCaching {
   type A = RootPolicyPackageCategoryId.type
   override lazy val id : A = RootPolicyPackageCategoryId
 }
@@ -188,7 +188,7 @@ case class SubPolicyPackageCategory(
   subCategoryIds: Set[SubPolicyPackageCategoryId] = Set(),
   packageIds : SortedSet[PolicyPackageId] = SortedSet(),
   isSystem : Boolean = false
-) extends PolicyPackageCategory {
+) extends PolicyPackageCategory with HashcodeCaching {
   type A = SubPolicyPackageCategoryId
 }
 
