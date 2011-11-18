@@ -33,7 +33,6 @@
 	package com.normation.stringtemplate.language;
     import org.antlr.stringtemplate.language.*;
     import org.antlr.stringtemplate.*;
-    import java.io.*;
 
 import java.io.InputStream;
 import antlr.TokenStreamException;
@@ -41,20 +40,15 @@ import antlr.TokenStreamIOException;
 import antlr.TokenStreamRecognitionException;
 import antlr.CharStreamException;
 import antlr.CharStreamIOException;
-import antlr.ANTLRException;
 import java.io.Reader;
 import java.util.Hashtable;
-import antlr.CharScanner;
 import antlr.InputBuffer;
 import antlr.ByteBuffer;
 import antlr.CharBuffer;
 import antlr.Token;
-import antlr.CommonToken;
 import antlr.RecognitionException;
 import antlr.NoViableAltForCharException;
-import antlr.MismatchedCharException;
 import antlr.TokenStream;
-import antlr.ANTLRHashString;
 import antlr.LexerSharedInputState;
 import antlr.collections.impl.BitSet;
 import antlr.SemanticException;
@@ -104,6 +98,8 @@ public NormationAmpersandTemplateLexer(Reader in) {
 public NormationAmpersandTemplateLexer(InputBuffer ib) {
 	this(new LexerSharedInputState(ib));
 }
+
+@SuppressWarnings("rawtypes")
 public NormationAmpersandTemplateLexer(LexerSharedInputState state) {
 	super(state);
 	caseSensitiveLiterals = true;
@@ -112,10 +108,8 @@ public NormationAmpersandTemplateLexer(LexerSharedInputState state) {
 }
 
 public Token nextToken() throws TokenStreamException {
-	Token theRetToken=null;
 tryAgain:
 	for (;;) {
-		Token _token = null;
 		int _ttype = Token.INVALID_TYPE;
 		resetText();
 		try {   // for char stream error handling
@@ -124,19 +118,16 @@ tryAgain:
 				case '\n':  case '\r':
 				{
 					mNEWLINE(true);
-					theRetToken=_returnToken;
 					break;
 				}
 				case '&':
 				{
 					mACTION(true);
-					theRetToken=_returnToken;
 					break;
 				}
 				default:
 					if (((_tokenSet_0.member(LA(1))))&&(LA(1)!='\r'&&LA(1)!='\n')) {
 						mLITERAL(true);
-						theRetToken=_returnToken;
 					}
 				else {
 					if (LA(1)==EOF_CHAR) {uponEOF(); _returnToken = makeToken(Token.EOF_TYPE);}
@@ -231,7 +222,6 @@ tryAgain:
 	protected final void mINDENT(boolean _createToken) throws RecognitionException, CharStreamException, TokenStreamException {
 		int _ttype; Token _token=null; int _begin=text.length();
 		_ttype = INDENT;
-		int _saveIndex;
 		
 		{
 		int _cnt76=0;
@@ -260,7 +250,6 @@ tryAgain:
 	public final void mNEWLINE(boolean _createToken) throws RecognitionException, CharStreamException, TokenStreamException {
 		int _ttype; Token _token=null; int _begin=text.length();
 		_ttype = NEWLINE;
-		int _saveIndex;
 		
 		{
 		switch ( LA(1)) {
@@ -832,7 +821,6 @@ tryAgain:
 	protected final void mCOMMENT(boolean _createToken) throws RecognitionException, CharStreamException, TokenStreamException {
 		int _ttype; Token _token=null; int _begin=text.length();
 		_ttype = COMMENT;
-		int _saveIndex;
 		
 		int startCol = getColumn();
 		
@@ -910,7 +898,6 @@ tryAgain:
 	protected final void mIF_EXPR(boolean _createToken) throws RecognitionException, CharStreamException, TokenStreamException {
 		int _ttype; Token _token=null; int _begin=text.length();
 		_ttype = IF_EXPR;
-		int _saveIndex;
 		
 		{
 		int _cnt64=0;
@@ -976,7 +963,6 @@ tryAgain:
 	protected final void mEXPR(boolean _createToken) throws RecognitionException, CharStreamException, TokenStreamException {
 		int _ttype; Token _token=null; int _begin=text.length();
 		_ttype = EXPR;
-		int _saveIndex;
 		
 		{
 		int _cnt52=0;
@@ -1102,7 +1088,6 @@ tryAgain:
 	protected final void mESC(boolean _createToken) throws RecognitionException, CharStreamException, TokenStreamException {
 		int _ttype; Token _token=null; int _begin=text.length();
 		_ttype = ESC;
-		int _saveIndex;
 		
 		match('\\');
 		matchNot(EOF_CHAR);
@@ -1116,7 +1101,6 @@ tryAgain:
 	protected final void mSUBTEMPLATE(boolean _createToken) throws RecognitionException, CharStreamException, TokenStreamException {
 		int _ttype; Token _token=null; int _begin=text.length();
 		_ttype = SUBTEMPLATE;
-		int _saveIndex;
 		
 		match('{');
 		{
@@ -1282,7 +1266,6 @@ tryAgain:
 	protected final void mNESTED_PARENS(boolean _createToken) throws RecognitionException, CharStreamException, TokenStreamException {
 		int _ttype; Token _token=null; int _begin=text.length();
 		_ttype = NESTED_PARENS;
-		int _saveIndex;
 		
 		match('(');
 		{
@@ -1322,7 +1305,6 @@ tryAgain:
 	protected final void mHEX(boolean _createToken) throws RecognitionException, CharStreamException, TokenStreamException {
 		int _ttype; Token _token=null; int _begin=text.length();
 		_ttype = HEX;
-		int _saveIndex;
 		
 		switch ( LA(1)) {
 		case '0':  case '1':  case '2':  case '3':

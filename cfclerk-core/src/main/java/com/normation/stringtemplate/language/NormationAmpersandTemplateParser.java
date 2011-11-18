@@ -33,19 +33,13 @@
 	package com.normation.stringtemplate.language;
     import org.antlr.stringtemplate.language.*;
     import org.antlr.stringtemplate.*;
-    import java.io.*;
 
 import antlr.TokenBuffer;
 import antlr.TokenStreamException;
-import antlr.TokenStreamIOException;
-import antlr.ANTLRException;
-import antlr.LLkParser;
 import antlr.Token;
 import antlr.TokenStream;
 import antlr.RecognitionException;
 import antlr.NoViableAltException;
-import antlr.MismatchedTokenException;
-import antlr.SemanticException;
 import antlr.ParserSharedInputState;
 import antlr.collections.impl.BitSet;
 

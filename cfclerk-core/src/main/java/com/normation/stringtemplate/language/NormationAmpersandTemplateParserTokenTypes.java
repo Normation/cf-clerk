@@ -31,9 +31,7 @@
 */
 
 	package com.normation.stringtemplate.language;
-    import org.antlr.stringtemplate.language.*;
-    import org.antlr.stringtemplate.*;
-    import java.io.*;
+
 
 public interface NormationAmpersandTemplateParserTokenTypes {
 	int EOF = 1;
