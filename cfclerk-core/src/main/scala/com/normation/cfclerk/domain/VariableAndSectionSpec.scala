@@ -53,7 +53,7 @@ sealed trait SectionChildSpec {
   def name: String
 
   def getVariables: Seq[VariableSpec] = this match {
-    case variable: VariableSpec => Seq(variable)
+    case variable: SectionVariableSpec => Seq(variable)
     case section: SectionSpec => section.children.flatMap { child =>
       child match {
         case v: VariableSpec => Seq(v)
@@ -63,13 +63,13 @@ sealed trait SectionChildSpec {
   }
 
   def getAllSections: Seq[SectionSpec] = this match {
-    case v:VariableSpec => Seq()
+    case v:SectionVariableSpec => Seq()
     case s:SectionSpec => s +: s.children.flatMap( _.getAllSections )
   }
   
   // get current variables and variables in sub section
   def getAllVariables: Seq[VariableSpec] = this match {
-    case variable: VariableSpec => Seq(variable)
+    case variable: SectionVariableSpec => Seq(variable)
     case section: SectionSpec =>
       section.children.flatMap(_.getAllVariables)
   }
@@ -80,14 +80,12 @@ sealed trait SectionChildSpec {
     val others = this match {
       case section: SectionSpec =>
         section.children.flatMap(_.filterByName(name))
-      case variable: VariableSpec => Seq()
+      case variable: SectionVariableSpec => Seq()
     }
     root ++ others
   }
 }
 
-
-case class SectionMu
 
 /**
  * Metadata about a section object. 
@@ -121,7 +119,7 @@ case class SectionSpec(
     val kept = children.filter(f) map { child =>
       child match {
         case secSpec: SectionSpec => secSpec.filterChildren(f)
-        case varSpec: VariableSpec => varSpec
+        case varSpec: SectionVariableSpec => varSpec
       }
     }
     this.copy(children = kept)
@@ -240,7 +238,7 @@ case class TrackerVariableSpec(
 }
 
 /**
- * Here we have all the variable that ca be declared in sections
+ * Here we have all the variable that can be declared in sections
  * (all but system vars). 
  */
 sealed trait SectionVariableSpec extends SectionChildSpec with VariableSpec {
