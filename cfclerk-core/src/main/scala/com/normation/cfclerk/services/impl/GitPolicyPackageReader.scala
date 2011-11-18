@@ -78,7 +78,19 @@ import org.eclipse.jgit.diff.DiffFormatter
  * a git repository.  
  * 
  * The root directory on the git repos is assumed to be
- * the root directory of the policy package reference library.
+ * a parent directory of the root directory of the policy
+ * template library. For example, if "policy-template" is
+ * the root directory of the PT lib:
+ * - (1) /some/path/policy-templates/.git [=> OK]
+ * - (2) /some/path/
+ *             |- policy-templates
+ *             ` .git  [=> OK]
+ * - (3) /some/path/
+ *             |-policy-templates
+ *             ` sub/dirs/.git [=> NOT OK]
+ * 
+ * The relative path from the parent of .git to ptlib root is given in
+ * the "relativePathToGitRepos" parameter. 
  * 
  * The convention used about policy packages and categories are the
  * same than for the FSPolicyPackageReader, which are:
@@ -104,6 +116,13 @@ import org.eclipse.jgit.diff.DiffFormatter
  *  In that implementation, the name of the directory of a category
  *  is used for the PolicyCategoryName. 
  *
+ * @parameter relativePathToGitRepos
+ *   The relative path from the root directory of the git repository to
+ *   the root directory of the policy template library. 
+ *   If the root directory of the git repos is in the PT lib root dir, 
+ *   as in example (1) above, None ("") must be used. 
+ *   Else, the relative path without leading nor trailing "/" is used. For
+ *   example, in example (2), Some("policy-templates") must be used. 
  */
 
 class GitPolicyPackagesReader(
@@ -111,11 +130,45 @@ class GitPolicyPackagesReader(
   revisionProvider:GitRevisionProvider,
   repo:GitRepositoryProvider,
   val policyDescriptorName: String, //full (with extension) conventional name for policy descriptor
-  val categoryDescriptorName: String //full (with extension) name of the descriptor for categories
+  val categoryDescriptorName: String, //full (with extension) name of the descriptor for categories
+  val relativePathToGitRepos: Option[String]
   ) extends PolicyPackagesReader with Loggable {
 
   reader =>
 
+  //denotes a path for a package, so it starts by a "/"
+  //and is not prefixed by relativePathToGitRepos
+  private[this] case class PackagePath(path:String)
+    
+  //the path of the PT lib relative to the git repos
+  //withtout leading and trailing /. 
+  val canonizedRelativePath = relativePathToGitRepos.flatMap { path => 
+      val p1 = path.trim
+      val p2 = if(p1(0) == '/') p1.tail else p1
+      val p3 = if(p2(p2.size -1) == '/') p2.substring(0, p2.size-1) else p2
+      
+      if(p3.size == 0) { //can not have Some("/") or Some("")
+        None
+      } else {
+        Some(p3)
+      }
+  }
+
+  /*
+   * Change a path relative to the Git repository to a path relative
+   * to the root of policy template library. 
+   * As it is required that the git repository is in  a parent of the
+   * ptLib, it's just removing start of the string.
+   */
+  private[this] def toPolicyTemplatePath(path:String) : PackagePath = {
+    canonizedRelativePath match {
+      case Some(relative) if(path.startsWith(relative)) => 
+        PackagePath(path.substring(relative.size, path.size))
+      case _ => PackagePath("/" + path)
+    }
+  }  
+  
+  
   private[this] var currentPackagesInfoCache : PackagesInfo = processRevTreeId(revisionProvider.currentRevTreeId)
   private[this] var nextPackagesInfoCache : (ObjectId,PackagesInfo) = (revisionProvider.currentRevTreeId, currentPackagesInfoCache)
   //a non empty list IS the indicator of differences between current and next
@@ -133,13 +186,13 @@ class GitPolicyPackagesReader(
 
       val diffFmt = new DiffFormatter(null)
       diffFmt.setRepository(repo.db)
-      val diffPathEntries : Set[String] = 
+      val diffPathEntries : Set[PackagePath] = 
         diffFmt.scan(revisionProvider.currentRevTreeId,nextId).flatMap { diffEntry => 
-          Seq("/" + diffEntry.getOldPath, "/" + diffEntry.getNewPath)
+          Seq(toPolicyTemplatePath(diffEntry.getOldPath), toPolicyTemplatePath(diffEntry.getNewPath))
         }.toSet
       diffFmt.release
       
-      val modifiedPackagePath = scala.collection.mutable.Set[String]()
+      val modifiedPackagePath = scala.collection.mutable.Set[PackagePath]()
       /*
        * now, group diff entries by policyPackageId to find which were updated
        * we take into account any modifications, as anything among a 
@@ -148,7 +201,7 @@ class GitPolicyPackagesReader(
        */
       diffPathEntries.foreach { path =>
         allKnownPackagePaths.find { packagePath =>
-          path.startsWith(packagePath)
+          path.path.startsWith(packagePath.path)
         }.foreach { packagePath =>
           modifiedPackagePath += packagePath
         } //else nothing
@@ -156,7 +209,7 @@ class GitPolicyPackagesReader(
  
       //Ok, now rebuild PolicyPackage !
       modifiedPolicyPackagesCache = modifiedPackagePath.map { s => 
-        val parts = s.split("/")
+        val parts = s.path.split("/")
         PolicyPackageId(PolicyPackageName(parts(parts.size - 2)), PolicyVersion(parts(parts.size - 1)))
       }.toSeq
       nextPackagesInfoCache = (nextId, nextPackagesInfo)
@@ -224,6 +277,8 @@ class GitPolicyPackagesReader(
     }
   }
   
+
+  
   private[this] def processRevTreeId(id:ObjectId, parseDescriptor:Boolean = true) : PackagesInfo = {
     /*
      * Global process : the logic is completly different
@@ -269,15 +324,15 @@ class GitPolicyPackagesReader(
   private[this] def processPolicyPackages(revTreeId: ObjectId, packageInfos : InternalPackagesInfo, parseDescriptor:Boolean) : Unit = {
       //a first walk to find categories
       val tw = new TreeWalk(repo.db)
-      tw.setFilter(new FileTreeFilter(policyDescriptorName))
+      tw.setFilter(new FileTreeFilter(canonizedRelativePath, policyDescriptorName))
       tw.setRecursive(true)
       tw.reset(revTreeId)
       
       //now, for each potential path, look if the cat or policy
       //is valid
       while(tw.next) {
-        val path = "/" + tw.getPathString //we will need it to build the category id
-        processPolicyPackage(repo.db.open(tw.getObjectId(0)).openStream, path, packageInfos, parseDescriptor)
+        val path = toPolicyTemplatePath(tw.getPathString) //we will need it to build the category id
+        processPolicyPackage(repo.db.open(tw.getObjectId(0)).openStream, path.path, packageInfos, parseDescriptor)
       }     
   }
   
@@ -285,7 +340,7 @@ class GitPolicyPackagesReader(
   private[this] def processCategories(revTreeId: ObjectId, packageInfos : InternalPackagesInfo, parseDescriptor:Boolean) : Unit = {
       //a first walk to find categories
       val tw = new TreeWalk(repo.db)
-      tw.setFilter(new FileTreeFilter(categoryDescriptorName))
+      tw.setFilter(new FileTreeFilter(canonizedRelativePath, categoryDescriptorName))
       tw.setRecursive(true)
       tw.reset(revTreeId)
       
@@ -295,8 +350,8 @@ class GitPolicyPackagesReader(
       //now, for each potential path, look if the cat or policy
       //is valid
       while(tw.next) {
-        val path = "/" + tw.getPathString //we will need it to build the category id
-        registerMaybeCategory(tw.getObjectId(0), path, maybeCategories, parseDescriptor)
+        val path = toPolicyTemplatePath(tw.getPathString) //we will need it to build the category id
+        registerMaybeCategory(tw.getObjectId(0), path.path, maybeCategories, parseDescriptor)
       }
     
       val toRemove = new collection.mutable.HashSet[SubPolicyPackageCategoryId]()
@@ -502,12 +557,12 @@ class GitPolicyPackagesReader(
    * /P1, a package P2 in sub category cat1 is denoted 
    * /cat1/P2, etc. 
    */
-  private[this] def getPolicyPackagePath(packageInfos:PackagesInfo) : Set[String] = {
-   var set = scala.collection.mutable.Set[String]()
-   packageInfos.rootCategory.packageIds.foreach { p => set += ( "/" + p.toString) }
+  private[this] def getPolicyPackagePath(packageInfos:PackagesInfo) : Set[PackagePath] = {
+   var set = scala.collection.mutable.Set[PackagePath]()
+   packageInfos.rootCategory.packageIds.foreach { p => set += PackagePath( "/" + p.toString) }
    packageInfos.subCategories.foreach { case (id,cat) =>
      val path = id.toString
-     cat.packageIds.foreach { p => set += (path + "/" + p.toString) }
+     cat.packageIds.foreach { p => set += PackagePath(path + "/" + p.toString) }
    }
    set.toSet
   }
