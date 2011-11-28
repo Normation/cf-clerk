@@ -73,11 +73,11 @@ class CFCPolicyInstance(
 ) extends Loggable {
 
   // TODO : do we want to keep this ?
-  private var _modificationDate: DateTime = new DateTime()
+  private var _modificationDate: DateTime = DateTime.now()
   private val variableMap: mutable.Map[String, Variable] = mutable.Map[String, Variable]() ++ __variableMap
 
   private def updateConftime() {
-    _modificationDate = new DateTime()
+    _modificationDate = DateTime.now()
   }
 
   def modificationDate = _modificationDate
