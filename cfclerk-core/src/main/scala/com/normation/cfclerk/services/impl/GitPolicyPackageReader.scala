@@ -379,8 +379,12 @@ class GitPolicyPackagesReader(
         case(sId@SubPolicyPackageCategoryId(_,RootPolicyPackageCategoryId) , _ ) => //update root
           root = root.copy( subCategoryIds = root.subCategoryIds + sId )
         case(sId@SubPolicyPackageCategoryId(_,pId:SubPolicyPackageCategoryId) , _ ) =>
-          val cat = packageInfos.subCategories(pId)
-          packageInfos.subCategories(pId) = cat.copy( subCategoryIds = cat.subCategoryIds + sId )
+          // Here we can have a Parent Category that is not, for some reason, in the subcategories
+          packageInfos.subCategories.get(pId) match {
+            case Some(cat) => packageInfos.subCategories(pId)
+            	packageInfos.subCategories(pId) = cat.copy( subCategoryIds = cat.subCategoryIds + sId )
+            case None => logger.error("Could not fetch the parent category %s from the package infos; skipping".format(pId))
+          }
       }
 
       //finally, update root !
