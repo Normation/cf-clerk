@@ -161,18 +161,16 @@ class SimpleGitRevisionProvider(refPath:String,repo:GitRepositoryProvider) exten
  */
 class FileTreeFilter(rootDirectory:Option[String], fileName: String) extends TreeFilter {
   private[this] val fileRawPath = JConstants.encode("/" + fileName)
-
-  private[this] val rootFilter : TreeWalk => Boolean = {
+  
+  private[this] val rawRootPath = {
     rootDirectory match {
-      case None => (walker:TreeWalk) => true
-      case Some(path) => 
-        val raw = JConstants.encode(path)
-        (walker:TreeWalk) => (walker.isPathPrefix(raw,raw.size) < 1)
+      case None => JConstants.encode("")
+      case Some(path) => JConstants.encode(path)
     }
   }
   
   override def include(walker:TreeWalk) : Boolean = {
-    rootFilter(walker) &&
+    (walker.isPathPrefix(rawRootPath,rawRootPath.size) == 0) && //same root
     ( walker.isSubtree || walker.isPathSuffix(fileRawPath, fileRawPath.size) )
   }
 

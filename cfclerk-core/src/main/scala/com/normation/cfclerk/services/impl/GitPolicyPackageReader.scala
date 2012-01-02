@@ -389,6 +389,9 @@ class GitPolicyPackagesReader(
   }
   
 
+  /**
+   * We remove each category for which parent category is not defined. 
+   */
   private[this] def recToRemove(
       catId:SubPolicyPackageCategoryId
     , toRemove:collection.mutable.HashSet[SubPolicyPackageCategoryId]

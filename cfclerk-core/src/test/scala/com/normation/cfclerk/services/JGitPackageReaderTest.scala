@@ -69,6 +69,9 @@ trait JGitPackageReaderSpec extends Specification with Loggable {
     FileUtils.deleteDirectory(gitRoot)
   }
   
+  //hook to allows to make some more initialisation
+  def postInitHook : Unit
+  
   override def map(fs: =>Fragments) = fs ^ Step(deleteDir)
   
   val variableSpecParser = new VariableSpecParser 
@@ -91,6 +94,10 @@ trait JGitPackageReaderSpec extends Specification with Loggable {
   FileUtils.copyDirectory(new File("src/test/resources/packagesRoot") , ptLib)
 
   val repo = new GitRepositoryProviderImpl(gitRoot.getAbsolutePath)
+    
+  //post init hook
+  postInitHook
+  
   val reader = new GitPolicyPackagesReader(
                 policyParser
               , new SimpleGitRevisionProvider("refs/heads/master", repo)
@@ -99,12 +106,13 @@ trait JGitPackageReaderSpec extends Specification with Loggable {
               , "category.xml"
               , relativePathArg
             )
-          
-  
+
   val infos = reader.readPolicies
   val § = RootPolicyPackageCategoryId
   
-  "The test lib should have 5 valid categories" should { infos.subCategories.size === 5 }
+  "The test lib" should { 
+    "have 3 categories" in infos.subCategories.size === 3   
+  }
   
   "The root category" should {
     val rootCat = infos.rootCategory
@@ -179,11 +187,14 @@ class JGitPackageReader_SameRootTest extends JGitPackageReaderSpec {
   lazy val gitRoot = new File("/tmp/test-jgit", System.currentTimeMillis.toString)
   lazy val ptLib = gitRoot
   lazy val relativePathArg = None
+  def postInitHook : Unit = {}
 }
 
 /**
  * A test case where git repos is on a parent directory
  * of pt lib root. 
+ * In that configuration, we also add false categories in an other sub-directory of the
+ * git to check that the PT reader does not look outside of its root. 
  */
 @RunWith(classOf[JUnitRunner])
 class JGitPackageReader_ChildRootTest extends JGitPackageReaderSpec {
@@ -191,4 +202,16 @@ class JGitPackageReader_ChildRootTest extends JGitPackageReaderSpec {
   lazy val ptLibDirName = "policy-templates"
   lazy val ptLib = new File(gitRoot, ptLibDirName)
   lazy val relativePathArg = Some("  /" + ptLibDirName + "/  ")
+  
+  def postInitHook : Unit = {
+    //add dummy files
+    val destName = "phantomPTs"
+    val dest = new File(gitRoot, destName)
+    logger.info("Add false PT outside root in '%s'".format(gitRoot.getPath + "/phantomPTs"))
+    FileUtils.copyDirectory(new File("src/test/resources/phantomPTs") ,dest)
+    //commit in git these files
+    val git = new Git(repo.db)
+    git.add.addFilepattern(destName).call
+    git.commit.setMessage("Commit something looking like a PT but outside PT root directory").call
+  }
 }
