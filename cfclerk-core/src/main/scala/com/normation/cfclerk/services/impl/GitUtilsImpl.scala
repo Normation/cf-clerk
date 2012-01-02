@@ -170,7 +170,7 @@ class FileTreeFilter(rootDirectory:Option[String], fileName: String) extends Tre
   }
   
   override def include(walker:TreeWalk) : Boolean = {
-    (walker.isPathPrefix(rawRootPath,rawRootPath.size) == 0) && //same root
+    (rawRootPath.size == 0 || (walker.isPathPrefix(rawRootPath,rawRootPath.size) == 0)) && //same root
     ( walker.isSubtree || walker.isPathSuffix(fileRawPath, fileRawPath.size) )
   }
 
