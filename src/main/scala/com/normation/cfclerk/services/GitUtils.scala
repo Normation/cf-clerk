@@ -40,9 +40,14 @@ import org.eclipse.jgit.lib.ObjectId
 
 /**
  * A service that gives access to the Git 
- * repository. 
+ * porcelain API of the repository. 
  */
 trait GitRepositoryProvider {
+  /**
+   * Obtain access to JGit porcelain API. 
+   */
+  def git : Git
+  
   def db : Repository
 }
 

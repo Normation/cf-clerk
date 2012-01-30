@@ -110,6 +110,8 @@ class GitRepositoryProviderImpl(packageDirectoryPath: String) extends GitReposit
     checkPackageDirectory(dir)
     checkGitRepos(dir)
   }
+  
+  override val git = new Git(db)
 }
 
 
@@ -143,7 +145,10 @@ class SimpleGitRevisionProvider(refPath:String,repo:GitRepositoryProvider) exten
       throw new TechnicalException(message)
     }
     
-    (new RevWalk(repo.db)).parseTree(treeId).getId
+    val rw = new RevWalk(repo.db)
+    val id = rw.parseTree(treeId).getId
+    rw.dispose
+    id
   }
   
   override def currentRevTreeId = currentId

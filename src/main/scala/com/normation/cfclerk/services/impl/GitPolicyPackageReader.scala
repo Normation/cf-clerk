@@ -58,7 +58,6 @@ import org.eclipse.jgit.revwalk.RevTree
 import org.eclipse.jgit.treewalk.TreeWalk
 import org.eclipse.jgit.lib.ObjectId
 import org.eclipse.jgit.treewalk.filter.TreeFilter
-import org.eclipse.jgit.revwalk.RevWalk
 import scala.collection.mutable.{ Map => MutMap }
 import org.eclipse.jgit.errors.StopWalkException
 import org.eclipse.jgit.events.RefsChangedListener
@@ -333,7 +332,7 @@ class GitPolicyPackagesReader(
       while(tw.next) {
         val path = toPolicyTemplatePath(tw.getPathString) //we will need it to build the category id
         processPolicyPackage(repo.db.open(tw.getObjectId(0)).openStream, path.path, packageInfos, parseDescriptor)
-      }     
+      }
   }
   
   
