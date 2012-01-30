@@ -106,6 +106,8 @@ class PolicyPackageServiceImpl(
           }
         }
   
+      } else {
+        logger.debug("Not reloading policy template library as nothing changed since last reload")
       }
       Full(modifiedPackages)
     } catch {
