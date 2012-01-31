@@ -39,11 +39,11 @@ import com.normation.cfclerk.domain._
 import org.slf4j.{ Logger, LoggerFactory }
 import net.liftweb.common._
 import Box._
-
 import com.normation.cfclerk.exceptions._
 import java.io.{ File, InputStream }
 import scala.collection.SortedSet
 import scala.collection.mutable
+import com.normation.eventlog.EventActor
 
 class PolicyPackageServiceImpl(
     policyPackagesReader: PolicyPackagesReader
@@ -73,7 +73,7 @@ class PolicyPackageServiceImpl(
     } catch {
       case e:Exception => 
         logger.error("Error when loading the previously saved policy template library. Trying to update to last library available to overcome the error")
-        this.update
+        this.update(CfclerkEventActor)
         policyPackagesReader.readPolicies
     }
   }
@@ -88,7 +88,7 @@ class PolicyPackageServiceImpl(
     callbacks.append(callback)
   }
   
-  override def update : Box[Seq[PolicyPackageId]] = {
+  override def update(actor:EventActor) : Box[Seq[PolicyPackageId]] = {
     try {
       val modifiedPackages = policyPackagesReader.getModifiedPolicyPackages
       if (modifiedPackages.nonEmpty || /* first time init */ null == packageInfosCache) {
@@ -100,7 +100,7 @@ class PolicyPackageServiceImpl(
   
         callbacks.foreach { callback =>
           try {
-            callback.updatedPolicyPackage(modifiedPackages)
+            callback.updatedPolicyPackage(modifiedPackages, actor)
           } catch {
             case e: Exception => logger.error("Error when executing callback '%s' with updated policy templates: '%s'".format(callback.name, modifiedPackages.mkString(", ")), e)
           }
