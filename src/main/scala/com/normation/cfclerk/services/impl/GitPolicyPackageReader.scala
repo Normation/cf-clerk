@@ -368,7 +368,8 @@ class GitPolicyPackagesReader(
       packageInfos.subCategories ++= maybeCategories.collect { case (sId:SubPolicyPackageCategoryId, cat:SubPolicyPackageCategory) => (sId -> cat) }
     
       var root = maybeCategories.get(RootPolicyPackageCategoryId) match {
-          case None => sys.error("Missing root category")
+          case None => sys.error("Missing policy-template root category in Git, expecting category descriptor for Git path: '%s'".format( 
+              repo.db.getWorkTree.getPath + canonizedRelativePath.map( "/" + _ + "/" + categoryDescriptorName).getOrElse("")))
           case Some(sub:SubPolicyPackageCategory) => sys.error("Bad type for root category, found: " + sub)
           case Some(r:RootPolicyPackageCategory) => r
         }
