@@ -44,110 +44,108 @@ import net.liftweb.common._
  * @author Nicolas CHARLES
  *
  */
-class PoliciesContainer(val outPath: String) extends Loggable {
+class Cf3PolicyDraftContainer(val outPath: String) extends Loggable {
 
-  protected val policiesInstances = MutMap[CFCPolicyInstanceId, CFCPolicyInstance]() /* the target policies (the one we wish to have) */
+  protected val cf3PolicyDrafts = MutMap[Cf3PolicyDraftId, Cf3PolicyDraft]() /* the target policies (the one we wish to have) */
 
   /**
    * Add a policy instance
    * @param policy
    * @return Full(the added policy) in case of success, Fail in case of error. 
    */
-  def addPolicyInstance(policy: CFCPolicyInstance) : Box[CFCPolicyInstance] = {
-    policiesInstances.get(policy.id) match {
+  def add(cf3PolicyDraft: Cf3PolicyDraft) : Box[Cf3PolicyDraft] = {
+    cf3PolicyDrafts.get(cf3PolicyDraft.id) match {
       case None =>
-        logger.trace("Adding policy instance " + policy.toString)
-        updateAllUniqueVariables(policy)
-        policiesInstances += (policy.id -> policy.clone)
-        Full(policy)
-      case Some(x) => Failure("An instance of the policy with the same identifier already exists")
+        logger.trace("Adding cf3PolicyDraft " + cf3PolicyDraft.toString)
+        updateAllUniqueVariables(cf3PolicyDraft)
+        cf3PolicyDrafts += (cf3PolicyDraft.id -> cf3PolicyDraft.clone)
+        Full(cf3PolicyDraft)
+      case Some(x) => Failure("An instance of the cf3PolicyDraft with the same identifier already exists")
     }
   }
 
   /** 
-   * Update a policyinstance, returns log entry only if variables have been modified (in this policy or another)
-   * @param policy
-   * @return Full(the updated policy) in case of success, the error else. 
+   * Update a policyinstance, returns log entry only if variables have been modified (in this cf3PolicyDraft or another)
+   * @param cf3PolicyDraft
+   * @return Full(the updated cf3PolicyDraft) in case of success, the error else. 
    */
-  def updatePolicyInstance(policy: CFCPolicyInstance) : Box[CFCPolicyInstance] = {
-    policiesInstances.get(policy.id) match {
-      case None => Failure("No instance of the policy with the given identifier '%s' exists".format(policy.id))
+  def update(cf3PolicyDraft: Cf3PolicyDraft) : Box[Cf3PolicyDraft] = {
+    cf3PolicyDrafts.get(cf3PolicyDraft.id) match {
+      case None => Failure("No instance of the cf3PolicyDraft with the given identifier '%s' exists".format(cf3PolicyDraft.id))
       case Some(x) => 
-        x.updatePolicy(policy)
-        updateAllUniqueVariables(policy)
+        x.updateCf3PolicyDraft(cf3PolicyDraft)
+        updateAllUniqueVariables(cf3PolicyDraft)
         Full(x)
     }
   }
 
   /**
-   * Returns a policy instance by its name (not its id)
+   * Returns a cf3PolicyDraft by its name (not its id)
    * @param policyName
    * @return
    */
-  def findPolicyInstanceByPolicyId(policyId: PolicyPackageId) = {
-    policiesInstances.filter(x => x._2.policyId == policyId).map(x => (x._1, x._2.clone()))
+  def findById(techniqueId: TechniqueId) = {
+    cf3PolicyDrafts.filter(x => x._2.techniqueId == techniqueId).map(x => (x._1, x._2.clone()))
   }
 
   /**
-   * Returns all the policy ids defined in this container
+   * Returns all the cf3PolicyDraft ids defined in this container
    * @return
    */
-  def getAllPoliciesIds(): Seq[PolicyPackageId] = {
+  def getAllIds(): Seq[TechniqueId] = {
     // toSet to suppress duplicates
-    policiesInstances.values.map(_.policyId).toSet.toSeq
+    cf3PolicyDrafts.values.map(_.techniqueId).toSet.toSeq
   }
 
   /**
-   * Removes a policy instance by its id
-   * @param policyId
+   * Removes a cf3PolicyDraft instance by its id
+   * @param techniqueId
    * @return
    */
-  def removePolicyInstance(policyInstanceId: CFCPolicyInstanceId) = {
-    policiesInstances.get(policyInstanceId) match {
+  def remove(cf3PolicyDraftId: Cf3PolicyDraftId) = {
+    cf3PolicyDrafts.get(cf3PolicyDraftId) match {
       case None => throw new Exception("No instance of the policy with the given identifier exists")
-      case Some(x) => policiesInstances.remove(policyInstanceId)
+      case Some(x) => cf3PolicyDrafts.remove(cf3PolicyDraftId)
     }
   }
 
   /**
    * Returns a policy instance by its id
-   * @param policyId
+   * @param techniqueId
    * @return
    */
-  def getPolicyInstance(policyInstanceId: CFCPolicyInstanceId): Option[CFCPolicyInstance] = {
-    policiesInstances.get(policyInstanceId).map(x => x.clone)
+  def get(cf3PolicyDraftId: Cf3PolicyDraftId): Option[Cf3PolicyDraft] = {
+    cf3PolicyDrafts.get(cf3PolicyDraftId).map(x => x.clone)
   }
 
   /**
    * Returns all the policy instances
    * @return
    */
-  def getPolicyInstances(): MutMap[CFCPolicyInstanceId, CFCPolicyInstance] = {
-    policiesInstances.map(x => (x._1, x._2.clone))
+  def getAll(): MutMap[Cf3PolicyDraftId, Cf3PolicyDraft] = {
+    cf3PolicyDrafts.map(x => (x._1, x._2.clone))
   }
 
   override def toString() = "Container : %s".format(outPath)
 
   /**
-   * Go through each policyinstance and update the unique variable
-   * Called when we add a policyInstance
+   * Go through each cf3PolicyDraft and update the unique variable
+   * Called when we add a cf3PolicyDraft
    * @param policy
    */
-  private def updateAllUniqueVariables(policy: CFCPolicyInstance) : CFCPolicyInstance = {
+  private def updateAllUniqueVariables(policy: Cf3PolicyDraft) : Cf3PolicyDraft = {
     for {
       uniqueVariable <- policy.getVariables.filter(x => (x._2.spec.isUniqueVariable))
-      instance <- policiesInstances.filter(x => (x._2.getVariable(uniqueVariable._1) != None))
+      instance <- cf3PolicyDrafts.filter(x => (x._2.getVariable(uniqueVariable._1) != None))
     } {
       instance._2.setVariable(uniqueVariable._2)
     }
     policy
   }
 
-  override def clone(): PoliciesContainer = {
-    val copy = new PoliciesContainer(outPath)
-
-    copy.policiesInstances ++= policiesInstances.map(x => (x._1, x._2.clone))
-
+  override def clone(): Cf3PolicyDraftContainer = {
+    val copy = new Cf3PolicyDraftContainer(outPath)
+    copy.cf3PolicyDrafts ++= cf3PolicyDrafts.map(x => (x._1, x._2.clone))
     copy
   }
 

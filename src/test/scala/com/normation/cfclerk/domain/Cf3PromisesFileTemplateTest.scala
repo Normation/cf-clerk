@@ -55,10 +55,10 @@ import java.io.FileNotFoundException
 
 @RunWith(classOf[SpringJUnit4ClassRunner])
 @ContextConfiguration(Array("file:src/test/resources/spring-config-test.xml"))
-class TmlTest {
+class Cf3PromisesFileTemplateTest {
 
   @Autowired
-  val tmlParser : TmlParser = null
+  val tmlParser : Cf3PromisesFileTemplateParser = null
   
   val doc = 
     try {
@@ -72,24 +72,24 @@ class TmlTest {
     throw new Exception("Unexpected issue (unvalid xml?) with the testTml.xml file " )
   }
   
-  val askedBundle = TmlId(PolicyPackageId(PolicyPackageName(""), PolicyVersion("1.0")),"three")
+  val askedBundle = Cf3PromisesFileTemplateId(TechniqueId(TechniqueName(""), TechniqueVersion("1.0")),"three")
   
-  val tmlDependencies = new PromiseWriterServiceImpl(new DummyPolicyService(), new SystemVariableSpecServiceImpl(), "/", "/" )
+  val tmlDependencies = new Cf3PromisesFileWriterServiceImpl(new DummyTechniqueRepository(), new SystemVariableSpecServiceImpl(), "/", "/" )
   
   @Test
   def parseDoc {
-    val templateMap = new HashMap[TmlId, Tml]
+    val templateMap = new HashMap[Cf3PromisesFileTemplateId, Cf3PromisesFileTemplate]
 
     for (elt <- (doc \\"TMLS"\ "TML")) {
-      val tml = tmlParser.parseXml(PolicyPackageId(PolicyPackageName(""), PolicyVersion("1.0")), elt)
-      templateMap += tml.name -> tml
+      val tml = tmlParser.parseXml(TechniqueId(TechniqueName(""), TechniqueVersion("1.0")), elt)
+      templateMap += tml.id -> tml
     }
     assert(templateMap.size==3)
   }
   /*
   @Test
   def orderBundles {
-    val templateMap = new HashMap[TmlId, Tml]
+    val templateMap = new HashMap[Cf3PromisesFileTemplateId, Tml]
     
     for (elt <- (doc \\"TMLS"\ "TML")) {
       val tml = Tml.parseXml("", elt)
@@ -102,9 +102,9 @@ class TmlTest {
     val tmls = tmlDependencies.manageDependencies(Set(askedBundle), templateMap)
     assert(tmls.size==3)
     
-    assert(tmls(0) == TmlId("","one"))
-    assert(tmls(1) == TmlId("","two"))
-    assert(tmls(2) == TmlId("","three"))
+    assert(tmls(0) == Cf3PromisesFileTemplateId("","one"))
+    assert(tmls(1) == Cf3PromisesFileTemplateId("","two"))
+    assert(tmls(2) == Cf3PromisesFileTemplateId("","three"))
   }
   */
 }

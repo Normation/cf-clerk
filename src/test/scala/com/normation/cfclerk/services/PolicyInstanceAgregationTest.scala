@@ -42,14 +42,14 @@ import org.junit.runner.RunWith
 import org.junit.runners.BlockJUnit4ClassRunner
 import scala.collection._
 import com.normation.cfclerk.domain._
-import com.normation.cfclerk.services.impl.PromiseWriterServiceImpl
+import com.normation.cfclerk.services.impl.Cf3PromisesFileWriterServiceImpl
 import com.normation.cfclerk.services.impl.SystemVariableSpecServiceImpl
 import com.normation.cfclerk.xmlparsers.CfclerkXmlConstants._
 
 @RunWith(classOf[BlockJUnit4ClassRunner])
 class PolicyInstanceAgregationTest {
-  implicit def str2pId(id: String) = PolicyPackageId(PolicyPackageName(id), PolicyVersion("1.0"))
-  implicit def str2piId(id: String) = CFCPolicyInstanceId(id)
+  implicit def str2pId(id: String) = TechniqueId(TechniqueName(id), TechniqueVersion("1.0"))
+  implicit def str2piId(id: String) = Cf3PolicyDraftId(id)
 
   def compareValues(expected: Seq[(String, String)], actual1: Seq[String], actual2: Seq[String]) = {
     assertEquals(expected.size, actual1.size)
@@ -65,19 +65,19 @@ class PolicyInstanceAgregationTest {
   val trackerVariableSpec = TrackerVariableSpec(Some("card"))
   val trackerVariable = TrackerVariable(trackerVariableSpec)
 
-  val ptId1 = PolicyPackageId(PolicyPackageName("name"), PolicyVersion("1.0"))
-  val ptId2 = PolicyPackageId(PolicyPackageName("other"), PolicyVersion("1.0"))
+  val ptId1 = TechniqueId(TechniqueName("name"), TechniqueVersion("1.0"))
+  val ptId2 = TechniqueId(TechniqueName("other"), TechniqueVersion("1.0"))
   
-  val templateDependencies = new PromiseWriterServiceImpl(
-    new DummyPolicyService(Seq(
-        PolicyPackage(
+  val templateDependencies = new Cf3PromisesFileWriterServiceImpl(
+    new DummyTechniqueRepository(Seq(
+        Technique(
           ptId1, 
           "name", "DESCRIPTION", Seq(), Seq(), 
           trackerVariableSpec,
           SectionSpec(name="root", children=Seq()), 
           isMultiInstance = true
         )
-      , PolicyPackage(
+      , Technique(
           ptId2, 
           "name", "DESCRIPTION", Seq(), Seq(), 
           trackerVariableSpec,
@@ -87,8 +87,8 @@ class PolicyInstanceAgregationTest {
     ) ),
     new SystemVariableSpecServiceImpl(), "/", "/")
 
-  def createPolicyInstanceWithBinding(ptId:PolicyPackageId, i: Int): CFCPolicyInstance = {
-    val instance = new CFCPolicyInstance("id" + i, ptId, 
+  def createPolicyInstanceWithBinding(ptId:TechniqueId, i: Int): Cf3PolicyDraft = {
+    val instance = new Cf3PolicyDraft("id" + i, ptId, 
         Map(), trackerVariable, priority = 0, serial = 0)
 
     val variable = new InputVariable(InputVariableSpec("card", "varDescription1"), Seq())
@@ -98,8 +98,8 @@ class PolicyInstanceAgregationTest {
     instance
   }
 
-  def createPolicyInstanceWithArrayBinding(ptId:PolicyPackageId, i: Int): CFCPolicyInstance = {
-    val instance = new CFCPolicyInstance("id" + i, ptId, Map(), trackerVariable, priority = 0, serial = 0)
+  def createPolicyInstanceWithArrayBinding(ptId:TechniqueId, i: Int): Cf3PolicyDraft = {
+    val instance = new Cf3PolicyDraft("id" + i, ptId, Map(), trackerVariable, priority = 0, serial = 0)
 
     val variable = new InputVariable(InputVariableSpec("card", "varDescription1", multivalued = true))
     val value = mutable.ArrayBuffer[String]()
@@ -115,8 +115,8 @@ class PolicyInstanceAgregationTest {
     instance
   }
 
-  def createPolicyInstanceWithArrayBindingAndNullValues(ptId:PolicyPackageId, i: Int): CFCPolicyInstance = {
-    val instance = new CFCPolicyInstance("id" + i, ptId, Map(), trackerVariable, priority = 0, serial = 0)
+  def createPolicyInstanceWithArrayBindingAndNullValues(ptId:TechniqueId, i: Int): Cf3PolicyDraft = {
+    val instance = new Cf3PolicyDraft("id" + i, ptId, Map(), trackerVariable, priority = 0, serial = 0)
 
     val variable = new InputVariable(InputVariableSpec("card", "varDescription1", multivalued = true))
     val value = mutable.ArrayBuffer[String]()
@@ -138,20 +138,20 @@ class PolicyInstanceAgregationTest {
   // Create a PolicyInstance, with value , and add it to a server, and aggregate values
   @Test
   def simplePolicyInstanceTest() {
-    val node = new PoliciesContainer("node")
+    val node = new Cf3PolicyDraftContainer("node")
 
-    node.addPolicyInstance(createPolicyInstanceWithBinding(ptId1, 1))
-    node.addPolicyInstance(createPolicyInstanceWithBinding(ptId1, 2))
-    node.addPolicyInstance(createPolicyInstanceWithBinding(ptId2, 3))
+    node.add(createPolicyInstanceWithBinding(ptId1, 1))
+    node.add(createPolicyInstanceWithBinding(ptId1, 2))
+    node.add(createPolicyInstanceWithBinding(ptId2, 3))
 
     for( id <- "id1" :: "id2" :: "id3" :: Nil) {
-      node.getPolicyInstance(id) match {
+      node.get(id) match {
         case None => fail("Couldn't find the instance")
         case Some(x) => assert(x.id.value == id)
       }
     }
 
-    val allVars = templateDependencies.prepareAllPolicyInstanceVariables(node)
+    val allVars = templateDependencies.prepareAllCf3PolicyDraftVariables(node)
 
     assertEquals(2, allVars(ptId1).size)
     assertTrue(allVars(ptId1).contains("card"))
@@ -169,23 +169,23 @@ class PolicyInstanceAgregationTest {
   // Create a PolicyInstance with arrayed value , and add it to a server, and agregate values
   @Test
   def arrayedPolicyInstanceTest() {
-    val machineA = new PoliciesContainer("machineA")
+    val machineA = new Cf3PolicyDraftContainer("machineA")
 
-    val instance = new CFCPolicyInstance("id", PolicyPackageId(PolicyPackageName("name"), PolicyVersion("1.0")), 
+    val instance = new Cf3PolicyDraft("id", TechniqueId(TechniqueName("name"), TechniqueVersion("1.0")), 
         Map(), trackerVariable, priority = 0, serial = 0)
-    machineA.addPolicyInstance(createPolicyInstanceWithArrayBinding(ptId1,1))
-    machineA.addPolicyInstance(createPolicyInstanceWithArrayBinding(ptId1,2))
+    machineA.add(createPolicyInstanceWithArrayBinding(ptId1,1))
+    machineA.add(createPolicyInstanceWithArrayBinding(ptId1,2))
 
-    machineA.getPolicyInstance("id1") match {
+    machineA.get("id1") match {
       case None => fail("Couldn't find the instance")
       case Some(x) => assert(x.id.value == "id1")
     }
-    machineA.getPolicyInstance("id2") match {
+    machineA.get("id2") match {
       case None => fail("Couldn't find the instance")
       case Some(x) => assert(x.id.value == "id2")
     }
 
-    val allVars = templateDependencies.prepareAllPolicyInstanceVariables(machineA)
+    val allVars = templateDependencies.prepareAllCf3PolicyDraftVariables(machineA)
     assert(allVars(ptId1).size == 2)
     assert(allVars(ptId1).contains("card"))
     assert(allVars(ptId1).contains(TRACKINGKEY))
@@ -197,22 +197,22 @@ class PolicyInstanceAgregationTest {
   // Create a PolicyInstance with arrayed & nulledvalue , and add it to a server, and agregate values
   @Test
   def arrayedAndNullPolicyInstanceTest() {
-    val machineA = new PoliciesContainer("machineA")
+    val machineA = new Cf3PolicyDraftContainer("machineA")
 
     val instance = createPolicyInstanceWithArrayBindingAndNullValues(ptId1,1)
-    machineA.addPolicyInstance(instance)
-    machineA.addPolicyInstance(createPolicyInstanceWithArrayBindingAndNullValues(ptId1,2))
+    machineA.add(instance)
+    machineA.add(createPolicyInstanceWithArrayBindingAndNullValues(ptId1,2))
 
-    machineA.getPolicyInstance("id1") match {
+    machineA.get("id1") match {
       case None => fail("Couldn't find the instance")
       case Some(x) => assert(x.id.value == "id1")
     }
-    machineA.getPolicyInstance("id2") match {
+    machineA.get("id2") match {
       case None => fail("Couldn't find the instance")
       case Some(x) => assert(x.id.value == "id2")
     }
 
-    val allVars = templateDependencies.prepareAllPolicyInstanceVariables(machineA)
+    val allVars = templateDependencies.prepareAllCf3PolicyDraftVariables(machineA)
     assert(allVars(ptId1).size == 2)
     assert(allVars(ptId1).contains("card"))
     assert(allVars(ptId1).contains(TRACKINGKEY))

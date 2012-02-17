@@ -34,45 +34,28 @@
 
 package com.normation.cfclerk.services
 
-import com.normation.cfclerk.domain._
-import scala.collection.mutable.{Map => MutMap}
-import java.io.InputStream
-import scala.collection.SortedSet
+import com.normation.cfclerk.domain.TechniqueId
+import com.normation.eventlog.EventActor
 
 /**
- * Dummy knowledge reader, to test the prototyped PathComputer
- * @author nicolas
+ * A trait that allows its implementation to get notification 
+ * about Reference Policy Template Library update. 
+ * 
+ * The implementation must be registered to a TechniqueRepository
+ * that allows such notification to be shared. 
  *
  */
-class DummyPolicyPackagesReader(policies:Seq[PolicyPackage]=Seq(PolicyPackage(PolicyPackageId(PolicyPackageName("dummy"), PolicyVersion("1.0")),"dummy", "DESCRIPTION",Seq(), Seq(), TrackerVariableSpec(), SectionSpec("ROOT")))) extends PolicyPackagesReader {
- 
-  def this() = this(Seq()) //Spring need that...
-     
-  val rootCategoryId = RootPolicyPackageCategoryId / "rootCategory"
-
-  //they are all under root
-  def readPolicies(): PackagesInfo = {
-    val packagesPath = MutMap[PolicyPackageId,PolicyPackageCategoryId]()
-    val packages = MutMap[PolicyPackageName , collection.immutable.SortedMap[PolicyVersion,PolicyPackage]]()
-    
-    var rootCategory = RootPolicyPackageCategory(
-        "Root category",
-        "The main category under witch all other are",
-        Set(), SortedSet(), true
-    )
-    
-    for {
-      p <- policies
-    } {
-      packagesPath(p.id) =  rootCategoryId
-      packages(p.id.name) = (packages.getOrElse(p.id.name,collection.SortedMap.empty[PolicyVersion,PolicyPackage]) + (p.id.version -> p))
-      rootCategory = rootCategory.copy( packageIds = rootCategory.packageIds + p.id)
-    }
-
-    PackagesInfo(rootCategory, packagesPath.toMap, packages.toMap, Map())
-  }
+trait TechniquesLibraryUpdateNotification {
   
-  def getTemplateContent[T](templateName: TmlId)(useIt : Option[InputStream] => T) : T = useIt(None)
-  def getModifiedPolicyPackages : Seq[PolicyPackageId] = Seq()
+  /**
+   * A name to identify that callback
+   */
+  def name:String
 
+  /**
+   * That method will be called when techniques are updated.
+   * TODO: perhaps we want something more useful as a return type. 
+   */
+  def updatedTechniques(TechniqueIds:Seq[TechniqueId], actor: EventActor) : Unit
+  
 }

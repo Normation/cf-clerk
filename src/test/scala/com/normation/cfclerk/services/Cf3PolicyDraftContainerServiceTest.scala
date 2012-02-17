@@ -50,18 +50,18 @@ import net.liftweb.common._
 
 @RunWith(classOf[SpringJUnit4ClassRunner])
 @ContextConfiguration(Array("file:src/test/resources/spring-config-test.xml"))
-class ContainerServiceTest {
-  implicit def str2pId(id: String) = PolicyPackageId(PolicyPackageName(id), PolicyVersion("1.0"))
-  implicit def str2piId(id: String) = CFCPolicyInstanceId(id)
+class Cf3PolicyDraftContainerServiceTest {
+  implicit def str2pId(id: String) = TechniqueId(TechniqueName(id), TechniqueVersion("1.0"))
+  implicit def str2piId(id: String) = Cf3PolicyDraftId(id)
 
   @Autowired
-  val containerService: ContainerService = null
+  val containerService: Cf3PolicyDraftContainerService = null
 
   val identifier = "identifier"
   
-  var policy1 : CFCPolicyInstance = null
+  var policy1 : Cf3PolicyDraft = null
   
-  var policy2 : CFCPolicyInstance = null
+  var policy2 : Cf3PolicyDraft = null
   
   def config() {
     
@@ -72,18 +72,18 @@ class ContainerServiceTest {
     val variable22 = new InputVariable(InputVariableSpec("$variable22", "description"))
     variable22.values = Seq("var22")
     
-    policy1 = new CFCPolicyInstance(
-    		new CFCPolicyInstanceId("uuid1"),
-    		PolicyPackageId(PolicyPackageName("policy1"), PolicyVersion("1.0")),
+    policy1 = new Cf3PolicyDraft(
+    		new Cf3PolicyDraftId("uuid1"),
+    		TechniqueId(TechniqueName("policy1"), TechniqueVersion("1.0")),
     		Map[String, Variable](variable1.spec.name -> variable1),
     		TrackerVariable(TrackerVariableSpec()),
     		priority =0,
     		serial = 0
     )
 
-    policy2 = new CFCPolicyInstance(
-    		new CFCPolicyInstanceId("uuid2"),
-    		PolicyPackageId(PolicyPackageName("policy2"), PolicyVersion("1.0")),
+    policy2 = new Cf3PolicyDraft(
+    		new Cf3PolicyDraftId("uuid2"),
+    		TechniqueId(TechniqueName("policy2"), TechniqueVersion("1.0")),
     		Map[String, Variable](variable2.spec.name -> variable2, variable22.spec.name -> variable22),
         TrackerVariable(TrackerVariableSpec()),
     		priority =0,
@@ -100,8 +100,8 @@ class ContainerServiceTest {
     container match {
       case Full(x) =>
         assertEquals(x.outPath, identifier)
-        assertEquals(x.getPolicyInstances.size, 1)
-        assert(x.getPolicyInstance("uuid1") != None)
+        assertEquals(x.getAll.size, 1)
+        assert(x.get("uuid1") != None)
 
       case _ => fail("Couldn't create the container")
     }
@@ -115,20 +115,20 @@ class ContainerServiceTest {
     container match {
       case Full(x) =>
         assertEquals(x.outPath, identifier)
-        assertEquals(x.getPolicyInstances.size, 1)
-        assert(x.getPolicyInstance("uuid1") != None)
+        assertEquals(x.getAll.size, 1)
+        assert(x.get("uuid1") != None)
 
       case _ => fail("Couldn't create the container")
     }
 
-    containerService.addPolicyInstance(container.open_!, policy2)
+    containerService.addCf3PolicyDraft(container.open_!, policy2)
 
     container match {
       case Full(x) =>
         assertEquals(x.outPath, identifier)
-        assertEquals(x.getPolicyInstances.size, 2)
-        assert(x.getPolicyInstance("uuid1") != None)
-        assert(x.getPolicyInstance("uuid2") != None)
+        assertEquals(x.getAll.size, 2)
+        assert(x.get("uuid1") != None)
+        assert(x.get("uuid2") != None)
 
       case _ => fail("Couldn't add policies")
     }

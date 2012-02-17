@@ -39,22 +39,22 @@ import java.io.{ InputStream, File }
 import net.liftweb.common._
 import scala.collection.SortedSet
 
-class DummyPolicyService(policies: Seq[PolicyPackage] = Seq()) extends PolicyPackageService {
+class DummyTechniqueRepository(policies: Seq[Technique] = Seq()) extends TechniqueRepository {
 
   var returnedVariable = collection.mutable.Set[VariableSpec]()
-  val policy1 = PolicyPackage(PolicyPackageId(PolicyPackageName("policy1"), PolicyVersion("1.0")), "policy1", "", Seq(), Seq(Bundle("one")), TrackerVariableSpec(), SectionSpec(name="root", children=Seq(InputVariableSpec("$variable1", "a variable1"))))
+  val policy1 = Technique(TechniqueId(TechniqueName("policy1"), TechniqueVersion("1.0")), "policy1", "", Seq(), Seq(Bundle("one")), TrackerVariableSpec(), SectionSpec(name="root", children=Seq(InputVariableSpec("$variable1", "a variable1"))))
 
   val sections = SectionSpec(name="root", children=Seq(InputVariableSpec("$variable2", "a variable2", multivalued = true), InputVariableSpec("$variable22", "a variable22")))
-  val policy2 = PolicyPackage(PolicyPackageId(PolicyPackageName("policy2"), PolicyVersion("1.0")), "policy2", "", Seq(), Seq(Bundle("two")), TrackerVariableSpec(), sections)
+  val policy2 = Technique(TechniqueId(TechniqueName("policy2"), TechniqueVersion("1.0")), "policy2", "", Seq(), Seq(Bundle("two")), TrackerVariableSpec(), sections)
 
   val sections3 = SectionSpec(name="root", children=Seq(InputVariableSpec("$variable3", "a variable3")))
-  val policy3 = PolicyPackage(PolicyPackageId(PolicyPackageName("policy3"), PolicyVersion("1.0")), "policy3", "", Seq(), Seq(Bundle("three")), TrackerVariableSpec(), sections3)
+  val policy3 = Technique(TechniqueId(TechniqueName("policy3"), TechniqueVersion("1.0")), "policy3", "", Seq(), Seq(Bundle("three")), TrackerVariableSpec(), sections3)
 
   val sections4 = SectionSpec(name="root", children=Seq(InputVariableSpec("$variable4", "an variable4")))
-  val policy4 = PolicyPackage(PolicyPackageId(PolicyPackageName("policy4"), PolicyVersion("1.0")), "policy4", "", Seq(), Seq(Bundle("four")), TrackerVariableSpec(), sections4)
+  val policy4 = Technique(TechniqueId(TechniqueName("policy4"), TechniqueVersion("1.0")), "policy4", "", Seq(), Seq(Bundle("four")), TrackerVariableSpec(), sections4)
 
   val sectionsFoo = SectionSpec(name="root", children=Seq(InputVariableSpec("$bar", "bar")))
-  val foo = PolicyPackage(PolicyPackageId(PolicyPackageName("foo"), PolicyVersion("1.0")), "foo", "", Seq(), Seq(Bundle("foo")), TrackerVariableSpec(), sectionsFoo)
+  val foo = Technique(TechniqueId(TechniqueName("foo"), TechniqueVersion("1.0")), "foo", "", Seq(), Seq(Bundle("foo")), TrackerVariableSpec(), sectionsFoo)
 
   val policyMap = Map(policy1.id -> policy1,
     policy2.id -> policy2,
@@ -64,27 +64,27 @@ class DummyPolicyService(policies: Seq[PolicyPackage] = Seq()) extends PolicyPac
 
   def this() = this(Seq()) //Spring need that...
 
-  def packageDirectory: File = new File("/")
+  def techniqueDirectory: File = new File("/")
 
-  def getPolicyPackagePath(id: PolicyPackageId): Option[String] = getPolicy(id).map(_ => id.name.value)
+  def getTechniquePath(id: TechniqueId): Option[String] = get(id).map(_ => id.name.value)
 
-  def getTemplateContent(templateName: TmlId)(useIt: Option[InputStream] => Unit): Unit = {}
+  def getTemplateContent(templateName: Cf3PromisesFileTemplateId)(useIt: Option[InputStream] => Unit): Unit = {}
 
-  def getAllPolicies(): Map[PolicyPackageId, PolicyPackage] = { policyMap }
+  def getAll(): Map[TechniqueId, Technique] = { policyMap }
 
-  def getPolicy(policyName: PolicyPackageId): Option[PolicyPackage] = {
+  def get(policyName: TechniqueId): Option[Technique] = {
     policyMap.get(policyName)
   }
 
-  def getPolicies(policiesName: Seq[PolicyPackageId]): Seq[PolicyPackage] = {
+  def getByIds(policiesName: Seq[TechniqueId]): Seq[Technique] = {
     policiesName.map(x => policyMap(x))
   }
 
-  def getLastPolicyByName(policyName: PolicyPackageName): Option[PolicyPackage] = {
-    policyMap.get(PolicyPackageId(policyName, PolicyVersion("1.0")))
+  def getLastTechniqueByName(policyName: TechniqueName): Option[Technique] = {
+    policyMap.get(TechniqueId(policyName, TechniqueVersion("1.0")))
   }
 
-//  def getVariables(policyName: PolicyPackageId, includeSystemVar: Boolean = false): Seq[VariableSpec] =
+//  def getVariables(policyName: TechniqueId, includeSystemVar: Boolean = false): Seq[VariableSpec] =
 //    policyName.name.value match {
 //      case "policy1" =>
 //        List(InputVariableSpec("$variable1", "a variable1"))
@@ -99,16 +99,16 @@ class DummyPolicyService(policies: Seq[PolicyPackage] = Seq()) extends PolicyPac
 //        List(InputVariableSpec("$bar", "bar"))
 //    }
 //  
-  override def getVersions(name:PolicyPackageName) : SortedSet[PolicyVersion] = SortedSet.empty[PolicyVersion]
+  override def getTechniqueVersions(name:TechniqueName) : SortedSet[TechniqueVersion] = SortedSet.empty[TechniqueVersion]
 
-  def manageDependencies(chosenTemplate: Seq[TmlId] , includeExternalDependencies : Boolean = true) : Seq[TmlId] = {
+  def manageDependencies(chosenTemplate: Seq[Cf3PromisesFileTemplateId] , includeExternalDependencies : Boolean = true) : Seq[Cf3PromisesFileTemplateId] = {
     Seq()
   }
 
-  def getReferencePolicyTemplateLibrary: RootPolicyPackageCategory = null
-  def getPolicyTemplateCategory(id: PolicyPackageCategoryId): Box[PolicyPackageCategory] = null
-  def getParentPolicyTemplateCategory(id: PolicyPackageCategoryId): Box[PolicyPackageCategory] = null
-  def getParents_PolicyTemplateCategory(id: PolicyPackageCategoryId): Box[List[PolicyPackageCategory]] = null
-  def getParentPolicyTemplateCategory_forTemplate(id: PolicyPackageId): Box[PolicyPackageCategory] = null
+  def getTechniqueLibrary: RootTechniqueCategory = null
+  def getTechniqueCategory(id: TechniqueCategoryId): Box[TechniqueCategory] = null
+  def getParentTechniqueCategory(id: TechniqueCategoryId): Box[TechniqueCategory] = null
+  def getParents_TechniqueCategory(id: TechniqueCategoryId): Box[List[TechniqueCategory]] = null
+  def getParentTechniqueCategory_forTechnique(id: TechniqueId): Box[TechniqueCategory] = null
 
 }

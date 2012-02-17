@@ -32,30 +32,8 @@
 *************************************************************************************
 */
 
-package com.normation.cfclerk.services
+package com.normation.cfclerk.exceptions
 
-import com.normation.cfclerk.domain.PolicyPackageId
-import com.normation.eventlog.EventActor
-
-/**
- * A trait that allows its implementation to get notification 
- * about Reference Policy Template Library update. 
- * 
- * The implementation must be registered to a PolicyPackageService
- * that allows such notification to be shared. 
- *
- */
-trait ReferenceLibraryUpdateNotification {
-  
-  /**
-   * A name to identify that callback
-   */
-  def name:String
-
-  /**
-   * That method will be called when the policy package are updated.
-   * TODO: perhaps we want something more useful as a return type. 
-   */
-  def updatedPolicyPackage(policyPackageIds:Seq[PolicyPackageId], actor: EventActor) : Unit
-  
+class TechniqueException(message:String) extends RuntimeException(message) {
+  def this() = this("Error with the technique")
 }

@@ -53,17 +53,17 @@ import scala.xml._
  * The class that handles all the writing of templates
  *
  */
-class PromiseWriterServiceImpl(
-  policyPackageService: PolicyPackageService,
-  systemVariableSpecService: SystemVariableSpecService,
-  baseFolder: String, //the base folder where policies are written to be read by node
-  backupFolder: String //folder where back-up of promises are stored
-  ) extends PromiseWriterService with Loggable {
+class Cf3PromisesFileWriterServiceImpl(
+    techniqueRepository     : TechniqueRepository
+  , systemVariableSpecService: SystemVariableSpecService
+  , baseFolder               : String //the base folder where policies are written to be read by node
+  , backupFolder             : String //folder where back-up of promises are stored
+  ) extends Cf3PromisesFileWriterService with Loggable {
 
   val newPostfix = ".new"
   val backupPostfix = ".bkp"
 
-  logger.trace("baseFolder for writting policies: %s".format(baseFolder))
+  logger.trace("baseFolder for writting promises files: %s".format(baseFolder))
 
   logger.trace("Repository loaded")
 
@@ -77,24 +77,24 @@ class PromiseWriterServiceImpl(
    * @param extraVariables : optional : extra system variables that we could want to add
    * @return
    */
-  def prepareTmls(container: PoliciesContainer, extraSystemVariables: Map[String, Variable]): Map[PolicyPackageId, PreparedTemplates] = {
+  def prepareCf3PromisesFileTemplate(container: Cf3PolicyDraftContainer, extraSystemVariables: Map[String, Variable]): Map[TechniqueId, PreparedTemplates] = {
     val systemVars = prepareBundleVars(container)
 
-    val policyPackages = policyPackageService.getPolicies(container.getAllPoliciesIds)
+    val techniques = techniqueRepository.getByIds(container.getAllIds)
     
-    val tmlsByPolicyPackage : Map[PolicyPackageId,Set[TemplateCopyInfo]] = policyPackages.map{ pt => 
+    val tmlsByTechnique : Map[TechniqueId,Set[Cf3PromisesFileTemplateCopyInfo]] = techniques.map{ pt => 
       (
           pt.id
-        , pt.templates.map(tml => TemplateCopyInfo(tml.name, tml.outPath)).toSet
+        , pt.templates.map(tml => Cf3PromisesFileTemplateCopyInfo(tml.id, tml.outPath)).toSet
       )
     }.toMap
     
-    val variablesByPolicyPackage = prepareVariables(container, systemVars ++ extraSystemVariables, policyPackages)
+    val variablesByTechnique = prepareVariables(container, systemVars ++ extraSystemVariables, techniques)
 
-    policyPackages.map {pt =>  
+    techniques.map {pt =>  
       (
           pt.id
-        , PreparedTemplates(tmlsByPolicyPackage(pt.id), variablesByPolicyPackage(pt.id))
+        , PreparedTemplates(tmlsByTechnique(pt.id), variablesByTechnique(pt.id))
       )
     }.toMap
   }
@@ -111,13 +111,13 @@ class PromiseWriterServiceImpl(
       for (folder @ PromisesFinalMoveInfo(containerId, baseFolder, newFolder, backupFolder) <- folders) {
         // backup old promises
         logger.debug("Backuping old promises from %s to %s ".format(baseFolder, backupFolder))
-        backupMachineFolder(baseFolder, backupFolder)
+        backupNodeFolder(baseFolder, backupFolder)
         try {
           newFolders += folder
 
           logger.debug("Copying new promises into %s ".format(baseFolder))
           // move new promises
-          moveNewMachineFolder(newFolder, baseFolder)
+          moveNewNodeFolder(newFolder, baseFolder)
 
         } catch {
           case ex: Exception =>
@@ -132,7 +132,7 @@ class PromiseWriterServiceImpl(
         for (folder <- newFolders) {
           logger.info("Restoring old promises on folder %s".format(folder.baseFolder))
           try {
-            restoreBackupMachineFolder(folder.baseFolder, folder.backupFolder);
+            restoreBackupNodeFolder(folder.baseFolder, folder.backupFolder);
           } catch {
             case ex: Exception =>
               logger.error("could not restore old promises into %s ".format(folder.baseFolder))
@@ -151,17 +151,17 @@ class PromiseWriterServiceImpl(
    * @param path : where to write the files
    */
   override def writePromisesFiles(
-      fileSet: Set[TemplateCopyInfo]
+      fileSet    : Set[Cf3PromisesFileTemplateCopyInfo]
     , variableSet: Seq[STVariable]
-    , outPath: String
+    , outPath    : String
   ): Unit = {
     try {
       for (fileEntry <- fileSet) {
-        policyPackageService.getTemplateContent(fileEntry.source) { optInputStream =>
+        techniqueRepository.getTemplateContent(fileEntry.source) { optInputStream =>
           optInputStream match {
-            case None => throw new RuntimeException("Can not find base path for policy package with ID %s".format(fileEntry.source.policyPackageId))
+            case None => throw new RuntimeException("Can not find base path for policy package with ID %s".format(fileEntry.source.techniqueId))
             case Some(inputStream) =>
-              logger.trace("Loading template %s (from an input stream relative to %s".format(fileEntry.source, policyPackageService))
+              logger.trace("Loading template %s (from an input stream relative to %s".format(fileEntry.source, techniqueRepository))
               //string template does not allows "." in path name, so we are force to use a templateGroup by polity template (versions have . in them)
               val template = new StringTemplate(IOUtils.toString(inputStream, "UTF-8"), classOf[NormationAmpersandTemplateLexer]);
               template.registerRenderer(classOf[DateTime], new DateRenderer());
@@ -199,17 +199,17 @@ class PromiseWriterServiceImpl(
 
   
   private[this] def prepareVariables(
-      container: PoliciesContainer
+      container: Cf3PolicyDraftContainer
     , systemVars: Map[String, Variable]
-    , policyPackages: Seq[PolicyPackage]
-  ) : Map[PolicyPackageId,Seq[STVariable]] = {
+    , techniques: Seq[Technique]
+  ) : Map[TechniqueId,Seq[STVariable]] = {
 
     logger.debug("Preparing the PI variables for container %s".format(container.outPath))
-    val variablesValues = prepareAllPolicyInstanceVariables(container)
+    val variablesValues = prepareAllCf3PolicyDraftVariables(container)
 
     // fill the variable
     (for {
-      pt <- policyPackages
+      pt <- techniques
     } yield {
       val ptValues = variablesValues(pt.id)
       
@@ -233,7 +233,7 @@ class PromiseWriterServiceImpl(
       }).flatten
       
       //return STVariable in place of Rudder variables
-      val ptVariables = variables.map { v => STVariable(
+      val stVariables = variables.map { v => STVariable(
           name = v.spec.name
         , mayBeEmpty = v.spec.constraint.mayBeEmpty
         , values = v.getTypedValues match {
@@ -241,7 +241,7 @@ class PromiseWriterServiceImpl(
             case e:EmptyBox => throw new VariableException("Wrong type of variable " + v)
           }
       ) }
-      (pt.id,ptVariables)
+      (pt.id,stVariables)
     }).toMap
   }
   
@@ -251,20 +251,20 @@ class PromiseWriterServiceImpl(
    * @param extraVariables : optional : extra system variables that we could want to add
    * @return
    */
-  private[this] def prepareBundleVars(container: PoliciesContainer) : Map[String,Variable] = {
-  //prepareTmlsAndBundleVars
+  private[this] def prepareBundleVars(container: Cf3PolicyDraftContainer) : Map[String,Variable] = {
+  //prepareCf3PromisesFileTemplateAndBundleVars
     
     logger.trace("Preparing bundle list and input list for container : %s ".format(container))
 
     val inputs = scala.collection.mutable.Buffer[String]() // all the include file
 
     // Fetch the policies configured, with the system policies first
-    val policies =  policyPackageService.getPolicies(container.getAllPoliciesIds).sortWith((x,y) => x.isSystem)
+    val policies =  techniqueRepository.getByIds(container.getAllIds).sortWith((x,y) => x.isSystem)
 
     for {
       tml <- policies.flatMap(p => p.templates)
     } {	
-//      files += TemplateCopyInfo(tml.name, tml.outPath)
+//      files += Cf3PromisesFileTemplateCopyInfo(tml.name, tml.outPath)
       if (tml.included) inputs += tml.outPath
     }
 
@@ -293,8 +293,8 @@ class PromiseWriterServiceImpl(
    * @param machineFolder
    * @param backupFolder
    */
-  private[this] def backupMachineFolder(machineFolder: String, backupFolder: String): Unit = {
-    val src = new File(machineFolder)
+  private[this] def backupNodeFolder(nodeFolder: String, backupFolder: String): Unit = {
+    val src = new File(nodeFolder)
     if (src.isDirectory()) {
       val dest = new File(backupFolder)
       if (dest.isDirectory)
@@ -309,7 +309,7 @@ class PromiseWriterServiceImpl(
    * @param newFolder : where the promises have been written
    * @param nodeFolder : where the promises will be
    */
-  private[this] def moveNewMachineFolder(sourceFolder: String, destinationFolder: String): Unit = {
+  private[this] def moveNewNodeFolder(sourceFolder: String, destinationFolder: String): Unit = {
     val src = new File(sourceFolder)
 
     logger.debug("Moving folders from %s to %s".format(src, destinationFolder))
@@ -332,10 +332,10 @@ class PromiseWriterServiceImpl(
    * @param machineFolder
    * @param backupFolder
    */
-  private[this] def restoreBackupMachineFolder(machineFolder: String, backupFolder: String): Unit = {
+  private[this] def restoreBackupNodeFolder(nodeFolder: String, backupFolder: String): Unit = {
     val src = new File(backupFolder)
     if (src.isDirectory()) {
-      val dest = new File(machineFolder)
+      val dest = new File(nodeFolder)
       // force deletion of invalid promises
       FileUtils.forceDelete(dest)
 
@@ -351,36 +351,36 @@ class PromiseWriterServiceImpl(
    * 
    * The serialization is done
    */
-  override def prepareAllPolicyInstanceVariables(policyContainer: PoliciesContainer): Map[PolicyPackageId, Map[String, Variable]] = {
+  override def prepareAllCf3PolicyDraftVariables(cf3PolicyDraftContainer: Cf3PolicyDraftContainer): Map[TechniqueId, Map[String, Variable]] = {
       /**
-       * Create the value of the policyinstancevariable from the Id of the CFCPolicyInstance and
+       * Create the value of the policyinstancevariable from the Id of the Cf3PolicyDraft and
        * the serial
        */
-      def createValue(policyInstance: CFCPolicyInstance): String = {
-        policyInstance.id.value + "@@" + policyInstance.serial
+      def createValue(cf3PolicyDraft: Cf3PolicyDraft): String = {
+        cf3PolicyDraft.id.value + "@@" + cf3PolicyDraft.serial
       }
 
     
     (for {
       // iterate over each policyName
-      ptId <- policyContainer.getAllPoliciesIds
+      ptId <- cf3PolicyDraftContainer.getAllIds
     } yield {
-      val pt = policyPackageService.getPolicy(ptId).getOrElse(
+      val pt = techniqueRepository.get(ptId).getOrElse(
           throw new RuntimeException("Error, can not find policy with id '%s' and version ".format(ptId.name.value) +
               "'%s' in the policy service".format(ptId.name.value)))
-      val policyInstanceVariables = scala.collection.mutable.Map[String, Variable]()
+      val cf3PolicyDraftVariables = scala.collection.mutable.Map[String, Variable]()
       
       for {
-        // over each policyInstance for this name
-        (policyInstanceId, policyInstance) <- policyContainer.findPolicyInstanceByPolicyId(ptId)
+        // over each cf3PolicyDraft for this name
+        (policyInstanceId, cf3PolicyDraft) <- cf3PolicyDraftContainer.findById(ptId)
       } yield {
         // start by setting the policyInstanceVariable
-        val (policyInstanceVariable, boundingVariable) = policyInstance.getPolicyInstanceVariable
+        val (policyInstanceVariable, boundingVariable) = cf3PolicyDraft.getPolicyInstanceVariable
 
-        policyInstanceVariables.get(policyInstanceVariable.spec.name) match {
+        cf3PolicyDraftVariables.get(policyInstanceVariable.spec.name) match {
           case None =>
               policyInstanceVariable.values = scala.collection.mutable.Buffer[String]()
-              policyInstanceVariables.put(policyInstanceVariable.spec.name, policyInstanceVariable)
+              cf3PolicyDraftVariables.put(policyInstanceVariable.spec.name, policyInstanceVariable)
           case Some(x) => // value is already there
         }
   
@@ -388,22 +388,22 @@ class PromiseWriterServiceImpl(
          // Only multiinstance policy may have a policyinstancevariable with high cardinal
           var i = 0;
           while (i < boundingVariable.getValuesLength) {
-            policyInstanceVariables(policyInstanceVariable.spec.name).appendValues(Seq(createValue(policyInstance)))
+            cf3PolicyDraftVariables(policyInstanceVariable.spec.name).appendValues(Seq(createValue(cf3PolicyDraft)))
             i += 1
           }
         } else {
-          policyInstanceVariables(policyInstanceVariable.spec.name).appendValues(Seq(createValue(policyInstance)))
+          cf3PolicyDraftVariables(policyInstanceVariable.spec.name).appendValues(Seq(createValue(cf3PolicyDraft)))
         }
   
         // All other variables now
-        for (variable <- policyInstance.getVariables) {
+        for (variable <- cf3PolicyDraft.getVariables) {
           variable._2 match {
             case newVar: TrackerVariable => // nothing, it's been dealt with already
             case newVar: Variable =>
             if ((!newVar.spec.checked) || (newVar.spec.isSystem)) {} else { // Only user defined variables should need to be agregated
-              policyInstanceVariables.get(newVar.spec.name) match {
+              cf3PolicyDraftVariables.get(newVar.spec.name) match {
                     case None =>
-                      policyInstanceVariables.put(newVar.spec.name, Variable.matchCopy(newVar, setMultivalued = true)) //asIntance is ok here, I believe
+                      cf3PolicyDraftVariables.put(newVar.spec.name, Variable.matchCopy(newVar, setMultivalued = true)) //asIntance is ok here, I believe
                     case Some(existingVariable) => // value is already there
                       // hope it is multivalued, otherwise BAD THINGS will happen
                       if (!existingVariable.spec.multivalued) {
@@ -416,7 +416,7 @@ class PromiseWriterServiceImpl(
             }
           }
         }
-        (ptId, policyInstanceVariables.toMap)
+        (ptId, cf3PolicyDraftVariables.toMap)
       }).toMap
   }
 

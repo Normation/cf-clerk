@@ -32,8 +32,27 @@
 *************************************************************************************
 */
 
-package com.normation.cfclerk.exceptions
+package com.normation.cfclerk.services
 
-class PolicyException(message:String) extends RuntimeException(message) {
-  def this() = this("Error with the policy")
+import net.liftweb.common.Box
+import com.normation.cfclerk.domain.TechniqueId
+import com.normation.eventlog.EventActor
+
+/**
+ * A trait that allows to update the reference policy
+ * template library. 
+ */
+trait UpdatePolicyTemplateLibrary {
+
+  /**
+   * Update the lib, and return the list of
+   * actually updated policy templates. 
+   */
+  def update(actor:EventActor) : Box[Seq[TechniqueId]]
+  
+  /**
+   * Allows callbacks to be called on a Policy Template library update. 
+   */
+  def registerCallback(callback:TechniquesLibraryUpdateNotification) : Unit
+
 }

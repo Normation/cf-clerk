@@ -34,25 +34,32 @@
 
 package com.normation.cfclerk.services
 
+import com.normation.cfclerk.domain.{Cf3PolicyDraft, Cf3PolicyDraftContainer}
 import net.liftweb.common.Box
-import com.normation.cfclerk.domain.PolicyPackageId
-import com.normation.eventlog.EventActor
 
 /**
- * A trait that allows to update the reference policy
- * template library. 
+ * Service to handle Containers : create a container, add a policy instance to a container and write the policies corresponding to this container
+ * This is the entry point for any CLI based on cf-clerk
+ * @author Nicolas CHARLES
+ *
  */
-trait UpdatePolicyTemplateLibrary {
+trait Cf3PolicyDraftContainerService {
 
-  /**
-   * Update the lib, and return the list of
-   * actually updated policy templates. 
-   */
-  def update(actor:EventActor) : Box[Seq[PolicyPackageId]]
   
   /**
-   * Allows callbacks to be called on a Policy Template library update. 
+   * Create a container
+   * @param identifier
+   * @param policiesInstancesBeans
+   * @return
    */
-  def registerCallback(callback:ReferenceLibraryUpdateNotification) : Unit
+  def createContainer(identifier: String, cf3PolicyDrafts : Seq[Cf3PolicyDraft]) : Box[Cf3PolicyDraftContainer]
 
+  
+  /**
+   * Add a policy instance to a container
+   * @param container
+   * @param cf3PolicyDraft
+   * @return
+   */
+  def addCf3PolicyDraft(container: Cf3PolicyDraftContainer, cf3PolicyDraft: Cf3PolicyDraft) : Box[Cf3PolicyDraft]
 }

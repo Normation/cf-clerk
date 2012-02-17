@@ -49,7 +49,7 @@ import net.liftweb.common._
  * Unique identifier for a CFClerk policy instance
  *
  */
-case class CFCPolicyInstanceId(value: String) extends HashcodeCaching
+case class Cf3PolicyDraftId(value: String) extends HashcodeCaching
 
 /**
  * That policy instance object is an instance of a policy applied (bound)
@@ -63,9 +63,9 @@ case class CFCPolicyInstanceId(value: String) extends HashcodeCaching
  * that will hold the id of the policyInstance to be written in the template
  *
  */
-class CFCPolicyInstance(
-    val id: CFCPolicyInstanceId
-  , val policyId: PolicyPackageId
+class Cf3PolicyDraft(
+    val id: Cf3PolicyDraftId
+  , val techniqueId: TechniqueId
   , val __variableMap: Map[String, Variable]
   , val TrackerVariable : TrackerVariable
   , val priority: Int
@@ -150,7 +150,7 @@ class CFCPolicyInstance(
    * 
    * Returned the diff
    */
-  def updatePolicy(other: CFCPolicyInstance): ModifyCFCPolicyInstanceDiff = {
+  def updateCf3PolicyDraft(other: Cf3PolicyDraft): ModifyCf3PolicyDraftDiff = {
     if (this.id != other.id)
       throw new Exception("the identifiers for the update don't match")
 
@@ -179,7 +179,7 @@ class CFCPolicyInstance(
       }
     }
 
-    ModifyCFCPolicyInstanceDiff(this.id, varToRemove, varToAdd, varToUpdate)
+    ModifyCf3PolicyDraftDiff(this.id, varToRemove, varToAdd, varToUpdate)
     
   }
 
@@ -199,12 +199,12 @@ class CFCPolicyInstance(
       }
   }
 
-  override lazy val toString = "%s %s".format(id, policyId)
+  override lazy val toString = "%s %s".format(id, techniqueId)
 
   override lazy val hashCode = 37 * id.hashCode
 
   override def equals(other: Any) = other match {
-    case that: CFCPolicyInstance => this.id == that.id
+    case that: Cf3PolicyDraft => this.id == that.id
     case _ => false
   }
 
@@ -216,9 +216,9 @@ class CFCPolicyInstance(
    *
    * @param that
    */
-  def equalsWithSameValues(that: CFCPolicyInstance): Boolean = {
+  def equalsWithSameValues(that: Cf3PolicyDraft): Boolean = {
     this.id == that.id &&
-      this.policyId == that.policyId &&
+      this.techniqueId == that.techniqueId &&
       this.serial == that.serial &&
       this.variableMap.filter(x => x._2.values.size > 0).keySet == that.variableMap.filter(x => x._2.values.size > 0).keySet &&
       variableMap.filter(x => x._2.values.size > 0).keySet.forall { k =>
@@ -226,15 +226,15 @@ class CFCPolicyInstance(
       }
   }
 
-  override def clone(): CFCPolicyInstance = {
-    val returnedPolicy = new CFCPolicyInstance(id, policyId, Map(), TrackerVariable, priority, serial)
+  override def clone(): Cf3PolicyDraft = {
+    val returnedPolicy = new Cf3PolicyDraft(id, techniqueId, Map(), TrackerVariable, priority, serial)
     returnedPolicy.variableMap ++= this.variableMap.map(x => (x._1 -> x._2.clone))
     returnedPolicy._modificationDate = this._modificationDate
     returnedPolicy
   }
   
-  def copy(serial : Int): CFCPolicyInstance = {
-    val returnedPolicy = new CFCPolicyInstance(id, policyId, Map(), TrackerVariable, priority, serial)
+  def copy(serial : Int): Cf3PolicyDraft = {
+    val returnedPolicy = new Cf3PolicyDraft(id, techniqueId, Map(), TrackerVariable, priority, serial)
     returnedPolicy.variableMap ++= this.variableMap.map(x => (x._1 -> x._2.clone))
     returnedPolicy._modificationDate = this._modificationDate
     returnedPolicy
@@ -243,8 +243,8 @@ class CFCPolicyInstance(
   
 }
 
-case class ModifyCFCPolicyInstanceDiff(
-    cfcPolicyInstanceId: CFCPolicyInstanceId
+case class ModifyCf3PolicyDraftDiff(
+    Cf3PolicyDraftId: Cf3PolicyDraftId
   , removedVariables: Map[String, Seq[String]] = Map()
   , addedVariables: Map[String, Seq[String]] = Map()
   , changedVariables: Map[String, Seq[String]] = Map()

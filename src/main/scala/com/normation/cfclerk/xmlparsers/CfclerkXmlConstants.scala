@@ -50,12 +50,12 @@ object CfclerkXmlConstants {
   /* tag names */
   
   //top level and general
-  val POLICY_ROOT = "POLICY"  
-  val POLICY_NAME = "name" //it's an attribute
-  val POLICY_DESCRIPTION = "DESCRIPTION"
-  val POLICY_IS_MULTIINSTANCE = "MULTIINSTANCE" 
-  val POLICY_LONG_DESCRIPTION = "LONG_DESCRIPTION"
-  val POLICY_IS_SYSTEM = "SYSTEM"
+  val TECHNIQUE_ROOT = "TECHNIQUE"  
+  val TECHNIQUE_NAME = "name" //it's an attribute
+  val TECHNIQUE_DESCRIPTION = "DESCRIPTION"
+  val TECHNIQUE_IS_MULTIINSTANCE = "MULTIINSTANCE" 
+  val TECHNIQUE_LONG_DESCRIPTION = "LONG_DESCRIPTION"
+  val TECHNIQUE_IS_SYSTEM = "SYSTEM"
     
     
   //bundles

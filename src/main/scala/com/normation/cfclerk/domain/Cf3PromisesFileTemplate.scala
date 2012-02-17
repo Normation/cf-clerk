@@ -51,23 +51,23 @@ import com.normation.utils.HashcodeCaching
  * A template qualified name has a string representation
  * that is by convention "policy name" / "template name". 
  */
-class TmlId(val policyPackageId:PolicyPackageId, val tmlName:String) {
-  override def toString() = policyPackageId.toString + "/" + tmlName
+class Cf3PromisesFileTemplateId(val techniqueId:TechniqueId, val name:String) {
+  override def toString() = techniqueId.toString + "/" + name
   
   override def equals(other:Any) = other match {
-    case that:TmlId => this.policyPackageId  == that.policyPackageId && this.tmlName == that.tmlName 
+    case that:Cf3PromisesFileTemplateId => this.techniqueId  == that.techniqueId && this.name == that.name 
     case _ => false
   }
   
-  override lazy val hashCode = this.policyPackageId.hashCode + 61 * this.tmlName.hashCode
+  override lazy val hashCode = this.techniqueId.hashCode + 61 * this.name.hashCode
 }
 
-object TmlId {
-  def apply(policyPackageId:PolicyPackageId, tmlName:String) = new TmlId(policyPackageId, tmlName)
+object Cf3PromisesFileTemplateId {
+  def apply(techniqueId:TechniqueId, name:String) = new Cf3PromisesFileTemplateId(techniqueId, name)
   
-  def unapply(str:String) : Option[(PolicyPackageId,String)] = {
+  def unapply(str:String) : Option[(TechniqueId,String)] = {
     val parts = str.split("/").map(_.replaceAll("""\s""", ""))
-    if(parts.size == 3 && parts(1).size > 0) Some(PolicyPackageId(PolicyPackageName(parts(0)), PolicyVersion(parts(1))),parts(2))
+    if(parts.size == 3 && parts(1).size > 0) Some(TechniqueId(TechniqueName(parts(0)), TechniqueVersion(parts(1))),parts(2))
     else None
   }
 }
@@ -83,15 +83,15 @@ object TmlId {
  * it is written at outPath/name
  * 
  */
-case class Tml(
+case class Cf3PromisesFileTemplate(
   /* 
    * This is the template identifier of the file.
    * The path of the matching template will be derived from that name by adding
    * the template extension to the end of the name. 
    * (by default, ".st")
    */
-  name : TmlId,
-  included : Boolean, // by default, we include the template in the promises.cf
+  id      : Cf3PromisesFileTemplateId,
+  included: Boolean, // by default, we include the template in the promises.cf
   /*
    *  Path where to PUT the template (e.g. for resources for ips)
    *  This path is relative to the "cf-engine" root directory on the
@@ -102,11 +102,8 @@ case class Tml(
   outPath : String
 ) extends HashcodeCaching
 
-object Tml {
-  
+object Cf3PromisesFileTemplate {
   val templateExtension = ".st"
   val promiseExtension = ".cf"
-   
-  
 }
 

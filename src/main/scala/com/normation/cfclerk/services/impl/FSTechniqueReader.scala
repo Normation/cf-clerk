@@ -42,7 +42,7 @@ import com.normation.cfclerk.exceptions._
 import org.slf4j.{ Logger, LoggerFactory }
 import java.io.File
 import org.apache.commons.io.FilenameUtils
-import com.normation.cfclerk.xmlparsers.PolicyParser
+import com.normation.cfclerk.xmlparsers.TechniqueParser
 import net.liftweb.common._
 import scala.collection.mutable.{ Map => MutMap }
 import scala.collection.SortedSet
@@ -54,7 +54,7 @@ import com.normation.cfclerk.services._
 
 /**
  *
- * A PolicyPackageReader that reads policy packages from
+ * A TechniqueReader that reads policy techniques from
  * a directory tree.
  *
  *
@@ -82,16 +82,16 @@ import com.normation.cfclerk.services._
  *  is used for the PolicyCategoryName.
  *
  */
-class FSPolicyPackagesReader(
-  policyParser: PolicyParser,
-  val packageDirectoryPath: String,
-  val policyDescriptorName: String, //full (with extension) conventional name for policy descriptor
-  val categoryDescriptorName: String //full (with extension) name of the descriptor for categories
-  ) extends PolicyPackagesReader with Loggable {
+class FSTechniqueReader(
+  policyParser               : TechniqueParser,
+  val techniqueDirectoryPath : String,
+  val techniqueDescriptorName: String, //full (with extension) conventional name for policy descriptor
+  val categoryDescriptorName : String //full (with extension) name of the descriptor for categories
+  ) extends TechniqueReader with Loggable {
 
   reader =>
 
-  private def checkPackageDirectory(dir: File): Unit = {
+  private def checkTechniqueDirectory(dir: File): Unit = {
     if (!dir.exists) {
       throw new RuntimeException("Directory %s does not exists, how do you want that I read policy package in it?".format(dir))
     }
@@ -100,49 +100,49 @@ class FSPolicyPackagesReader(
     }
   }
 
-  private[this] val packageDirectory: File = {
-    val dir = new File(packageDirectoryPath)
-    checkPackageDirectory(dir)
+  private[this] val techniqueDirectory: File = {
+    val dir = new File(techniqueDirectoryPath)
+    checkTechniqueDirectory(dir)
     dir
   }
 
   //we never know when to read again
-  override def getModifiedPolicyPackages : Seq[PolicyPackageId] = Seq()
+  override def getModifiedTechniques : Seq[TechniqueId] = Seq()
 
   /**
    * Read the policies
    * @param doc : the xml representation of the knowledge file
    * @return a map of policy
    */
-  override lazy val readPolicies: PackagesInfo = {
+  override lazy val readTechniques: TechniquesInfo = {
     reader.synchronized {
-      val packageInfos = new InternalPackagesInfo()
+      val techniqueInfos = new InternalTechniquesInfo()
 
       processDirectory(
         null, //we have to ignore it, so if we don't, a NPE is a good idea.
-        reader.packageDirectory,
-        packageInfos)
+        reader.techniqueDirectory,
+        techniqueInfos)
       
-      PackagesInfo(
-        rootCategory = packageInfos.rootCategory.getOrElse(throw new RuntimeException("No root category was found")),
-        packagesCategory = packageInfos.packagesCategory.toMap,
-        packages = packageInfos.packages.map { case (k, v) => (k, SortedMap.empty[PolicyVersion, PolicyPackage] ++ v) }.toMap,
-        subCategories = packageInfos.subCategories.toMap)
+      TechniquesInfo(
+        rootCategory = techniqueInfos.rootCategory.getOrElse(throw new RuntimeException("No root category was found")),
+        techniquesCategory = techniqueInfos.techniquesCategory.toMap,
+        techniques = techniqueInfos.techniques.map { case (k, v) => (k, SortedMap.empty[TechniqueVersion, Technique] ++ v) }.toMap,
+        subCategories = techniqueInfos.subCategories.toMap)
     }
   }
 
-  override def getTemplateContent[T](templateName: TmlId)(useIt: Option[InputStream] => T): T = {
+  override def getTemplateContent[T](templateId: Cf3PromisesFileTemplateId)(useIt: Option[InputStream] => T): T = {
     var is: InputStream = null
     try {
       useIt {
-        readPolicies.packagesCategory.get(templateName.policyPackageId).map { catPath =>
-          is = new FileInputStream(packageDirectory.getAbsolutePath + "/" + catPath + "/" + templateName.toString + Tml.templateExtension)
+        readTechniques.techniquesCategory.get(templateId.techniqueId).map { catPath =>
+          is = new FileInputStream(techniqueDirectory.getAbsolutePath + "/" + catPath + "/" + templateId.toString + Cf3PromisesFileTemplate.templateExtension)
           is
         }
       }
     } catch {
       case ex: FileNotFoundException =>
-        logger.debug(() => "Template %s does not exists".format(templateName), ex)
+        logger.debug(() => "Template %s does not exists".format(templateId), ex)
         useIt(None)
     } finally {
       if (null != is) {
@@ -156,73 +156,73 @@ class FSPolicyPackagesReader(
    * or a package.
    * f must be a directory
    */
-  //  private def processDirectory(f: File, packagesInfo: InternalPackagesInfo): Unit = {
+  //  private def processDirectory(f: File, internalTechniquesInfo: InternalTechniquesInfo): Unit = {
   //    val children = f.listFiles
   //    val childrenName = children.map(_.getName)
-  //    (childrenName.exists(c => c == policyDescriptorName), childrenName.exists(c => c == categoryDescriptorName)) match {
+  //    (childrenName.exists(c => c == techniqueDescriptorName), childrenName.exists(c => c == categoryDescriptorName)) match {
   //      case (true, true) =>
   //        throw new RuntimeException("Directory %s contains both file %s and %s: can not know if it is a category or a policy package".
-  //          format(f.getAbsolutePath, policyDescriptorName, categoryDescriptorName))
-  //      case (true, false) => processPolicyPackage(f, packagesInfo)
-  //      case (false, _) => processCategory(f, packagesInfo)
+  //          format(f.getAbsolutePath, techniqueDescriptorName, categoryDescriptorName))
+  //      case (true, false) => processTechnique(f, internalTechniquesInfo)
+  //      case (false, _) => processCategory(f, internalTechniquesInfo)
   //    }
   //  }
 
-  private def processDirectory(parentCategoryId: PolicyPackageCategoryId, f: File, packagesInfo: InternalPackagesInfo): Unit = {
+  private def processDirectory(parentCategoryId: TechniqueCategoryId, f: File, internalTechniquesInfo: InternalTechniquesInfo): Unit = {
     val children = f.listFiles
     val childrenName = children.map(_.getName)
-    val versionsDir = children.filter(_.isDirectory).flatMap(_.listFiles).filter(f => f.getName == policyDescriptorName).map(_.getParentFile)
+    val versionsDir = children.filter(_.isDirectory).flatMap(_.listFiles).filter(f => f.getName == techniqueDescriptorName).map(_.getParentFile)
     
     if (versionsDir.size > 0) {
       for (d <- versionsDir) {
-        processPolicyPackage(parentCategoryId, d, packagesInfo)
+        processTechnique(parentCategoryId, d, internalTechniquesInfo)
       }
     } else {
-      processCategory(parentCategoryId, f, packagesInfo)
+      processCategory(parentCategoryId, f, internalTechniquesInfo)
     }
     
   }
 
   /**
-   * Load a PolicyPackage contains in the directory packageRootDirectory.
-   * By convention, packageRootDirectory is the version of the PolicyPackage,
-   * and the parent's name directory is the PolicyPackage Name.
+   * Load a Technique contains in the directory packageRootDirectory.
+   * By convention, packageRootDirectory is the version of the Technique,
+   * and the parent's name directory is the Technique Name.
    */
-  private def processPolicyPackage(parentCategoryId: PolicyPackageCategoryId, packageRootDirectory: File, packagesInfo: InternalPackagesInfo): Unit = {
-    val name = PolicyPackageName(packageRootDirectory.getParentFile.getName)
-    val id = PolicyPackageId(name, PolicyVersion(packageRootDirectory.getName))
-    val pack = policyParser.parseXml(loadDescriptorFile(new File(packageRootDirectory, policyDescriptorName)), id)
+  private def processTechnique(parentCategoryId: TechniqueCategoryId, packageRootDirectory: File, internalTechniquesInfo: InternalTechniquesInfo): Unit = {
+    val name = TechniqueName(packageRootDirectory.getParentFile.getName)
+    val id = TechniqueId(name, TechniqueVersion(packageRootDirectory.getName))
+    val pack = policyParser.parseXml(loadDescriptorFile(new File(packageRootDirectory, techniqueDescriptorName)), id)
         
       def updateParentCat() {
         parentCategoryId match {
-          case RootPolicyPackageCategoryId =>
-            val cat = packagesInfo.rootCategory.getOrElse(
+          case RootTechniqueCategoryId =>
+            val cat = internalTechniquesInfo.rootCategory.getOrElse(
               throw new RuntimeException("Can not find the parent (root) caterogy %s for package %s".format(packageRootDirectory.getParentFile.getAbsolutePath, pack.id)))
-            packagesInfo.rootCategory = Some(cat.copy(packageIds = cat.packageIds + pack.id))
+            internalTechniquesInfo.rootCategory = Some(cat.copy(packageIds = cat.packageIds + pack.id))
 
-          case sid: SubPolicyPackageCategoryId =>
-            val cat = packagesInfo.subCategories.get(sid).getOrElse(
+          case sid: SubTechniqueCategoryId =>
+            val cat = internalTechniquesInfo.subCategories.get(sid).getOrElse(
               throw new RuntimeException("Can not find the parent caterogy %s for package %s".format(packageRootDirectory.getParentFile.getAbsolutePath, pack.id)))
-            packagesInfo.subCategories(sid) = cat.copy(packageIds = cat.packageIds + pack.id)
+            internalTechniquesInfo.subCategories(sid) = cat.copy(packageIds = cat.packageIds + pack.id)
 
         }
       }
 
     //check that that package is not already know, else its an error (by id ?)
-    packagesInfo.packages.get(pack.id.name) match {
+    internalTechniquesInfo.techniques.get(pack.id.name) match {
       case None => //so we don't have any version yet, and so no id
         updateParentCat()
-        packagesInfo.packages(pack.id.name) = MutMap(pack.id.version -> pack)
-        packagesInfo.packagesCategory(pack.id) = parentCategoryId
+        internalTechniquesInfo.techniques(pack.id.name) = MutMap(pack.id.version -> pack)
+        internalTechniquesInfo.techniquesCategory(pack.id) = parentCategoryId
       case Some(versionMap) => //check for the version
         versionMap.get(pack.id.version) match {
           case None => //add that version
             updateParentCat()
-            packagesInfo.packages(pack.id.name)(pack.id.version) = pack
-            packagesInfo.packagesCategory(pack.id) = parentCategoryId
+            internalTechniquesInfo.techniques(pack.id.name)(pack.id.version) = pack
+            internalTechniquesInfo.techniquesCategory(pack.id) = parentCategoryId
           case Some(v) => //error, policy package version already exsits
             logger.error("Ignoring package for policy with ID %s and root directory %s because an other policy is already defined with that id and root path %s".format(
-              pack.id, packageRootDirectory.getAbsolutePath, packagesInfo.packagesCategory(pack.id).toString))
+              pack.id, packageRootDirectory.getAbsolutePath, internalTechniquesInfo.techniquesCategory(pack.id).toString))
         }
     }
     
@@ -236,12 +236,12 @@ class FSPolicyPackagesReader(
    * - ignore all other files
    *
    * @param packageRootDirectory
-   * @param packagesInfo
+   * @param internalTechniquesInfo
    */
-  private def processCategory(parentCategoryId: PolicyPackageCategoryId, categoryRootDirectory: File, packagesInfo: InternalPackagesInfo): Unit = {
+  private def processCategory(parentCategoryId: TechniqueCategoryId, categoryRootDirectory: File, internalTechniquesInfo: InternalTechniquesInfo): Unit = {
 
     //build a category without children from file name and path
-    //    def categoryFromFile(f: File)(name: String = f.getName, desc: String = "", system: Boolean = false) = PolicyPackageCategory(
+    //    def categoryFromFile(f: File)(name: String = f.getName, desc: String = "", system: Boolean = false) = TechniqueCategory(
     //      id = parentCategoryId / f.getName, name = name, description = desc, subCategoryIds = SortedSet(), packageIds = SortedSet(), isSystem = system)
 
     val categoryDescriptor = new File(categoryRootDirectory, categoryDescriptorName)
@@ -272,21 +272,21 @@ class FSPolicyPackagesReader(
     //add the category as a child to its parent (if not root) and as new category
     val newParentId = {
       if (null == parentCategoryId) {
-        packagesInfo.rootCategory = Some(RootPolicyPackageCategory(name, desc, isSystem = system))
-        RootPolicyPackageCategoryId
+        internalTechniquesInfo.rootCategory = Some(RootTechniqueCategory(name, desc, isSystem = system))
+        RootTechniqueCategoryId
       } else {
-        val category = SubPolicyPackageCategory(
+        val category = SubTechniqueCategory(
           id = parentCategoryId / categoryRootDirectory.getName, name = name, description = desc, isSystem = system)
         parentCategoryId match {
-          case RootPolicyPackageCategoryId =>
-            val parent = packagesInfo.rootCategory.getOrElse(throw new RuntimeException("Missing root policy category"))
-            packagesInfo.rootCategory = Some(parent.copy(subCategoryIds = parent.subCategoryIds + category.id))
-          case sid: SubPolicyPackageCategoryId =>
-            val parent = packagesInfo.subCategories(sid)
-            packagesInfo.subCategories(parent.id) = parent.copy(subCategoryIds = parent.subCategoryIds + category.id)
+          case RootTechniqueCategoryId =>
+            val parent = internalTechniquesInfo.rootCategory.getOrElse(throw new RuntimeException("Missing root policy category"))
+            internalTechniquesInfo.rootCategory = Some(parent.copy(subCategoryIds = parent.subCategoryIds + category.id))
+          case sid: SubTechniqueCategoryId =>
+            val parent = internalTechniquesInfo.subCategories(sid)
+            internalTechniquesInfo.subCategories(parent.id) = parent.copy(subCategoryIds = parent.subCategoryIds + category.id)
         }
 
-        packagesInfo.subCategories(category.id) = category
+        internalTechniquesInfo.subCategories(category.id) = category
         category.id
       }
     }
@@ -294,7 +294,7 @@ class FSPolicyPackagesReader(
     //process sub-directories
     categoryRootDirectory.listFiles.foreach { f =>
       if (f.isDirectory) {
-        processDirectory(newParentId, f, packagesInfo)
+        processDirectory(newParentId, f, internalTechniquesInfo)
       }
     }
   }

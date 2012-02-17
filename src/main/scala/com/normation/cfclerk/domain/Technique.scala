@@ -45,10 +45,10 @@ import com.normation.utils.HashcodeCaching
  * TODO : check case sensivity and allowed chars.
  *
  */
-case class PolicyPackageName(value: String) extends Ordered[PolicyPackageName] with HashcodeCaching {
+case class TechniqueName(value: String) extends Ordered[TechniqueName] with HashcodeCaching {
   override lazy val toString = value
 
-  override def compare(that: PolicyPackageName) = this.value.compare(that.value)
+  override def compare(that: TechniqueName) = this.value.compare(that.value)
 }
 
 /**
@@ -56,10 +56,10 @@ case class PolicyPackageName(value: String) extends Ordered[PolicyPackageName] w
  * A policy ID is built from the policy name, unique
  * among all policies, and a version for that policy.
  */
-case class PolicyPackageId(name: PolicyPackageName, version: PolicyVersion) extends Ordered[PolicyPackageId] with HashcodeCaching {
+case class TechniqueId(name: TechniqueName, version: TechniqueVersion) extends Ordered[TechniqueId] with HashcodeCaching {
   override def toString() = name.toString + "/" + version.toString
 
-  override def compare(that: PolicyPackageId): Int = {
+  override def compare(that: TechniqueId): Int = {
     val c = this.name.compare(that.name)
     if (c == 0) this.version.compare(that.version)
     else c
@@ -74,11 +74,11 @@ case class PolicyPackageId(name: PolicyPackageName, version: PolicyVersion) exte
  * @author Nicolas Charles
  *
  */
-case class PolicyPackage(
-    id: PolicyPackageId
+case class Technique(
+    id: TechniqueId
   , name: String
   , description: String
-  , templates: Seq[Tml]
+  , templates: Seq[Cf3PromisesFileTemplate]
   , bundlesequence : Seq[Bundle]
   , trackerVariableSpec : TrackerVariableSpec
   , rootSection: SectionSpec
@@ -96,7 +96,7 @@ case class PolicyPackage(
   /**
    * Utity method that retrieve the map of all template full name for that policy
    */
-  val templatesMap: Map[TmlId, Tml] = templates.map(t => (t.name, t)).toMap
+  val templatesMap: Map[Cf3PromisesFileTemplateId, Cf3PromisesFileTemplate] = templates.map(t => (t.id, t)).toMap
 
   def toLongString: String = {
     "## %s [%s-%s] ## \n  -> unique:%-5s \n  -> %s\n  -> templates: %s".format(
@@ -114,7 +114,7 @@ case class PolicyPackage(
  */
 case class Bundle(name : String) extends HashcodeCaching
 
-object PolicyPackage {
+object Technique {
   def normalizeName(name: String): String = {
     name.replaceAll("""\s""", "").toLowerCase
   }

@@ -32,38 +32,44 @@
 *************************************************************************************
 */
 
-package com.normation.cfclerk.services
+package com.normation.cfclerk.xmlparsers
 
 import com.normation.cfclerk.domain._
+import com.normation.cfclerk.exceptions.ParsingException
+import net.liftweb.common.Loggable
+import scala.xml._
+import CfclerkXmlConstants._
+import CfclerkXmlConstants._
 
 /**
- * Deals with templates : prepare the templates, fetch variables needed by a policy,
- * and write machine configuration
- * @author Nicolas CHARLES
- *
+ * Parse a template file tag in policy.xml.
+ * 
+ * The tag looks like:
+ * <TML name="someIdentification">
+ *   <OUTPATH>some_out_path_name</OUTPATH> (optional, default to "techniqueId/templateName.cf")
+ *   <INCLUDED>true</INCLUDED> (optional, default to true)
+ * </TML>
  */
-trait PromiseWriterService {
- 
+class Cf3PromisesFileTemplateParser extends Loggable {
 
-  /**
-   * Write the current seq of template file a the path location, replacing the variables found in variableSet
-   * @param fileSet : the set of template to be written
-   * @param variableSet : the set of variable
-   * @param path : where to write the files
-   */
-  def writePromisesFiles(fileSet: Set[TemplateCopyInfo], variableSet: Seq[STVariable], outPath: String): Unit
-  
-  /**
-   * Move the promises from the new folder to their final folder, backuping previous promises in the way
-   * Throw an exception if something fails during the move (all the data will be restored)
-   * @param folder : (Container identifier, promisefolder, newfolder, backupfolder )
-   */
-  def movePromisesToFinalPosition(folders : Seq[PromisesFinalMoveInfo] ) : Seq[PromisesFinalMoveInfo]
+  def parseXml(techniqueId: TechniqueId, node: Node): Cf3PromisesFileTemplate = {
+    if(node.label != PROMISE_TEMPLATE) throw new ParsingException("Error: try to parse a <%s> node, but actually get: %s".format(PROMISE_TEMPLATE, node))
+    
+    val name = node.attribute(PROMISE_TEMPLATE_NAME) match {
+      case Some(n) if (n.size == 1) => n.text
+      case _ => throw new ParsingException("Error when parsing node %s. Template name is not defined".format(node))
+    }
 
-  /**
-   * Concatenate all the variables for each policy Instances.
-   * @param policyContainer
-   * @return
-   */
-  def prepareAllPolicyInstanceVariables(policyContainer: PoliciesContainer):  Map[PolicyPackageId, Map[String, Variable]]
+    val outPath = (node \ PROMISE_TEMPLATE_OUTPATH).text match {
+      case "" => //set to "techniqueId/templateName.cf
+        "%s/%s/%s.cf".format(techniqueId.name.value, techniqueId.version.toString, name)
+      case path => path
+    }
+
+    logger.trace("Reading node %s for policy %s".format(name, techniqueId))
+    val included = !((node \ PROMISE_TEMPLATE_INCLUDED).text == "false")
+    logger.trace("Node %s included status is %s".format(name, included))
+
+    Cf3PromisesFileTemplate( Cf3PromisesFileTemplateId(techniqueId, name), included, outPath )
+  }
 }

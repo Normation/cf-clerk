@@ -32,44 +32,47 @@
 *************************************************************************************
 */
 
-package com.normation.cfclerk.xmlparsers
+package com.normation.cfclerk.services
 
 import com.normation.cfclerk.domain._
-import com.normation.cfclerk.exceptions.ParsingException
-import net.liftweb.common.Loggable
-import scala.xml._
-import CfclerkXmlConstants._
-import CfclerkXmlConstants._
+import scala.collection.mutable.{Map => MutMap}
+import java.io.InputStream
+import scala.collection.SortedSet
 
 /**
- * Parse a template file tag in policy.xml.
- * 
- * The tag looks like:
- * <TML name="someIdentification">
- *   <OUTPATH>some_out_path_name</OUTPATH> (optional, default to "policyId/templateName.cf")
- *   <INCLUDED>true</INCLUDED> (optional, default to true)
- * </TML>
+ * Dummy knowledge reader, to test the prototyped PathComputer
+ * @author nicolas
+ *
  */
-class TmlParser extends Loggable {
+class DummyTechniqueReader(policies:Seq[Technique]=Seq(Technique(TechniqueId(TechniqueName("dummy"), TechniqueVersion("1.0")),"dummy", "DESCRIPTION",Seq(), Seq(), TrackerVariableSpec(), SectionSpec("ROOT")))) extends TechniqueReader {
+ 
+  def this() = this(Seq()) //Spring need that...
+     
+  val rootCategoryId = RootTechniqueCategoryId / "rootCategory"
 
-  def parseXml(policyPackageId: PolicyPackageId, node: Node): Tml = {
-    if(node.label != PROMISE_TEMPLATE) throw new ParsingException("Error: try to parse a <%s> node, but actually get: %s".format(PROMISE_TEMPLATE, node))
+  //they are all under root
+  def readTechniques(): TechniquesInfo = {
+    val packagesPath = MutMap[TechniqueId,TechniqueCategoryId]()
+    val packages = MutMap[TechniqueName , collection.immutable.SortedMap[TechniqueVersion,Technique]]()
     
-    val name = node.attribute(PROMISE_TEMPLATE_NAME) match {
-      case Some(n) if (n.size == 1) => n.text
-      case _ => throw new ParsingException("Error when parsing node %s. Template name is not defined".format(node))
+    var rootCategory = RootTechniqueCategory(
+        "Root category",
+        "The main category under witch all other are",
+        Set(), SortedSet(), true
+    )
+    
+    for {
+      p <- policies
+    } {
+      packagesPath(p.id) =  rootCategoryId
+      packages(p.id.name) = (packages.getOrElse(p.id.name,collection.SortedMap.empty[TechniqueVersion,Technique]) + (p.id.version -> p))
+      rootCategory = rootCategory.copy( packageIds = rootCategory.packageIds + p.id)
     }
 
-    val outPath = (node \ PROMISE_TEMPLATE_OUTPATH).text match {
-      case "" => //set to "policyId/templateName.cf
-        "%s/%s/%s.cf".format(policyPackageId.name.value, policyPackageId.version.toString, name)
-      case path => path
-    }
-
-    logger.trace("Reading node %s for policy %s".format(name, policyPackageId))
-    val included = !((node \ PROMISE_TEMPLATE_INCLUDED).text == "false")
-    logger.trace("Node %s included status is %s".format(name, included))
-
-    Tml( TmlId(policyPackageId, name), included, outPath )
+    TechniquesInfo(rootCategory, packagesPath.toMap, packages.toMap, Map())
   }
+  
+  def getTemplateContent[T](templateName: Cf3PromisesFileTemplateId)(useIt : Option[InputStream] => T) : T = useIt(None)
+  def getModifiedTechniques : Seq[TechniqueId] = Seq()
+
 }

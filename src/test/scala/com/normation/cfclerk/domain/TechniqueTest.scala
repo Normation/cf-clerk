@@ -53,30 +53,30 @@ import com.normation.cfclerk.exceptions.ParsingException
 import com.normation.cfclerk.services.impl.SystemVariableSpecServiceImpl
 
 @RunWith(classOf[JUnitRunner])
-class PolicyTest extends Specification {
-  val doc = readFile("testPolicy.xml")
+class TechniqueTest extends Specification {
+  val doc = readFile("testTechnique.xml")
   
-  val policyParser = {
+  val techniqueParser = {
     val varParser = new VariableSpecParser
-    new PolicyParser(varParser, new SectionSpecParser(varParser), new TmlParser, new SystemVariableSpecServiceImpl())
+    new TechniqueParser(varParser, new SectionSpecParser(varParser), new Cf3PromisesFileTemplateParser, new SystemVariableSpecServiceImpl())
   }
 
-  val id = PolicyPackageId(PolicyPackageName("foo"), PolicyVersion("1.0"))
+  val id = TechniqueId(TechniqueName("foo"), TechniqueVersion("1.0"))
 
-  val pt = policyParser.parseXml(doc, id)
+  val pt = techniqueParser.parseXml(doc, id)
   
       
-  "The policy described" should {
+  "The technique described" should {
     
-    "have name 'Test policy'" in {
-      pt.name === "Test policy"
+    "have name 'Test technique'" in {
+      pt.name === "Test technique"
     }
     
-    "have description 'A test policy'" in {
-      pt.description === "A test policy"
+    "have description 'A test technique'" in {
+      pt.description === "A test technique"
     }
     
-    "be a system policy" in {
+    "be a system technique" in {
       pt.isSystem === true
     }
     
@@ -89,21 +89,21 @@ class PolicyTest extends Specification {
     }
     
     "have templates 'tml1, tml2, tml3'" in {
-      pt.templates.map( _.name.tmlName ) === Seq("tml1", "tml2", "tml3")
+      pt.templates.map( _.id.name ) === Seq("tml1", "tml2", "tml3")
     }
     
     "'tml1' is included and has default outpath" in {
-      val tml = pt.templatesMap(TmlId(id,"tml1"))
+      val tml = pt.templatesMap(Cf3PromisesFileTemplateId(id,"tml1"))
       tml.included === true and tml.outPath === "foo/1.0/tml1.cf"
     }
     
     "'tml2' is included and has tml2.bar outpath" in {
-      val tml = pt.templatesMap(TmlId(id,"tml2"))
+      val tml = pt.templatesMap(Cf3PromisesFileTemplateId(id,"tml2"))
       tml.included === true and tml.outPath === "tml2.bar"
     }
     
     "'tml3' is not included and has default outpath" in {
-      val tml = pt.templatesMap(TmlId(id,"tml3"))
+      val tml = pt.templatesMap(Cf3PromisesFileTemplateId(id,"tml3"))
       tml.included === false and tml.outPath === "foo/1.0/tml3.cf"
     }
     

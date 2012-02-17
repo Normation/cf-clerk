@@ -44,24 +44,24 @@ import net.liftweb.common._
  * a parent category (i.e: all subcategories of
  * a given categories must have different names)
  */
-case class PolicyPackageCategoryName(value:String) extends HashcodeCaching {
+case class TechniqueCategoryName(value:String) extends HashcodeCaching {
   require(null != value && value.length > 0, "Id of a category can not be null nor empty")
 }
 
-object RootPolicyPackageCategoryName extends PolicyPackageCategoryName("/")
+object RootTechniqueCategoryName extends TechniqueCategoryName("/")
 
 
-sealed abstract class PolicyPackageCategoryId(val name:PolicyPackageCategoryName) {
+sealed abstract class TechniqueCategoryId(val name:TechniqueCategoryName) {
   
   /**
    * Allows to build a subcategory with 
    * catId / "subCatName"
    */
-  def /(subCategoryName:String) : SubPolicyPackageCategoryId = 
-    SubPolicyPackageCategoryId(PolicyPackageCategoryName(subCategoryName),this)
+  def /(subCategoryName:String) : SubTechniqueCategoryId = 
+    SubTechniqueCategoryId(TechniqueCategoryName(subCategoryName),this)
   
   /**
-   * The toString of a SubPolicyPackageCategoryId is its path
+   * The toString of a SubTechniqueCategoryId is its path
    * from root with "/" as separator
    */
   override lazy val toString = getPathFromRoot.tail.map( _.value ).mkString("/", "/", "")
@@ -70,50 +70,50 @@ sealed abstract class PolicyPackageCategoryId(val name:PolicyPackageCategoryName
    * The list of category from root to that one
    * (including that one)
    */
-  lazy val getPathFromRoot = PolicyPackageCategoryId.pathFrom(this).reverse
-  lazy val getIdPathFromRoot = PolicyPackageCategoryId.idPathFrom(this).reverse
+  lazy val getPathFromRoot = TechniqueCategoryId.pathFrom(this).reverse
+  lazy val getIdPathFromRoot = TechniqueCategoryId.idPathFrom(this).reverse
   
   /**
    * The list of category from root to the
    * parent of that one (son excluding that one)
    */
   lazy val getParentPathFromRoot = this match {
-    case RootPolicyPackageCategoryId => Nil
-    case s:SubPolicyPackageCategoryId => PolicyPackageCategoryId.pathFrom(s)
+    case RootTechniqueCategoryId => Nil
+    case s:SubTechniqueCategoryId => TechniqueCategoryId.pathFrom(s)
   }
   
   lazy val getParentIdPathFromRoot = this match {
-    case RootPolicyPackageCategoryId => Nil
-    case s:SubPolicyPackageCategoryId => PolicyPackageCategoryId.idPathFrom(s)
+    case RootTechniqueCategoryId => Nil
+    case s:SubTechniqueCategoryId => TechniqueCategoryId.idPathFrom(s)
   }
 }
 
-case object RootPolicyPackageCategoryId extends PolicyPackageCategoryId(RootPolicyPackageCategoryName)
+case object RootTechniqueCategoryId extends TechniqueCategoryId(RootTechniqueCategoryName)
 
-case class SubPolicyPackageCategoryId(
-    override val name: PolicyPackageCategoryName,
-    parentId : PolicyPackageCategoryId
-) extends PolicyPackageCategoryId(name) with HashcodeCaching {
+case class SubTechniqueCategoryId(
+    override val name: TechniqueCategoryName,
+    parentId : TechniqueCategoryId
+) extends TechniqueCategoryId(name) with HashcodeCaching {
   
 
 }
 
-object PolicyPackageCategoryId {
+object TechniqueCategoryId {
   
   /**
-   * Build the path from the given PolicyPackageCategory
+   * Build the path from the given TechniqueCategory
    * up to the root
    */
-  def pathFrom(id:PolicyPackageCategoryId) : List[PolicyPackageCategoryName] = 
+  def pathFrom(id:TechniqueCategoryId) : List[TechniqueCategoryName] = 
     id match {
-      case RootPolicyPackageCategoryId => id.name :: Nil
-      case SubPolicyPackageCategoryId(name, pId) => id.name :: pathFrom(pId)
+      case RootTechniqueCategoryId => id.name :: Nil
+      case SubTechniqueCategoryId(name, pId) => id.name :: pathFrom(pId)
     }
 
-  def idPathFrom(id:PolicyPackageCategoryId) : List[PolicyPackageCategoryId] = 
+  def idPathFrom(id:TechniqueCategoryId) : List[TechniqueCategoryId] = 
     id match {
-      case RootPolicyPackageCategoryId => id :: Nil
-      case SubPolicyPackageCategoryId(name, pId) => id :: idPathFrom(pId)
+      case RootTechniqueCategoryId => id :: Nil
+      case SubTechniqueCategoryId(name, pId) => id :: idPathFrom(pId)
     } 
   
     
@@ -135,11 +135,11 @@ object PolicyPackageCategoryId {
    *   root is appended to the relative path, and then all other element are empty
    * - "    " is valid and == "/"
    */
-  def buildId(path:String) : PolicyPackageCategoryId = {    
+  def buildId(path:String) : TechniqueCategoryId = {    
     val absPath = "/" + path
     val parts = absPath.split("/").filterNot(x => empty.findFirstIn(x).isDefined)
-    ( (RootPolicyPackageCategoryId:PolicyPackageCategoryId) /: parts) { (id,name) =>
-        SubPolicyPackageCategoryId(PolicyPackageCategoryName(name), id)
+    ( (RootTechniqueCategoryId:TechniqueCategoryId) /: parts) { (id,name) =>
+        SubTechniqueCategoryId(TechniqueCategoryName(name), id)
     }
   }
 }
@@ -149,46 +149,45 @@ object PolicyPackageCategoryId {
 
 
 /**
- * That class define a node in the hierarchy of packages.
- * It's a code representation of the file system
- * hierarchy.
+ * That class define a node in the hierarchy of techniques.
+ * It's a code representation of the file system  hierarchy.
  *
  */
-sealed trait PolicyPackageCategory {
-  type A <: PolicyPackageCategoryId
+sealed trait TechniqueCategory {
+  type A <: TechniqueCategoryId
   def id : A
   val name : String
   val description : String
-  val subCategoryIds: Set[SubPolicyPackageCategoryId]
-  val packageIds : SortedSet[PolicyPackageId]
+  val subCategoryIds: Set[SubTechniqueCategoryId]
+  val packageIds : SortedSet[TechniqueId]
   val isSystem : Boolean
   
   require(subCategoryIds.forall(sc => sc.parentId == id), 
-      "Unconsistancy in the Policy Category; one of the subcategories is not marked as having [%s] as parent. Subcategory ids: %s".format(
+      "Unconsistancy in the Technique Category; one of the subcategories is not marked as having [%s] as parent. Subcategory ids: %s".format(
           id.toString,
           subCategoryIds.map( _.toString).mkString("\n", "\n", "\n")
       ) )
 }
 
-case class RootPolicyPackageCategory(
+case class RootTechniqueCategory(
   name : String,
   description : String,
-  subCategoryIds: Set[SubPolicyPackageCategoryId] = Set(),
-  packageIds : SortedSet[PolicyPackageId] = SortedSet(),
+  subCategoryIds: Set[SubTechniqueCategoryId] = Set(),
+  packageIds : SortedSet[TechniqueId] = SortedSet(),
   isSystem : Boolean = false
-) extends PolicyPackageCategory with HashcodeCaching {
-  type A = RootPolicyPackageCategoryId.type
-  override lazy val id : A = RootPolicyPackageCategoryId
+) extends TechniqueCategory with HashcodeCaching {
+  type A = RootTechniqueCategoryId.type
+  override lazy val id : A = RootTechniqueCategoryId
 }
 
-case class SubPolicyPackageCategory(
-  override val id : SubPolicyPackageCategoryId,
+case class SubTechniqueCategory(
+  override val id : SubTechniqueCategoryId,
   name : String,
   description : String,
-  subCategoryIds: Set[SubPolicyPackageCategoryId] = Set(),
-  packageIds : SortedSet[PolicyPackageId] = SortedSet(),
+  subCategoryIds: Set[SubTechniqueCategoryId] = Set(),
+  packageIds : SortedSet[TechniqueId] = SortedSet(),
   isSystem : Boolean = false
-) extends PolicyPackageCategory with HashcodeCaching {
-  type A = SubPolicyPackageCategoryId
+) extends TechniqueCategory with HashcodeCaching {
+  type A = SubTechniqueCategoryId
 }
 

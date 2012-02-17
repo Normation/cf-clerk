@@ -41,10 +41,10 @@ import org.specs2.runner._
 
 
 /**
- * Test ordering on PolicyPackageCategoryId
+ * Test ordering on TechniqueCategoryId
  */
 @RunWith(classOf[JUnitRunner])
-class PolicyPackageCategoryIdTest extends Specification {
+class TechniqueCategoryIdTest extends Specification {
 
   /**
    * We are dealing with that tree:
@@ -59,7 +59,7 @@ class PolicyPackageCategoryIdTest extends Specification {
    * The order is: A B C D E F G H I
    */
   
-  val a = RootPolicyPackageCategoryId / "A"
+  val a = RootTechniqueCategoryId / "A"
   val b = a / "B"
   val c = a / "B" / "C"
   val d = a / "B" / "D"
@@ -78,8 +78,8 @@ class PolicyPackageCategoryIdTest extends Specification {
   
   "Two node build differently" should {
     "be equals" in {
-      b === SubPolicyPackageCategoryId(PolicyPackageCategoryName("B"),
-              SubPolicyPackageCategoryId(PolicyPackageCategoryName("A"), RootPolicyPackageCategoryId)
+      b === SubTechniqueCategoryId(TechniqueCategoryName("B"),
+              SubTechniqueCategoryId(TechniqueCategoryName("A"), RootTechniqueCategoryId)
             )
     }
   }
@@ -92,42 +92,42 @@ class PolicyPackageCategoryIdTest extends Specification {
   
   "A path could be transformed to root" should {
     "when it is empty" in {
-      PolicyPackageCategoryId.buildId("") === RootPolicyPackageCategoryId
+      TechniqueCategoryId.buildId("") === RootTechniqueCategoryId
     }
     
     "when it is only a slash" in {
-      PolicyPackageCategoryId.buildId("/") === RootPolicyPackageCategoryId
+      TechniqueCategoryId.buildId("/") === RootTechniqueCategoryId
     }
     
     "when it is only several slashes" in {
-      PolicyPackageCategoryId.buildId("////") === RootPolicyPackageCategoryId
+      TechniqueCategoryId.buildId("////") === RootTechniqueCategoryId
     }
     
     "when it is only blanck chars" in {
-      PolicyPackageCategoryId.buildId(" ") === RootPolicyPackageCategoryId
-      PolicyPackageCategoryId.buildId("\n") === RootPolicyPackageCategoryId
-      PolicyPackageCategoryId.buildId("\t") === RootPolicyPackageCategoryId
-      PolicyPackageCategoryId.buildId("  \n  \t") === RootPolicyPackageCategoryId
+      TechniqueCategoryId.buildId(" ") === RootTechniqueCategoryId
+      TechniqueCategoryId.buildId("\n") === RootTechniqueCategoryId
+      TechniqueCategoryId.buildId("\t") === RootTechniqueCategoryId
+      TechniqueCategoryId.buildId("  \n  \t") === RootTechniqueCategoryId
     }
     
     "when it is only several slashes and blank chars" in {
-      PolicyPackageCategoryId.buildId(" /\n/  ") === RootPolicyPackageCategoryId
+      TechniqueCategoryId.buildId(" /\n/  ") === RootTechniqueCategoryId
     }
   }
   
   "A path could be transformed to an id" should {
     "when it is root" in {
-      PolicyPackageCategoryId.buildId("root") === RootPolicyPackageCategoryId / "root"
+      TechniqueCategoryId.buildId("root") === RootTechniqueCategoryId / "root"
     }
     
     "when it is composed by several levels" in {
-      PolicyPackageCategoryId.buildId("/a/b/c") === 
-        RootPolicyPackageCategoryId / "a" / "b" / "c"
+      TechniqueCategoryId.buildId("/a/b/c") === 
+        RootTechniqueCategoryId / "a" / "b" / "c"
     }
     
     "when some level are blank and are ignored" in {
-      PolicyPackageCategoryId.buildId("/a//b/ \t /c/") === 
-        RootPolicyPackageCategoryId / "a" / "b" / "c"
+      TechniqueCategoryId.buildId("/a//b/ \t /c/") === 
+        RootTechniqueCategoryId / "a" / "b" / "c"
     }
   }
 

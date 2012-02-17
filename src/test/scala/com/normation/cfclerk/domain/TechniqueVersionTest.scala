@@ -39,7 +39,7 @@ import org.specs2.mutable._
 import org.specs2.runner._
 
 @RunWith(classOf[JUnitRunner])
-class PolicyVersionTest extends Specification {
+class TechniqueVersionTest extends Specification {
 
   "Two clearly differents versions" should {
     increasingVersions("0:1~", "2.2.0~beta1")
@@ -61,37 +61,37 @@ class PolicyVersionTest extends Specification {
 
   "Epoch" should {
     "not be printed when toString, if 0" in {
-      PolicyVersion("0:5abc~").toString === "5abc~"
+      TechniqueVersion("0:5abc~").toString === "5abc~"
     }
 
     "be printed when toString, if > 0" in {
-      PolicyVersion("2:2bce").toString === "2:2bce"
+      TechniqueVersion("2:2bce").toString === "2:2bce"
     }
   }
 
   "Invalid version" should {
 
     val msg1 = "The epoch value has to be an unsigned integer"
-    "throw a VersionFormatException : %s".format(msg1) in {
-      PolicyVersion("a:18") must throwA[VersionFormatException].like { case e => e.getMessage must contain(msg1) }
+    "throw a TechniqueVersionFormatException : %s".format(msg1) in {
+      TechniqueVersion("a:18") must throwA[TechniqueVersionFormatException].like { case e => e.getMessage must contain(msg1) }
     }
 
     val msg2 = "The upstream_version should start with a digit"
-    "throw a VersionFormatException : %s".format(msg2) in {
-      PolicyVersion("a15") must throwA[VersionFormatException].like { case e => e.getMessage must contain(msg2) }
+    "throw a TechniqueVersionFormatException : %s".format(msg2) in {
+      TechniqueVersion("a15") must throwA[TechniqueVersionFormatException].like { case e => e.getMessage must contain(msg2) }
     }
   }
 
   private[this] def equalVersions(version1: String, version2: String) = {
     //the actual comparison test
     "be so that '%s' == '%s'".format(version1, version2) in {
-      PolicyVersion(version1) == PolicyVersion(version2) must beTrue
+      TechniqueVersion(version1) == TechniqueVersion(version2) must beTrue
     }
     "be so that '%s' > '%s' is false".format(version1, version2) in {
-      PolicyVersion(version1) > PolicyVersion(version2) must beFalse
+      TechniqueVersion(version1) > TechniqueVersion(version2) must beFalse
     }
     "be so that '%s' < '%s' is false".format(version1, version2) in {
-      PolicyVersion(version1) < PolicyVersion(version2) must beFalse
+      TechniqueVersion(version1) < TechniqueVersion(version2) must beFalse
     }
   }
 
@@ -99,13 +99,13 @@ class PolicyVersionTest extends Specification {
   private[this] def increasingVersions(version1: String, version2: String) = {
     //the actual comparison test
     "be so that '%s' < '%s'".format(version1, version2) in {
-      PolicyVersion(version1) < PolicyVersion(version2) must beTrue
+      TechniqueVersion(version1) < TechniqueVersion(version2) must beTrue
     }
     "be so that '%s' > '%s' is false".format(version1, version2) in {
-      PolicyVersion(version1) > PolicyVersion(version2) must beFalse
+      TechniqueVersion(version1) > TechniqueVersion(version2) must beFalse
     }
     "be so that '%s' == '%s' is false".format(version1, version2) in {
-      PolicyVersion(version1) == PolicyVersion(version2) must beFalse
+      TechniqueVersion(version1) == TechniqueVersion(version2) must beFalse
     }
   }
 }

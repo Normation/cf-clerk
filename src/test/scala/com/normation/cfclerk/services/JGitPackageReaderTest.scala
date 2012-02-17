@@ -75,10 +75,10 @@ trait JGitPackageReaderSpec extends Specification with Loggable {
   override def map(fs: =>Fragments) = fs ^ Step(deleteDir)
   
   val variableSpecParser = new VariableSpecParser 
-  val policyParser: PolicyParser = new PolicyParser(
+  val policyParser: TechniqueParser = new TechniqueParser(
       variableSpecParser,
       new SectionSpecParser(variableSpecParser),
-      new TmlParser,
+      new Cf3PromisesFileTemplateParser,
       new SystemVariableSpecServiceImpl
   )
 
@@ -98,7 +98,7 @@ trait JGitPackageReaderSpec extends Specification with Loggable {
   //post init hook
   postInitHook
   
-  val reader = new GitPolicyPackagesReader(
+  val reader = new GitTechniqueReader(
                 policyParser
               , new SimpleGitRevisionProvider("refs/heads/master", repo)
               , repo
@@ -107,8 +107,8 @@ trait JGitPackageReaderSpec extends Specification with Loggable {
               , relativePathArg
             )
 
-  val infos = reader.readPolicies
-  val § = RootPolicyPackageCategoryId
+  val infos = reader.readTechniques
+  val § = RootTechniqueCategoryId
   
   "The test lib" should { 
     "have 3 categories" in infos.subCategories.size === 3   
@@ -128,13 +128,13 @@ trait JGitPackageReaderSpec extends Specification with Loggable {
   "cat1 sub category" should {
     val cat1 = infos.subCategories( § / "cat1" )
     val packages = cat1.packageIds.toSeq
-    val tmlId = TmlId(packages(0), "theTemplate")
+    val tmlId = Cf3PromisesFileTemplateId(packages(0), "theTemplate")
     "be named 'cat1'" in  cat1.name === "cat1"
     "has no description" in cat1.description === "" 
     "has two packages..." in cat1.packageIds.size === 2
     "...with the same name p1_1" in cat1.packageIds.forall(id => "p1_1" === id.name.value)
-    "...and version 1.0" in packages(0).version === PolicyVersion("1.0")
-    "...and version 2.0" in packages(1).version === PolicyVersion("2.0")
+    "...and version 1.0" in packages(0).version === TechniqueVersion("1.0")
+    "...and version 2.0" in packages(1).version === TechniqueVersion("2.0")
     "...with a template from which we can read 'The template content\\non two lines.'" in {
       reader.getTemplateContent(tmlId){ 
         case None => failure("Can not open an InputStream for " + tmlId.toString)
@@ -159,7 +159,7 @@ trait JGitPackageReaderSpec extends Specification with Loggable {
       Seq("p1_1_1_1", "p1_1_1_2").forall(name => cat1_1_1.packageIds.exists(id => id.name.value == name)) === true
     }
     "...and the same version 1.0" in {
-      cat1_1_1.packageIds.forall(id => id.version === PolicyVersion("1.0"))
+      cat1_1_1.packageIds.forall(id => id.version === TechniqueVersion("1.0"))
     }
   }  
   
@@ -172,7 +172,7 @@ trait JGitPackageReaderSpec extends Specification with Loggable {
     git.commit.setMessage("Modify PT: cat1/p1_1/2.0").call
     
     "have update package" in {
-      reader.getModifiedPolicyPackages.size === 1
+      reader.getModifiedTechniques.size === 1
     }
   }
 

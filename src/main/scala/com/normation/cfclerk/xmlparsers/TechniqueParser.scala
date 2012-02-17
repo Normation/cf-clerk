@@ -44,47 +44,47 @@ import scala.xml._
 import net.liftweb.common._
 
 /**
- * Parse a Policy Package (policy.xml file)
+ * Parse a technique (policy.xml file)
  */
 
-class PolicyParser(
-    variableSpecParser: VariableSpecParser
-  , sectionParser:SectionSpecParser
-  , tmlParser : TmlParser
-  , systemVariableSpecService : SystemVariableSpecService
+class TechniqueParser(
+    variableSpecParser           : VariableSpecParser
+  , sectionSpecParser            : SectionSpecParser
+  , cf3PromisesFileTemplateParser: Cf3PromisesFileTemplateParser
+  , systemVariableSpecService    : SystemVariableSpecService
 ) extends Loggable {
   
-  def parseXml(node: Node, id: PolicyPackageId): PolicyPackage = {
-    //check that node is <POLICY> and has a name attribute
-    if (node.label.toUpperCase == POLICY_ROOT) {
-      node.attribute(POLICY_NAME) match {
-        case Some(nameAttr) if (PolicyParser.isValidId(id.name.value) && nonEmpty(nameAttr.text)) =>
+  def parseXml(node: Node, id: TechniqueId): Technique = {
+    //check that node is <TECHNIQUE> and has a name attribute
+    if (node.label.toUpperCase == TECHNIQUE_ROOT) {
+      node.attribute(TECHNIQUE_NAME) match {
+        case Some(nameAttr) if (TechniqueParser.isValidId(id.name.value) && nonEmpty(nameAttr.text)) =>
 
           val name = nameAttr.text
           val compatible = try Some(CompatibleParser.parseXml((node \ COMPAT_TAG).head)) catch { case _ => None }
 
-          val policyPackage = PolicyPackage(
+          val technique = Technique(
               id
             , name
-            , rootSection = sectionParser.parseSectionsInPolicy(node, id, name)
-            , description = ??!((node \ POLICY_DESCRIPTION).text).getOrElse(name)
+            , rootSection = sectionSpecParser.parseSectionsInPolicy(node, id, name)
+            , description = ??!((node \ TECHNIQUE_DESCRIPTION).text).getOrElse(name)
             , compatible = compatible
-            , templates = (node \ PROMISE_TEMPLATES_ROOT \\ PROMISE_TEMPLATE).map(xml => tmlParser.parseXml(id, xml) )
+            , templates = (node \ PROMISE_TEMPLATES_ROOT \\ PROMISE_TEMPLATE).map(xml => cf3PromisesFileTemplateParser.parseXml(id, xml) )
             , bundlesequence = (node \ BUNDLES_ROOT \\ BUNDLE_NAME).map(xml => Bundle(xml.text) )
-            , trackerVariableSpec = parsePolicyInfo(node)
+            , trackerVariableSpec = parseTrackerVariableSpec(node)
             , systemVariableSpecs = parseSysvarSpecs(node,id)
-            , isMultiInstance = ((node \ POLICY_IS_MULTIINSTANCE).text.equalsIgnoreCase("true") )
-            , longDescription = ??!((node \ POLICY_LONG_DESCRIPTION).text).getOrElse("")
-            , isSystem = ((node \ POLICY_IS_SYSTEM).text.equalsIgnoreCase("true"))
+            , isMultiInstance = ((node \ TECHNIQUE_IS_MULTIINSTANCE).text.equalsIgnoreCase("true") )
+            , longDescription = ??!((node \ TECHNIQUE_LONG_DESCRIPTION).text).getOrElse("")
+            , isSystem = ((node \ TECHNIQUE_IS_SYSTEM).text.equalsIgnoreCase("true"))
           )
           
           /*
            * Check that if the policy info variable spec has a bounding variable, that
            * variable actually exists
            */
-          policyPackage.trackerVariableSpec.boundingVariable.foreach { bound =>
+          technique.trackerVariableSpec.boundingVariable.foreach { bound =>
             if(
-                policyPackage.rootSection.getAllVariables.exists { v => v.name == bound } ||
+                technique.rootSection.getAllVariables.exists { v => v.name == bound } ||
                 systemVariableSpecService.getAll.exists { v => v.name == bound }
             ) {
               //ok
@@ -93,12 +93,12 @@ class PolicyParser(
             }
           }
                     
-          policyPackage
+          technique
 
         case _ => throw new ParsingException("Not a policy node, missing 'name' attribute: %s".format(node))
       }
     } else {
-      throw new ParsingException("Not a policy node, bad node name. Was expecting <%s>, got: %s".format(POLICY_ROOT,node))
+      throw new ParsingException("Not a policy node, bad node name. Was expecting <%s>, got: %s".format(TECHNIQUE_ROOT,node))
     }
   }
   
@@ -110,7 +110,7 @@ class PolicyParser(
     }
   }
 
-  private[this] def parsePolicyInfo(node: Node): TrackerVariableSpec = {
+  private[this] def parseTrackerVariableSpec(node: Node): TrackerVariableSpec = {
     val trackerVariableSpecs = (node \ TRACKINGVAR)
     if(trackerVariableSpecs.size == 0) { //default trackerVariable variable spec for that package
       TrackerVariableSpec()
@@ -127,13 +127,13 @@ class PolicyParser(
    * Parse the list of system vars used by that policy package.
    * 
    */
-  private[this] def parseSysvarSpecs(node: Node, id:PolicyPackageId) : Set[SystemVariableSpec] = {
+  private[this] def parseSysvarSpecs(node: Node, id:TechniqueId) : Set[SystemVariableSpec] = {
     (node \ SYSTEMVARS_ROOT \ SYSTEMVAR_NAME).map(x => systemVariableSpecService.get(x.text)).toSet
   }
   
 }
 
-object PolicyParser {
+object TechniqueParser {
 
   val authorizedCharInId = """([a-zA-Z0-9\-_]+)""".r
 

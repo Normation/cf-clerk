@@ -42,7 +42,7 @@ import org.junit.runner.RunWith
 import org.junit.runners.BlockJUnit4ClassRunner
 import scala.collection._
 import com.normation.cfclerk.domain._
-import com.normation.cfclerk.xmlparsers.PolicyParser
+import com.normation.cfclerk.xmlparsers.TechniqueParser
 import org.springframework.context.{ ApplicationContext, ApplicationContextAware }
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.beans.factory.annotation.Autowired
@@ -56,9 +56,9 @@ import com.normation.cfclerk.services.impl._
 class TestPackageReader {
 
   @Autowired
-  val policyParser: PolicyParser = null
+  val policyParser: TechniqueParser = null
 
-  lazy val reader = new FSPolicyPackagesReader(
+  lazy val reader = new FSTechniqueReader(
     policyParser,
     "src/test/resources/packagesRoot",
     "policy.xml",
@@ -66,18 +66,18 @@ class TestPackageReader {
 
   @Test
   def testReadPackage() {
-    val infos = reader.readPolicies
+    val infos = reader.readTechniques
     assertEquals(5, infos.subCategories.size)
 
     val rootDir = new File("src/test/resources/packagesRoot")
-    val rootCatId = RootPolicyPackageCategoryId
+    val rootCatId = RootTechniqueCategoryId
     val rootCat = infos.rootCategory
     assertEquals("Root category", rootCat.name)
     assertEquals("", rootCat.description)
 
     assertEquals(1, rootCat.packageIds.size)
     assertEquals("p_root_1", rootCat.packageIds.head.name.value)
-    assertEquals(PolicyVersion("1.0"), rootCat.packageIds.head.version)
+    assertEquals(TechniqueVersion("1.0"), rootCat.packageIds.head.version)
 
     assertEquals(2, rootCat.subCategoryIds.size)
 
@@ -89,11 +89,11 @@ class TestPackageReader {
       }
 
       // dir has to be a directory
-      def isValidPolicyVersionDir(dir: File): Boolean = {
-        val isVersionDir = dir.listFiles.exists(f => f.getName == reader.policyDescriptorName)
+      def isValidTechniqueVersionDir(dir: File): Boolean = {
+        val isVersionDir = dir.listFiles.exists(f => f.getName == reader.techniqueDescriptorName)
         if (isVersionDir) {
           try {
-            PolicyVersion(dir.getName)
+            TechniqueVersion(dir.getName)
             true
           } catch {
             case e: Exception => false
@@ -104,7 +104,7 @@ class TestPackageReader {
       }
 
     // test that if a directory contains policy.xml files, its name is a valid policy version name
-    assert(forAllSubDirs(new File(reader.packageDirectoryPath), isValidPolicyVersionDir))
+    assert(forAllSubDirs(new File(reader.techniqueDirectoryPath), isValidTechniqueVersionDir))
 
     //Cat 2 is empty                                                                    
     val cat2 = infos.subCategories(subCatIds(1))
@@ -124,11 +124,11 @@ class TestPackageReader {
     val cat1packages = cat1.packageIds.toSeq
     assertEquals(2, cat1packages.size)
     assertEquals("p1_1", cat1packages(0).name.value)
-    assertEquals(PolicyVersion("1.0"), cat1packages(0).version)
+    assertEquals(TechniqueVersion("1.0"), cat1packages(0).version)
     assertEquals("p1_1", cat1packages(1).name.value)
-    assertEquals(PolicyVersion("2.0"), cat1packages(1).version)
+    assertEquals(TechniqueVersion("2.0"), cat1packages(1).version)
 
-    val tmlId = TmlId(cat1packages(0), "theTemplate")
+    val tmlId = Cf3PromisesFileTemplateId(cat1packages(0), "theTemplate")
     reader.getTemplateContent(tmlId) {
       case None => assertTrue("Can not open an InputStream for " + tmlId.toString, false)
       case Some(is) =>
@@ -158,7 +158,7 @@ class TestPackageReader {
     assertTrue(Seq("p1_1_1_1", "p1_1_1_2").forall { p =>
       cat1_1_1.packageIds.exists(id => id.name.value == p)
     })
-    assertTrue(cat1_1_1.packageIds.forall(id => id.version == PolicyVersion("1.0")))
+    assertTrue(cat1_1_1.packageIds.forall(id => id.version == TechniqueVersion("1.0")))
 
   }
 }

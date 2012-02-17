@@ -73,19 +73,19 @@ case class STVariable(
  * parameter in them. 
  */
 case class PreparedTemplates(
-    templatesToCopy: Set[TemplateCopyInfo]
-  , environmentVariables : Seq[STVariable] 
+    templatesToCopy     : Set[Cf3PromisesFileTemplateCopyInfo]
+  , environmentVariables: Seq[STVariable] 
 ) extends HashcodeCaching
 
 /**
  * A class that store information about a template to copy somewhere. 
  * It gives what template to copy where. 
  */
-case class TemplateCopyInfo(
-    val source:TmlId  // the full name where the template is found
- ,  val destination:String
+case class Cf3PromisesFileTemplateCopyInfo(
+    source     : Cf3PromisesFileTemplateId  // the full name where the template is found
+ ,  destination: String
 ) extends HashcodeCaching {
-  override def toString() = "Tml package id %s, Tml name %s, Tml destination %s".format(source.policyPackageId, source.tmlName, destination)
+  override def toString() = "Tml package id %s, Tml name %s, Tml destination %s".format(source.techniqueId, source.name, destination)
 }
 
 /**
@@ -95,7 +95,7 @@ case class TemplateCopyInfo(
  */
 case class PromisesFinalMoveInfo(
     containerId : String
-  , baseFolder : String //directory where the file have to in the end
-  , newFolder : String //poclicies are temporarly store in a policyName.new directory
-  , backupFolder : String
+  , baseFolder  : String //directory where the file have to in the end
+  , newFolder   : String //poclicies are temporarly store in a policyName.new directory
+  , backupFolder: String
 ) extends HashcodeCaching

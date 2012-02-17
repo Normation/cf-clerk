@@ -34,32 +34,36 @@
 
 package com.normation.cfclerk.services
 
-import com.normation.cfclerk.domain.{CFCPolicyInstance, PoliciesContainer}
-import net.liftweb.common.Box
+import com.normation.cfclerk.domain._
 
 /**
- * Service to handle Containers : create a container, add a policy instance to a container and write the policies corresponding to this container
- * This is the entry point for any CLI based on cf-clerk
+ * Deals with templates : prepare the templates, fetch variables needed by a policy,
+ * and write machine configuration
  * @author Nicolas CHARLES
  *
  */
-trait ContainerService {
+trait Cf3PromisesFileWriterService {
+ 
 
+  /**
+   * Write the current seq of template file a the path location, replacing the variables found in variableSet
+   * @param fileSet : the set of template to be written
+   * @param variableSet : the set of variable
+   * @param path : where to write the files
+   */
+  def writePromisesFiles(fileSet: Set[Cf3PromisesFileTemplateCopyInfo], variableSet: Seq[STVariable], outPath: String): Unit
   
   /**
-   * Create a container
-   * @param identifier
-   * @param policiesInstancesBeans
-   * @return
+   * Move the promises from the new folder to their final folder, backuping previous promises in the way
+   * Throw an exception if something fails during the move (all the data will be restored)
+   * @param folder : (Container identifier, promisefolder, newfolder, backupfolder )
    */
-  def createContainer(identifier: String, policiesInstancesBeans : Seq[CFCPolicyInstance]) : Box[PoliciesContainer]
+  def movePromisesToFinalPosition(folders : Seq[PromisesFinalMoveInfo] ) : Seq[PromisesFinalMoveInfo]
 
-  
   /**
-   * Add a policy instance to a container
-   * @param container
-   * @param policyInstanceBean
+   * Concatenate all the variables for each policy Instances.
+   * @param policyContainer
    * @return
    */
-  def addPolicyInstance(container: PoliciesContainer, policyInstanceBean : CFCPolicyInstance) : Box[CFCPolicyInstance]
+  def prepareAllCf3PolicyDraftVariables(container: Cf3PolicyDraftContainer):  Map[TechniqueId, Map[String, Variable]]
 }

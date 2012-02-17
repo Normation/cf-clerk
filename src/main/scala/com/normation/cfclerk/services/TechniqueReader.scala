@@ -41,21 +41,21 @@ import scala.collection.mutable.{ Map => MutMap }
 import com.normation.utils.HashcodeCaching
 
 
-case class PackagesInfo(
-    rootCategory: RootPolicyPackageCategory
-    //the PolicyPackageCategoryId is a path from the point of view of a tree
-  , packagesCategory: Map[PolicyPackageId, PolicyPackageCategoryId]
-  , packages: Map[PolicyPackageName, SortedMap[PolicyVersion, PolicyPackage]]
+case class TechniquesInfo(
+    rootCategory: RootTechniqueCategory
+    //the TechniqueCategoryId is a path from the point of view of a tree
+  , techniquesCategory: Map[TechniqueId, TechniqueCategoryId]
+  , techniques: Map[TechniqueName, SortedMap[TechniqueVersion, Technique]]
     //head of categories is the root category
-  , subCategories: Map[SubPolicyPackageCategoryId, PolicyPackageCategory]
+  , subCategories: Map[SubTechniqueCategoryId, TechniqueCategory]
 ) extends HashcodeCaching 
 
-//a mutable version of PackagesInfo, for internal use only !
-private[services] class InternalPackagesInfo(
-    var rootCategory: Option[RootPolicyPackageCategory] = None
-  , val packagesCategory: MutMap[PolicyPackageId, PolicyPackageCategoryId] = MutMap()
-  , val packages: MutMap[PolicyPackageName, MutMap[PolicyVersion, PolicyPackage]] = MutMap()
-  , val subCategories: MutMap[SubPolicyPackageCategoryId, SubPolicyPackageCategory] = MutMap()
+//a mutable version of TechniquesInfo, for internal use only !
+private[services] class InternalTechniquesInfo(
+    var rootCategory: Option[RootTechniqueCategory] = None
+  , val techniquesCategory: MutMap[TechniqueId, TechniqueCategoryId] = MutMap()
+  , val techniques: MutMap[TechniqueName, MutMap[TechniqueVersion, Technique]] = MutMap()
+  , val subCategories: MutMap[SubTechniqueCategoryId, SubTechniqueCategory] = MutMap()
 )
 
 /**
@@ -65,7 +65,7 @@ private[services] class InternalPackagesInfo(
  * and all the relevant information like its templates.
  *
  */
-trait PolicyPackagesReader {
+trait TechniqueReader {
 
   /**
    * read the policies from the source directory.
@@ -73,28 +73,28 @@ trait PolicyPackagesReader {
    * root directory for the "current" revision of the
    * reference library. "current" pointer update is 
    * implementation dependent, some implementation doesn't
-   * have any notion of version, other using getModifiedPolicyPackages
+   * have any notion of version, other using getModifiedTechniques
    * for updating the available "next" state. 
    */
-  def readPolicies(): PackagesInfo
+  def readTechniques(): TechniquesInfo
 
   /**
    * Read the content of a template, if the template is known by that
-   * PolicyPackageReader.
+   * TechniqueReader.
    * If the template exists, then a Some(input stream), open at the
    * beginning of the template is given to the caller. 
    * If not, a None is given. 
    * The implementation must take care of correct closing of the input
    * stream and any I/O exception. 
    */
-  def getTemplateContent[T](templateName: TmlId)(useIt : Option[InputStream] => T) : T
+  def getTemplateContent[T](templateName: Cf3PromisesFileTemplateId)(useIt : Option[InputStream] => T) : T
  
   /**
    * An indicator that the underlying policy template library changed and that the content 
    * should be read again.
-   * If the sequence is empty, then nothing changed. Else, the list of PolicyPackage with 
+   * If the sequence is empty, then nothing changed. Else, the list of Technique with 
    * *any* change will be given
    */
-  def getModifiedPolicyPackages : Seq[PolicyPackageId]
+  def getModifiedTechniques : Seq[TechniqueId]
 }
 

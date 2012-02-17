@@ -61,42 +61,42 @@ import com.normation.utils.HashcodeCaching
  * exhausted.
  */
 
-class VersionFormatException(msg: String) extends Exception("The version format should be : [epoch:]upstream_version\n" + msg)
+class TechniqueVersionFormatException(msg: String) extends Exception("The version format of a technique should be : [epoch:]upstream_version\n" + msg)
 
-final class PolicyVersion(val epoch: Int, val uv: UpstreamVersion) extends Ordered[PolicyVersion] {
-  def compare(v: PolicyVersion): Int = {
+final class TechniqueVersion(val epoch: Int, val upsreamTechniqueVersion: UpstreamTechniqueVersion) extends Ordered[TechniqueVersion] {
+  def compare(v: TechniqueVersion): Int = {
     if (epoch != v.epoch) epoch compare v.epoch
-    else uv compare v.uv
+    else upsreamTechniqueVersion compare v.upsreamTechniqueVersion
   }
   
   override def equals(other:Any) : Boolean = other match {
-    case that:PolicyVersion => this.epoch == that.epoch && this.uv == that.uv
+    case that:TechniqueVersion => this.epoch == that.epoch && this.upsreamTechniqueVersion == that.upsreamTechniqueVersion
     case _ => false
   }
   
-  override lazy val hashCode : Int = 7 + 13 * epoch + 41 * uv.hashCode
+  override lazy val hashCode : Int = 7 + 13 * epoch + 41 * upsreamTechniqueVersion.hashCode
   
   override lazy val toString = {
-    if(epoch < 1) uv.s
-    else epoch.toString + ":" + uv.s
+    if(epoch < 1) upsreamTechniqueVersion.value
+    else epoch.toString + ":" + upsreamTechniqueVersion.value
   }
 }
 
-object PolicyVersion {
+object TechniqueVersion {
 
   /*  epoch :This is a single (generally small) unsigned integer. It may be omitted, in
    *  which case zero is assumed(value=0). If it is omitted then the upstream_version may
    *  not contain any colons.
    */
-  def splitEpochUpstream(s: String): (Int, UpstreamVersion) = {
-    val arr = s.split(":")
-    if (arr.length <= 1) return (0, UpstreamVersion(s))
+  def splitEpochUpstream(value: String): (Int, UpstreamTechniqueVersion) = {
+    val arr = value.split(":")
+    if (arr.length <= 1) return (0, UpstreamTechniqueVersion(value))
 
-    val errorEx = new VersionFormatException("The epoch value has to be an unsigned integer which is not the case of : " + arr(0))
+    val errorEx = new TechniqueVersionFormatException("The epoch value has to be an unsigned integer which is not the case of : " + arr(0))
     try {
       val epochVal = arr(0).toInt
       if (epochVal < 0) throw errorEx
-      return (epochVal, UpstreamVersion(rest(s, arr(0) + ":")))
+      return (epochVal, UpstreamTechniqueVersion(rest(value, arr(0) + ":")))
     } catch {
       case e: NumberFormatException => throw errorEx
     }
@@ -104,27 +104,27 @@ object PolicyVersion {
 
   def rest(hole: String, pref: String) = hole.substring(pref.length, hole.length)
 
-  def apply(s: String) = {
-    val (epoch, uv) = splitEpochUpstream(s)
-    new PolicyVersion(epoch, uv)
+  def apply(value: String) = {
+    val (epoch, upsreamTechniqueVersion) = splitEpochUpstream(value)
+    new TechniqueVersion(epoch, upsreamTechniqueVersion)
   }
 }
 
-case class UpstreamVersion(s: String) extends Ordered[UpstreamVersion] with HashcodeCaching {
-  checkValid(s)
+case class UpstreamTechniqueVersion(value: String) extends Ordered[UpstreamTechniqueVersion] with HashcodeCaching {
+  checkValid(value)
 
   import scala.util.matching.Regex
-  import PolicyVersion.rest
+  import TechniqueVersion.rest
 
   def checkValid(strings: String*) {
-    for (s <- strings) {
-      if (s.length == 0 || !s(0).isDigit)
-        throw new VersionFormatException("The upstream_version should start with a digit : " + s)
+    for (value <- strings) {
+      if (value.length == 0 || !value(0).isDigit)
+        throw new TechniqueVersionFormatException("The upstream_version should start with a digit : " + value)
 
       val validReg = new Regex("[A-Za-z0-9.+\\-:~]*")
-      validReg.findPrefixOf(s) match {
-        case Some(matchReg) if (matchReg != s) =>
-          throw new VersionFormatException("The upstream_version contains invalid charaters.\n" +
+      validReg.findPrefixOf(value) match {
+        case Some(matchReg) if (matchReg != value) =>
+          throw new TechniqueVersionFormatException("The upstream_version contains invalid charaters.\n" +
             "The upstream_version may contain only alphanumerics and " +
             "the characters . + - : ~ (full stop, plus, hyphen, colon, tilde).")
         case _ =>
@@ -134,10 +134,10 @@ case class UpstreamVersion(s: String) extends Ordered[UpstreamVersion] with Hash
 
   val intsReg = new Regex("[0-9]+")
 
-  def compare(uv: UpstreamVersion): Int = {
-    val (s1, s2) = (s, uv.s)
+  def compare(upsreamTechniqueVersion: UpstreamTechniqueVersion): Int = {
+    val (s1, s2) = (value, upsreamTechniqueVersion.value)
 
-    (intsReg.findPrefixOf(s), intsReg.findPrefixOf(s2)) match {
+    (intsReg.findPrefixOf(value), intsReg.findPrefixOf(s2)) match {
       case (Some(subInt1), Some(subInt2)) =>
         val cmpI = subInt1.toInt compare subInt2.toInt
         if (cmpI != 0)

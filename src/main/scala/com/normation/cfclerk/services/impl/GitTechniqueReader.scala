@@ -63,7 +63,7 @@ import org.eclipse.jgit.errors.StopWalkException
 import org.eclipse.jgit.events.RefsChangedListener
 import org.eclipse.jgit.events.RefsChangedEvent
 import scala.collection.mutable.Buffer
-import com.normation.cfclerk.xmlparsers.PolicyParser
+import com.normation.cfclerk.xmlparsers.TechniqueParser
 import com.normation.cfclerk.services._
 import com.normation.exceptions.TechnicalException
 import org.eclipse.jgit.treewalk.FileTreeIterator
@@ -73,7 +73,7 @@ import org.eclipse.jgit.diff.DiffFormatter
 
 /**
  * 
- * A PolicyPackageReader that reads policy packages from
+ * A TechniqueReader that reads policy techniques from
  * a git repository.  
  * 
  * The root directory on the git repos is assumed to be
@@ -91,8 +91,8 @@ import org.eclipse.jgit.diff.DiffFormatter
  * The relative path from the parent of .git to ptlib root is given in
  * the "relativePathToGitRepos" parameter. 
  * 
- * The convention used about policy packages and categories are the
- * same than for the FSPolicyPackageReader, which are:
+ * The convention used about policy techniques and categories are the
+ * same than for the FSTechniqueReader, which are:
  * 
  * - all directories which contains a policy.xml file is
  *   considered to be a policy package.
@@ -124,20 +124,20 @@ import org.eclipse.jgit.diff.DiffFormatter
  *   example, in example (2), Some("policy-templates") must be used. 
  */
 
-class GitPolicyPackagesReader(
-  policyParser: PolicyParser,
-  revisionProvider:GitRevisionProvider,
-  repo:GitRepositoryProvider,
-  val policyDescriptorName: String, //full (with extension) conventional name for policy descriptor
-  val categoryDescriptorName: String, //full (with extension) name of the descriptor for categories
-  val relativePathToGitRepos: Option[String]
-  ) extends PolicyPackagesReader with Loggable {
+class GitTechniqueReader(
+  techniqueParser            : TechniqueParser,
+  revisionProvider           : GitRevisionProvider,
+  repo                       : GitRepositoryProvider,
+  val techniqueDescriptorName: String, //full (with extension) conventional name for policy descriptor
+  val categoryDescriptorName : String, //full (with extension) name of the descriptor for categories
+  val relativePathToGitRepos : Option[String]
+  ) extends TechniqueReader with Loggable {
 
   reader =>
 
-  //denotes a path for a package, so it starts by a "/"
+  //denotes a path for a technique, so it starts by a "/"
   //and is not prefixed by relativePathToGitRepos
-  private[this] case class PackagePath(path:String)
+  private[this] case class TechniquePath(path:String)
     
   //the path of the PT lib relative to the git repos
   //withtout leading and trailing /. 
@@ -159,67 +159,67 @@ class GitPolicyPackagesReader(
    * As it is required that the git repository is in  a parent of the
    * ptLib, it's just removing start of the string.
    */
-  private[this] def toPolicyTemplatePath(path:String) : PackagePath = {
+  private[this] def toPolicyTemplatePath(path:String) : TechniquePath = {
     canonizedRelativePath match {
       case Some(relative) if(path.startsWith(relative)) => 
-        PackagePath(path.substring(relative.size, path.size))
-      case _ => PackagePath("/" + path)
+        TechniquePath(path.substring(relative.size, path.size))
+      case _ => TechniquePath("/" + path)
     }
   }  
   
   
-  private[this] var currentPackagesInfoCache : PackagesInfo = processRevTreeId(revisionProvider.currentRevTreeId)
-  private[this] var nextPackagesInfoCache : (ObjectId,PackagesInfo) = (revisionProvider.currentRevTreeId, currentPackagesInfoCache)
+  private[this] var currentTechniquesInfoCache : TechniquesInfo = processRevTreeId(revisionProvider.currentRevTreeId)
+  private[this] var nextTechniquesInfoCache : (ObjectId,TechniquesInfo) = (revisionProvider.currentRevTreeId, currentTechniquesInfoCache)
   //a non empty list IS the indicator of differences between current and next
-  private[this] var modifiedPolicyPackagesCache : Seq[PolicyPackageId] = Seq()
+  private[this] var modifiedTechniquesCache : Seq[TechniqueId] = Seq()
 
-  override def getModifiedPolicyPackages : Seq[PolicyPackageId] = {
+  override def getModifiedTechniques : Seq[TechniqueId] = {
     val nextId = revisionProvider.getAvailableRevTreeId
-    if(nextId == nextPackagesInfoCache._1) modifiedPolicyPackagesCache
+    if(nextId == nextTechniquesInfoCache._1) modifiedTechniquesCache
     else reader.synchronized { //update next and calculate diffs      
-      val nextPackagesInfo = processRevTreeId(nextId)
+      val nextTechniquesInfo = processRevTreeId(nextId)
       
       //get the list of ALL valid package infos, both in current and in next version,
       //so we have both deleted package (from current) and new one (from next)
-      val allKnownPackagePaths = getPolicyPackagePath(currentPackagesInfoCache) ++ getPolicyPackagePath(nextPackagesInfo)
+      val allKnownTechniquePaths = getTechniquePath(currentTechniquesInfoCache) ++ getTechniquePath(nextTechniquesInfo)
 
       val diffFmt = new DiffFormatter(null)
       diffFmt.setRepository(repo.db)
-      val diffPathEntries : Set[PackagePath] = 
+      val diffPathEntries : Set[TechniquePath] = 
         diffFmt.scan(revisionProvider.currentRevTreeId,nextId).flatMap { diffEntry => 
           Seq(toPolicyTemplatePath(diffEntry.getOldPath), toPolicyTemplatePath(diffEntry.getNewPath))
         }.toSet
       diffFmt.release
       
-      val modifiedPackagePath = scala.collection.mutable.Set[PackagePath]()
+      val modifiedTechniquePath = scala.collection.mutable.Set[TechniquePath]()
       /*
-       * now, group diff entries by policyPackageId to find which were updated
+       * now, group diff entries by TechniqueId to find which were updated
        * we take into account any modifications, as anything among a 
        * delete, rename, copy, add, modify must be accepted and the matching
        * datetime saved. 
        */
       diffPathEntries.foreach { path =>
-        allKnownPackagePaths.find { packagePath =>
-          path.path.startsWith(packagePath.path)
-        }.foreach { packagePath =>
-          modifiedPackagePath += packagePath
+        allKnownTechniquePaths.find { TechniquePath =>
+          path.path.startsWith(TechniquePath.path)
+        }.foreach { TechniquePath =>
+          modifiedTechniquePath += TechniquePath
         } //else nothing
       }
  
-      //Ok, now rebuild PolicyPackage !
-      modifiedPolicyPackagesCache = modifiedPackagePath.map { s => 
+      //Ok, now rebuild Technique !
+      modifiedTechniquesCache = modifiedTechniquePath.map { s => 
         val parts = s.path.split("/")
-        PolicyPackageId(PolicyPackageName(parts(parts.size - 2)), PolicyVersion(parts(parts.size - 1)))
+        TechniqueId(TechniqueName(parts(parts.size - 2)), TechniqueVersion(parts(parts.size - 1)))
       }.toSeq
-      nextPackagesInfoCache = (nextId, nextPackagesInfo)
-      modifiedPolicyPackagesCache
+      nextTechniquesInfoCache = (nextId, nextTechniquesInfo)
+      modifiedTechniquesCache
     }
   }
 
 
-  override def getTemplateContent[T](templateName: TmlId)(useIt : Option[InputStream] => T) : T = {
-    //build a treewalk with the path, given by TmlId.toString
-    val path = templateName.toString + Tml.templateExtension
+  override def getTemplateContent[T](cf3PromisesFileTemplateId: Cf3PromisesFileTemplateId)(useIt : Option[InputStream] => T) : T = {
+    //build a treewalk with the path, given by Cf3PromisesFileTemplateId.toString
+    val path = cf3PromisesFileTemplateId.toString + Cf3PromisesFileTemplate.templateExtension
     //has package id are unique among the whole tree, we are able to find a
     //template only base on the packageId + name. 
     
@@ -237,13 +237,13 @@ class GitPolicyPackagesReader(
         }
         ids match {
           case Nil => 
-            logger.error("Template with id %s was not found".format(templateName))
+            logger.error("Template with id %s was not found".format(cf3PromisesFileTemplateId))
             None
           case h :: Nil =>
             is = repo.db.open(h).openStream
             Some(is)
           case _ => 
-            logger.error("More than exactly one ids were found in the git tree for template %s, I can not know which one to choose. IDs: %s".format(templateName,ids.mkString(", ")))
+            logger.error("More than exactly one ids were found in the git tree for template %s, I can not know which one to choose. IDs: %s".format(cf3PromisesFileTemplateId,ids.mkString(", ")))
             None
       } } 
     } catch {
@@ -259,26 +259,26 @@ class GitPolicyPackagesReader(
 
   /**
    * Read the policies from the last available tag. 
-   * The last available tag state is given by modifiedPolicyPackages
+   * The last available tag state is given by modifiedTechniques
    * and is ONLY updated by that method.
-   * Two subsequent call to readPolicies without a call
-   * to modifiedPolicyPackages does nothing, even if some 
+   * Two subsequent call to readTechniques without a call
+   * to modifiedTechniques does nothing, even if some 
    * commit were done in git repository. 
    */
-  override def readPolicies : PackagesInfo = {    
+  override def readTechniques : TechniquesInfo = {    
     reader.synchronized {
-      if(modifiedPolicyPackagesCache.nonEmpty) {
-        currentPackagesInfoCache = nextPackagesInfoCache._2
-        revisionProvider.setCurrentRevTreeId(nextPackagesInfoCache._1)
-        modifiedPolicyPackagesCache = Seq()
+      if(modifiedTechniquesCache.nonEmpty) {
+        currentTechniquesInfoCache = nextTechniquesInfoCache._2
+        revisionProvider.setCurrentRevTreeId(nextTechniquesInfoCache._1)
+        modifiedTechniquesCache = Seq()
       }
-      currentPackagesInfoCache
+      currentTechniquesInfoCache
     }
   }
   
 
   
-  private[this] def processRevTreeId(id:ObjectId, parseDescriptor:Boolean = true) : PackagesInfo = {
+  private[this] def processRevTreeId(id:ObjectId, parseDescriptor:Boolean = true) : TechniquesInfo = {
     /*
      * Global process : the logic is completly different
      * from a standard "directory then subdirectoies" walk, because 
@@ -287,7 +287,7 @@ class GitPolicyPackagesReader(
      * - paths which end by categoryDescriptorName:
      *   these paths parents are category path if and only
      *   if their own parent is a category
-     * - paths which end by policyDescriptorName 
+     * - paths which end by techniqueDescriptorName 
      *   these paths are policy version directories if and only
      *   if:
      *   - their direct parent name is a valid version number
@@ -302,28 +302,28 @@ class GitPolicyPackagesReader(
      * - we are always looking for a category
      * - and so we have to found the matching catId in the category map. 
      */
-      val packageInfos = new InternalPackagesInfo()
+      val techniqueInfos = new InternalTechniquesInfo()
       //we only want path ending by a descriptor file
 
       //start to process all categories related information
-      processCategories(id,packageInfos, parseDescriptor)
+      processCategories(id,techniqueInfos, parseDescriptor)
       
-      //now, build packages
-      processPolicyPackages(id,packageInfos,parseDescriptor)
+      //now, build techniques
+      processTechniques(id,techniqueInfos,parseDescriptor)
     
       //ok, return the result in its immutable format 
-      PackagesInfo(
-        rootCategory = packageInfos.rootCategory.get,
-        packagesCategory = packageInfos.packagesCategory.toMap,
-        packages = packageInfos.packages.map { case(k,v) => (k, SortedMap.empty[PolicyVersion,PolicyPackage] ++ v)}.toMap,
-        subCategories = Map[SubPolicyPackageCategoryId, SubPolicyPackageCategory]() ++ packageInfos.subCategories
+      TechniquesInfo(
+        rootCategory = techniqueInfos.rootCategory.get,
+        techniquesCategory = techniqueInfos.techniquesCategory.toMap,
+        techniques = techniqueInfos.techniques.map { case(k,v) => (k, SortedMap.empty[TechniqueVersion,Technique] ++ v)}.toMap,
+        subCategories = Map[SubTechniqueCategoryId, SubTechniqueCategory]() ++ techniqueInfos.subCategories
       )
   }
   
-  private[this] def processPolicyPackages(revTreeId: ObjectId, packageInfos : InternalPackagesInfo, parseDescriptor:Boolean) : Unit = {
+  private[this] def processTechniques(revTreeId: ObjectId, techniqueInfos : InternalTechniquesInfo, parseDescriptor:Boolean) : Unit = {
       //a first walk to find categories
       val tw = new TreeWalk(repo.db)
-      tw.setFilter(new FileTreeFilter(canonizedRelativePath, policyDescriptorName))
+      tw.setFilter(new FileTreeFilter(canonizedRelativePath, techniqueDescriptorName))
       tw.setRecursive(true)
       tw.reset(revTreeId)
       
@@ -331,12 +331,12 @@ class GitPolicyPackagesReader(
       //is valid
       while(tw.next) {
         val path = toPolicyTemplatePath(tw.getPathString) //we will need it to build the category id
-        processPolicyPackage(repo.db.open(tw.getObjectId(0)).openStream, path.path, packageInfos, parseDescriptor)
+        processTechnique(repo.db.open(tw.getObjectId(0)).openStream, path.path, techniqueInfos, parseDescriptor)
       }
   }
   
   
-  private[this] def processCategories(revTreeId: ObjectId, packageInfos : InternalPackagesInfo, parseDescriptor:Boolean) : Unit = {
+  private[this] def processCategories(revTreeId: ObjectId, techniqueInfos : InternalTechniquesInfo, parseDescriptor:Boolean) : Unit = {
       //a first walk to find categories
       val tw = new TreeWalk(repo.db)
       tw.setFilter(new FileTreeFilter(canonizedRelativePath, categoryDescriptorName))
@@ -344,7 +344,7 @@ class GitPolicyPackagesReader(
       tw.reset(revTreeId)
       
       
-      val maybeCategories = MutMap[PolicyPackageCategoryId, PolicyPackageCategory]()
+      val maybeCategories = MutMap[TechniqueCategoryId, TechniqueCategory]()
       
       //now, for each potential path, look if the cat or policy
       //is valid
@@ -353,9 +353,9 @@ class GitPolicyPackagesReader(
         registerMaybeCategory(tw.getObjectId(0), path.path, maybeCategories, parseDescriptor)
       }
     
-      val toRemove = new collection.mutable.HashSet[SubPolicyPackageCategoryId]()
+      val toRemove = new collection.mutable.HashSet[SubTechniqueCategoryId]()
       maybeCategories.foreach { 
-        case (sId:SubPolicyPackageCategoryId,cat:SubPolicyPackageCategory) =>
+        case (sId:SubTechniqueCategoryId,cat:SubTechniqueCategory) =>
           recToRemove(sId,toRemove, maybeCategories)
           
         case _ => //ignore
@@ -364,27 +364,27 @@ class GitPolicyPackagesReader(
       //now, actually remove things
       maybeCategories --= toRemove
       
-      //update packageInfos
-      packageInfos.subCategories ++= maybeCategories.collect { case (sId:SubPolicyPackageCategoryId, cat:SubPolicyPackageCategory) => (sId -> cat) }
+      //update techniqueInfos
+      techniqueInfos.subCategories ++= maybeCategories.collect { case (sId:SubTechniqueCategoryId, cat:SubTechniqueCategory) => (sId -> cat) }
     
-      var root = maybeCategories.get(RootPolicyPackageCategoryId) match {
+      var root = maybeCategories.get(RootTechniqueCategoryId) match {
           case None => sys.error("Missing policy-template root category in Git, expecting category descriptor for Git path: '%s'".format( 
               repo.db.getWorkTree.getPath + canonizedRelativePath.map( "/" + _ + "/" + categoryDescriptorName).getOrElse("")))
-          case Some(sub:SubPolicyPackageCategory) => sys.error("Bad type for root category, found: " + sub)
-          case Some(r:RootPolicyPackageCategory) => r
+          case Some(sub:SubTechniqueCategory) => sys.error("Bad type for root category, found: " + sub)
+          case Some(r:RootTechniqueCategory) => r
         }
       
       //update subcategories
-      packageInfos.subCategories.toSeq.foreach { 
-        case(sId@SubPolicyPackageCategoryId(_,RootPolicyPackageCategoryId) , _ ) => //update root
+      techniqueInfos.subCategories.toSeq.foreach { 
+        case(sId@SubTechniqueCategoryId(_,RootTechniqueCategoryId) , _ ) => //update root
           root = root.copy( subCategoryIds = root.subCategoryIds + sId )
-        case(sId@SubPolicyPackageCategoryId(_,pId:SubPolicyPackageCategoryId) , _ ) =>
-          val cat = packageInfos.subCategories(pId)
-          packageInfos.subCategories(pId) = cat.copy( subCategoryIds = cat.subCategoryIds + sId )
+        case(sId@SubTechniqueCategoryId(_,pId:SubTechniqueCategoryId) , _ ) =>
+          val cat = techniqueInfos.subCategories(pId)
+          techniqueInfos.subCategories(pId) = cat.copy( subCategoryIds = cat.subCategoryIds + sId )
       }
 
       //finally, update root !
-      packageInfos.rootCategory = Some(root)
+      techniqueInfos.rootCategory = Some(root)
  
   }
   
@@ -393,13 +393,13 @@ class GitPolicyPackagesReader(
    * We remove each category for which parent category is not defined. 
    */
   private[this] def recToRemove(
-      catId:SubPolicyPackageCategoryId
-    , toRemove:collection.mutable.HashSet[SubPolicyPackageCategoryId]
-    , maybeCategories: MutMap[PolicyPackageCategoryId, PolicyPackageCategory]
+      catId:SubTechniqueCategoryId
+    , toRemove:collection.mutable.HashSet[SubTechniqueCategoryId]
+    , maybeCategories: MutMap[TechniqueCategoryId, TechniqueCategory]
   ) : Boolean = {
       catId.parentId match {
-        case RootPolicyPackageCategoryId => false
-        case sId:SubPolicyPackageCategoryId =>        
+        case RootTechniqueCategoryId => false
+        case sId:SubTechniqueCategoryId =>        
           if(toRemove.contains(sId)) {
             toRemove += catId
             true
@@ -412,73 +412,73 @@ class GitPolicyPackagesReader(
       }
   }
   
-  private[this] val dummyPolicyPackage = PolicyPackage(
-      PolicyPackageId(PolicyPackageName("dummy"),PolicyVersion("1.0"))
+  private[this] val dummyTechnique = Technique(
+      TechniqueId(TechniqueName("dummy"),TechniqueVersion("1.0"))
     , "dummy", "dummy", Seq(), Seq(), TrackerVariableSpec(), SectionSpec("ROOT"))
     
-  private[this] def processPolicyPackage(
+  private[this] def processTechnique(
       is:InputStream
     , filePath:String
-    , packagesInfo:InternalPackagesInfo
+    , techniquesInfo:InternalTechniquesInfo
     , parseDescriptor:Boolean // that option is a pure optimization for the case diff between old/new commit
   ): Unit = {
     try {
       val descriptorFile = new File(filePath)
-      val policyVersion = PolicyVersion(descriptorFile.getParentFile.getName)
-      val policyName = PolicyPackageName(descriptorFile.getParentFile.getParentFile.getName)
-      val parentCategoryId = PolicyPackageCategoryId.buildId(descriptorFile.getParentFile.getParentFile.getParent )
+      val policyVersion = TechniqueVersion(descriptorFile.getParentFile.getName)
+      val policyName = TechniqueName(descriptorFile.getParentFile.getParentFile.getName)
+      val parentCategoryId = TechniqueCategoryId.buildId(descriptorFile.getParentFile.getParentFile.getParent )
   
-      val policyPackageId = PolicyPackageId(policyName,policyVersion)
+      val techniqueId = TechniqueId(policyName,policyVersion)
       
-      val pack = if(parseDescriptor) policyParser.parseXml(loadDescriptorFile(is, filePath), policyPackageId)
-                 else dummyPolicyPackage
+      val pack = if(parseDescriptor) techniqueParser.parseXml(loadDescriptorFile(is, filePath), techniqueId)
+                 else dummyTechnique
 
       def updateParentCat() : Boolean = {
         parentCategoryId match {
-          case RootPolicyPackageCategoryId => 
-            val cat = packagesInfo.rootCategory.getOrElse(
-                throw new RuntimeException("Can not find the parent (root) caterogy %s for package %s".format(descriptorFile.getParent, policyPackageId))
+          case RootTechniqueCategoryId => 
+            val cat = techniquesInfo.rootCategory.getOrElse(
+                throw new RuntimeException("Can not find the parent (root) caterogy %s for package %s".format(descriptorFile.getParent, TechniqueId))
             )
-            packagesInfo.rootCategory = Some(cat.copy(packageIds = cat.packageIds + policyPackageId ))
+            techniquesInfo.rootCategory = Some(cat.copy(packageIds = cat.packageIds + techniqueId ))
             true
             
-          case sid:SubPolicyPackageCategoryId =>
-            packagesInfo.subCategories.get(sid) match {
+          case sid:SubTechniqueCategoryId =>
+            techniquesInfo.subCategories.get(sid) match {
               case Some(cat) =>
-                packagesInfo.subCategories(sid) = cat.copy(packageIds = cat.packageIds + policyPackageId )
+                techniquesInfo.subCategories(sid) = cat.copy(packageIds = cat.packageIds + techniqueId )
                 true
               case None =>
-                logger.error("Can not find the parent caterogy %s for package %s".format(descriptorFile.getParent, policyPackageId))
+                logger.error("Can not find the parent caterogy %s for package %s".format(descriptorFile.getParent, TechniqueId))
                 false
             }
         }
       }
   
       //check that that package is not already know, else its an error (by id ?)
-      packagesInfo.packages.get(policyPackageId.name) match {
+      techniquesInfo.techniques.get(techniqueId.name) match {
         case None => //so we don't have any version yet, and so no id
           if(updateParentCat) {
-            packagesInfo.packages(policyPackageId.name) = MutMap(policyPackageId.version -> pack)
-            packagesInfo.packagesCategory(policyPackageId) = parentCategoryId
+            techniquesInfo.techniques(techniqueId.name) = MutMap(techniqueId.version -> pack)
+            techniquesInfo.techniquesCategory(techniqueId) = parentCategoryId
           }
         case Some(versionMap) => //check for the version
-          versionMap.get(policyPackageId.version) match {
+          versionMap.get(techniqueId.version) match {
             case None => //add that version
               if(updateParentCat) {
-                packagesInfo.packages(policyPackageId.name)(policyPackageId.version) = pack
-                packagesInfo.packagesCategory(policyPackageId) = parentCategoryId
+                techniquesInfo.techniques(techniqueId.name)(techniqueId.version) = pack
+                techniquesInfo.techniquesCategory(techniqueId) = parentCategoryId
               }
             case Some(v) => //error, policy package version already exsits
               logger.error("Ignoring package for policy with ID %s and root directory %s because an other policy is already defined with that id and root path %s".format(
-                  policyPackageId, descriptorFile.getParent, packagesInfo.packagesCategory(policyPackageId).toString)
+                  TechniqueId, descriptorFile.getParent, techniquesInfo.techniquesCategory(techniqueId).toString)
               )
           }
       }
     } catch {
-      case e : VersionFormatException => logger.error("Ignoring policy package '%s' because the version format is incorrect".format(filePath),e)
-      case e : ParsingException => logger.error("Ignoring policy package '%s' because the descriptor file is malformed".format(filePath),e)
+      case e : TechniqueVersionFormatException => logger.error("Ignoring technique '%s' because the version format is incorrect".format(filePath),e)
+      case e : ParsingException => logger.error("Ignoring technique '%s' because the descriptor file is malformed".format(filePath),e)
       case e : Exception =>
-        logger.error("Error when processing policy package '%s'".format(filePath),e)
+        logger.error("Error when processing technique '%s'".format(filePath),e)
         throw e
     }
   }
@@ -495,15 +495,15 @@ class GitPolicyPackagesReader(
    * but DO use the folder as a category. 
    */
   private[this] def registerMaybeCategory(
-      descriptorObjectId:ObjectId
-    , filePath:String
-    , maybeCategories:MutMap[PolicyPackageCategoryId, PolicyPackageCategory]
-    , parseDescriptor:Boolean // that option is a pure optimization for the case diff between old/new commit
+      descriptorObjectId: ObjectId
+    , filePath          : String
+    , maybeCategories   : MutMap[TechniqueCategoryId, TechniqueCategory]
+    , parseDescriptor   : Boolean // that option is a pure optimization for the case diff between old/new commit
   ) : Unit = {
     
     val catPath = filePath.substring(0, filePath.size - categoryDescriptorName.size - 1 ) // -1 for the trailing slash
     
-    val catId = PolicyPackageCategoryId.buildId(catPath)
+    val catId = TechniqueCategoryId.buildId(catPath)
     //built the category
     val (name, desc, system ) = {
       if(parseDescriptor) {
@@ -523,8 +523,8 @@ class GitPolicyPackagesReader(
     } 
     
     val cat = catId match {
-      case RootPolicyPackageCategoryId => RootPolicyPackageCategory(name, desc, isSystem = system)
-      case sId:SubPolicyPackageCategoryId => SubPolicyPackageCategory(sId, name, desc, isSystem = system)
+      case RootTechniqueCategoryId => RootTechniqueCategory(name, desc, isSystem = system)
+      case sId:SubTechniqueCategoryId => SubTechniqueCategory(sId, name, desc, isSystem = system)
     }
     
     maybeCategories(cat.id) = cat
@@ -555,17 +555,17 @@ class GitPolicyPackagesReader(
   }
   
   /**
-   * Output the set of path for all policy packages. 
+   * Output the set of path for all techniques. 
    * Root is "/", so that a package "P1" is denoted
    * /P1, a package P2 in sub category cat1 is denoted 
    * /cat1/P2, etc. 
    */
-  private[this] def getPolicyPackagePath(packageInfos:PackagesInfo) : Set[PackagePath] = {
-   var set = scala.collection.mutable.Set[PackagePath]()
-   packageInfos.rootCategory.packageIds.foreach { p => set += PackagePath( "/" + p.toString) }
-   packageInfos.subCategories.foreach { case (id,cat) =>
+  private[this] def getTechniquePath(techniqueInfos:TechniquesInfo) : Set[TechniquePath] = {
+   var set = scala.collection.mutable.Set[TechniquePath]()
+   techniqueInfos.rootCategory.packageIds.foreach { p => set += TechniquePath( "/" + p.toString) }
+   techniqueInfos.subCategories.foreach { case (id,cat) =>
      val path = id.toString
-     cat.packageIds.foreach { p => set += PackagePath(path + "/" + p.toString) }
+     cat.packageIds.foreach { p => set += TechniquePath(path + "/" + p.toString) }
    }
    set.toSet
   }

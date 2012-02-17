@@ -95,7 +95,7 @@ class VariableSpecParser {
             val constraint: Constraint = (elt \ VAR_CONSTRAINT).toList match {
               case h :: Nil => parseConstraint(h)
               case Nil => Constraint()
-              case _ => throw new PolicyException("Only one <%s> it authorized".format(VAR_CONSTRAINT))
+              case _ => throw new TechniqueException("Only one <%s> it authorized".format(VAR_CONSTRAINT))
             }
 
             val checked = "true" == getUniqueNodeText(elt, VAR_IS_CHECKED, "true").toLowerCase

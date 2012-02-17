@@ -49,63 +49,63 @@ import scala.collection.SortedSet
  * @author vincent
  *
  */
-trait PolicyPackageService {
+trait TechniqueRepository {
 
   /**
    * Retrieve the template path for templateName relative to
    * the root of the policy package category tree
    */
-  def getTemplateContent(templateName: TmlId)(useIt: Option[InputStream] => Unit): Unit
+  def getTemplateContent(templateName: Cf3PromisesFileTemplateId)(useIt: Option[InputStream] => Unit): Unit
 
   //  def packageDirectory : File
 
   /**
    * Return all the policies available
    */
-  def getAllPolicies(): Map[PolicyPackageId, PolicyPackage]
+  def getAll(): Map[TechniqueId, Technique]
 
   /**
    * Return a policy by its
    * @param policyName
    * @return
    */
-  def getPolicy(policyId: PolicyPackageId): Option[PolicyPackage]
+  def get(techniqueId: TechniqueId): Option[Technique]
 
   /**
    * Return a policy found by its name.
    * If several versions of that policy are available,
    * the most recent version is used
    */
-  def getLastPolicyByName(policyName: PolicyPackageName): Option[PolicyPackage]
+  def getLastTechniqueByName(techniqueName: TechniqueName): Option[Technique]
 
   /**
    * Retrieve a the list of policies corresponding to the names
    * @param policiesName : the names of the policies
    * @return : the list of policy objects
    */
-  def getPolicies(policyIds: Seq[PolicyPackageId]): Seq[PolicyPackage]
+  def getByIds(techniqueIds: Seq[TechniqueId]): Seq[Technique]
 
   /**
-   * For the given PolicyPackageName, retrieve all available 
+   * For the given TechniqueName, retrieve all available 
    * versions. 
    * If the policyName is unknown, the returned collection will
    * be empty. 
    */
-  def getVersions(name:PolicyPackageName) : SortedSet[PolicyVersion]
+  def getTechniqueVersions(name:TechniqueName) : SortedSet[TechniqueVersion]
 
   ////////////////// method for categories //////////////////
 
-  def getReferencePolicyTemplateLibrary: RootPolicyPackageCategory
+  def getTechniqueLibrary: RootTechniqueCategory
 
-  def getPolicyTemplateCategory(id: PolicyPackageCategoryId): Box[PolicyPackageCategory]
+  def getTechniqueCategory(id: TechniqueCategoryId): Box[TechniqueCategory]
 
-  def getParentPolicyTemplateCategory_forTemplate(id: PolicyPackageId): Box[PolicyPackageCategory]
+  def getParentTechniqueCategory_forTechnique(id: TechniqueId): Box[TechniqueCategory]
 
-  final def getPolicyTemplateBreadCrump(id: PolicyPackageId): Box[Seq[PolicyPackageCategory]] = {
+  final def getTechniqueCategoriesBreadCrump(id: TechniqueId): Box[Seq[TechniqueCategory]] = {
     for {
-      cat <- getParentPolicyTemplateCategory_forTemplate(id)
+      cat <- getParentTechniqueCategory_forTechnique(id)
       path <- sequence(cat.id.getIdPathFromRoot) { currentCatId =>
-        getPolicyTemplateCategory(currentCatId) ?~! "'%s' category was not found but should be a parent of '%s'".format(currentCatId, cat.id)
+        getTechniqueCategory(currentCatId) ?~! "'%s' category was not found but should be a parent of '%s'".format(currentCatId, cat.id)
       }
     } yield {
       path

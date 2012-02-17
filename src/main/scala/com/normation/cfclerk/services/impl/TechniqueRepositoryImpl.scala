@@ -45,10 +45,10 @@ import scala.collection.SortedSet
 import scala.collection.mutable
 import com.normation.eventlog.EventActor
 
-class PolicyPackageServiceImpl(
-    policyPackagesReader: PolicyPackagesReader
-  , refLibCallbacks     : Seq[ReferenceLibraryUpdateNotification]
-) extends PolicyPackageService with UpdatePolicyTemplateLibrary with Loggable {
+class TechniqueRepositoryImpl(
+    techniqueReader: TechniqueReader
+  , refLibCallbacks: Seq[TechniquesLibraryUpdateNotification]
+) extends TechniqueRepository with UpdatePolicyTemplateLibrary with Loggable {
 
   /**
    * Callback to call on PTLib update
@@ -57,24 +57,24 @@ class PolicyPackageServiceImpl(
 
   
   /*
-   * PackagesInfo:
-   * - packagesCategory: Map[PolicyPackageId, PolicyPackageCategoryId]
-   * - packages: Map[PolicyPackageName, SortedMap[PolicyVersion, PolicyPackage]] 
-   * - categories: SortedMap[PolicyPackageCategoryId, PolicyPackageCategory]
+   * TechniquesInfo:
+   * - techniquesCategory: Map[TechniqueId, TechniqueCategoryId]
+   * - techniques: Map[TechniqueName, SortedMap[TechniqueVersion, Technique]] 
+   * - categories: SortedMap[TechniqueCategoryId, TechniqueCategory]
    */
-  private[this] var packageInfosCache: PackagesInfo = {
+  private[this] var techniqueInfosCache: TechniquesInfo = {
     /*
-     * readPolicies result is updated only on 
-     * policyPackagesReader.getModifiedPolicyPackages,
+     * readTechniques result is updated only on 
+     * techniqueReader.getModifiedTechniques,
      * so we don't call that method at boot time. 
      */
     try {
-      policyPackagesReader.readPolicies
+      techniqueReader.readTechniques
     } catch {
       case e:Exception => 
         logger.error("Error when loading the previously saved policy template library. Trying to update to last library available to overcome the error")
         this.update(CfclerkEventActor)
-        policyPackagesReader.readPolicies
+        techniqueReader.readTechniques
     }
   }
     
@@ -84,23 +84,23 @@ class PolicyPackageServiceImpl(
   /**
    * Register a new callback
    */
-  override def registerCallback(callback:ReferenceLibraryUpdateNotification) : Unit = {
+  override def registerCallback(callback:TechniquesLibraryUpdateNotification) : Unit = {
     callbacks.append(callback)
   }
   
-  override def update(actor:EventActor) : Box[Seq[PolicyPackageId]] = {
+  override def update(actor:EventActor) : Box[Seq[TechniqueId]] = {
     try {
-      val modifiedPackages = policyPackagesReader.getModifiedPolicyPackages
-      if (modifiedPackages.nonEmpty || /* first time init */ null == packageInfosCache) {
+      val modifiedPackages = techniqueReader.getModifiedTechniques
+      if (modifiedPackages.nonEmpty || /* first time init */ null == techniqueInfosCache) {
         logger.info("Reloading policy template library, " + {
-          if (modifiedPackages.isEmpty) "no modified packages found"
+          if (modifiedPackages.isEmpty) "no modified techniques found"
           else "found modified policy package(s): " + modifiedPackages.mkString(", ")
         })
-        packageInfosCache = policyPackagesReader.readPolicies
+        techniqueInfosCache = techniqueReader.readTechniques
   
         callbacks.foreach { callback =>
           try {
-            callback.updatedPolicyPackage(modifiedPackages, actor)
+            callback.updatedTechniques(modifiedPackages, actor)
           } catch {
             case e: Exception => logger.error("Error when executing callback '%s' with updated policy templates: '%s'".format(callback.name, modifiedPackages.mkString(", ")), e)
           }
@@ -118,34 +118,34 @@ class PolicyPackageServiceImpl(
 
 
 
-  override def getTemplateContent(templateName: TmlId)(useIt: Option[InputStream] => Unit): Unit =
-    policyPackagesReader.getTemplateContent(templateName)(useIt)
+  override def getTemplateContent(templateName: Cf3PromisesFileTemplateId)(useIt: Option[InputStream] => Unit): Unit =
+    techniqueReader.getTemplateContent(templateName)(useIt)
 
   /**
    * Return all the policies available
    * @return
    */
-  override def getAllPolicies: Map[PolicyPackageId, PolicyPackage] = {
+  override def getAll: Map[TechniqueId, Technique] = {
     (for {
-      (id, versions) <- packageInfosCache.packages
+      (id, versions) <- techniqueInfosCache.techniques
       (v, p) <- versions
     } yield {
-      (PolicyPackageId(id, v), p)
+      (TechniqueId(id, v), p)
     }).toMap
   }
 
-  override def getVersions(name: PolicyPackageName): SortedSet[PolicyVersion] = {
-    SortedSet[PolicyVersion]() ++ packageInfosCache.packages.get(name).toSeq.flatMap(_.keySet)
+  override def getTechniqueVersions(name: TechniqueName): SortedSet[TechniqueVersion] = {
+    SortedSet[TechniqueVersion]() ++ techniqueInfosCache.techniques.get(name).toSeq.flatMap(_.keySet)
   }
 
   /**
    * Retrieve the list of policies corresponding to the ids
-   * @param policyIds : identifiers of the policies
+   * @param techniqueIds : identifiers of the policies
    * @return : the list of policy objects
    * Throws an error if one policy ID does not match any known policy
    */
-  override def getPolicies(policyIds: Seq[PolicyPackageId]): Seq[PolicyPackage] = {
-    policyIds.map(x => packageInfosCache.packages(x.name)(x.version))
+  override def getByIds(techniqueIds: Seq[TechniqueId]): Seq[Technique] = {
+    techniqueIds.map(x => techniqueInfosCache.techniques(x.name)(x.version))
   }
 
   /**
@@ -153,16 +153,16 @@ class PolicyPackageServiceImpl(
    * @param policyName
    * @return
    */
-  override def getPolicy(policyId: PolicyPackageId): Option[PolicyPackage] = {
-    val result = packageInfosCache.packages.get(policyId.name).flatMap(versions => versions.get(policyId.version))
+  override def get(techniqueId: TechniqueId): Option[Technique] = {
+    val result = techniqueInfosCache.techniques.get(techniqueId.name).flatMap(versions => versions.get(techniqueId.version))
     if(!result.isDefined) {
-      logger.debug("Required policy package '%s' was not found".format(policyId))
+      logger.debug("Required policy package '%s' was not found".format(techniqueId))
     }
     result
   }
 
-  override def getLastPolicyByName(policyName: PolicyPackageName): Option[PolicyPackage] = {
-    packageInfosCache.packages.get(policyName).map { versions => versions.last._2 }
+  override def getLastTechniqueByName(policyName: TechniqueName): Option[Technique] = {
+    techniqueInfosCache.techniques.get(policyName).map { versions => versions.last._2 }
   }
 
   //////////////////////////////////// categories /////////////////////////////
@@ -174,21 +174,21 @@ class PolicyPackageServiceImpl(
 
   }
 
-  override def getReferencePolicyTemplateLibrary: RootPolicyPackageCategory = packageInfosCache.rootCategory
+  override def getTechniqueLibrary: RootTechniqueCategory = techniqueInfosCache.rootCategory
 
-  override def getPolicyTemplateCategory(id: PolicyPackageCategoryId): Box[PolicyPackageCategory] = {
+  override def getTechniqueCategory(id: TechniqueCategoryId): Box[TechniqueCategory] = {
     id match {
-      case RootPolicyPackageCategoryId => Full(this.packageInfosCache.rootCategory)
-      case sid: SubPolicyPackageCategoryId => this.packageInfosCache.subCategories.get(sid)
+      case RootTechniqueCategoryId => Full(this.techniqueInfosCache.rootCategory)
+      case sid: SubTechniqueCategoryId => this.techniqueInfosCache.subCategories.get(sid)
     }
   }
 
-  override def getParentPolicyTemplateCategory_forTemplate(id: PolicyPackageId): Box[PolicyPackageCategory] = {
+  override def getParentTechniqueCategory_forTechnique(id: TechniqueId): Box[TechniqueCategory] = {
     for {
-      cid <- this.packageInfosCache.packagesCategory.get(id)
+      cid <- this.techniqueInfosCache.techniquesCategory.get(id)
       cat <- cid match {
-        case RootPolicyPackageCategoryId => Some(this.packageInfosCache.rootCategory)
-        case sid: SubPolicyPackageCategoryId => this.packageInfosCache.subCategories.get(sid)
+        case RootTechniqueCategoryId => Some(this.techniqueInfosCache.rootCategory)
+        case sid: SubTechniqueCategoryId => this.techniqueInfosCache.subCategories.get(sid)
       }
     } yield {
       cat

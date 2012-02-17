@@ -135,7 +135,7 @@ case class SectionSpec(
   private def recCloneMultivalued: SectionSpec = {
     val multivaluedChildren = for (child <- children) yield child match {
       case s: SectionSpec =>
-        if (s.isMultivalued) throw new PolicyException(
+        if (s.isMultivalued) throw new TechniqueException(
           "A multivalued section should not contain other multivalued sections." +
             " It may contain only imbricated sections or variables.")
         else
