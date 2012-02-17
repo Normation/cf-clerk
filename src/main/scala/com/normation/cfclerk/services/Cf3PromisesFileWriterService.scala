@@ -32,17 +32,38 @@
 *************************************************************************************
 */
 
-package com.normation.cfclerk.exceptions
+package com.normation.cfclerk.services
 
-import scala.util.control.NoStackTrace
+import com.normation.cfclerk.domain._
 
 /**
- * An exception that may occur when parsing metadata.xml files.
- * That exception is allowed to be displayed to user, who don't need
- * the stack trace. 
+ * Deals with templates : prepare the templates, fetch variables needed by a policy,
+ * and write machine configuration
+ * @author Nicolas CHARLES
+ *
  */
-class ParsingException (message:String) extends RuntimeException(message) {
-  def this() = this("Incompatible XML file")
+trait Cf3PromisesFileWriterService {
+ 
+
+  /**
+   * Write the current seq of template file a the path location, replacing the variables found in variableSet
+   * @param fileSet : the set of template to be written
+   * @param variableSet : the set of variable
+   * @param path : where to write the files
+   */
+  def writePromisesFiles(fileSet: Set[Cf3PromisesFileTemplateCopyInfo], variableSet: Seq[STVariable], outPath: String): Unit
   
-  override def fillInStackTrace(): Throwable = this
+  /**
+   * Move the promises from the new folder to their final folder, backuping previous promises in the way
+   * Throw an exception if something fails during the move (all the data will be restored)
+   * @param folder : (Container identifier, promisefolder, newfolder, backupfolder )
+   */
+  def movePromisesToFinalPosition(folders : Seq[PromisesFinalMoveInfo] ) : Seq[PromisesFinalMoveInfo]
+
+  /**
+   * Concatenate all the variables for each policy Instances.
+   * @param policyContainer
+   * @return
+   */
+  def prepareAllCf3PolicyDraftVariables(container: Cf3PolicyDraftContainer):  Map[TechniqueId, Map[String, Variable]]
 }

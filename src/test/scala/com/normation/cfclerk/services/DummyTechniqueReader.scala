@@ -32,17 +32,47 @@
 *************************************************************************************
 */
 
-package com.normation.cfclerk.exceptions
+package com.normation.cfclerk.services
 
-import scala.util.control.NoStackTrace
+import com.normation.cfclerk.domain._
+import scala.collection.mutable.{Map => MutMap}
+import java.io.InputStream
+import scala.collection.SortedSet
 
 /**
- * An exception that may occur when parsing metadata.xml files.
- * That exception is allowed to be displayed to user, who don't need
- * the stack trace. 
+ * Dummy knowledge reader, to test the prototyped PathComputer
+ * @author nicolas
+ *
  */
-class ParsingException (message:String) extends RuntimeException(message) {
-  def this() = this("Incompatible XML file")
+class DummyTechniqueReader(policies:Seq[Technique]=Seq(Technique(TechniqueId(TechniqueName("dummy"), TechniqueVersion("1.0")),"dummy", "DESCRIPTION",Seq(), Seq(), TrackerVariableSpec(), SectionSpec("ROOT")))) extends TechniqueReader {
+ 
+  def this() = this(Seq()) //Spring need that...
+     
+  val rootCategoryId = RootTechniqueCategoryId / "rootCategory"
+
+  //they are all under root
+  def readTechniques(): TechniquesInfo = {
+    val packagesPath = MutMap[TechniqueId,TechniqueCategoryId]()
+    val packages = MutMap[TechniqueName , collection.immutable.SortedMap[TechniqueVersion,Technique]]()
+    
+    var rootCategory = RootTechniqueCategory(
+        "Root category",
+        "The main category under witch all other are",
+        Set(), SortedSet(), true
+    )
+    
+    for {
+      p <- policies
+    } {
+      packagesPath(p.id) =  rootCategoryId
+      packages(p.id.name) = (packages.getOrElse(p.id.name,collection.SortedMap.empty[TechniqueVersion,Technique]) + (p.id.version -> p))
+      rootCategory = rootCategory.copy( packageIds = rootCategory.packageIds + p.id)
+    }
+
+    TechniquesInfo(rootCategory, packagesPath.toMap, packages.toMap, Map())
+  }
   
-  override def fillInStackTrace(): Throwable = this
+  def getTemplateContent[T](templateName: Cf3PromisesFileTemplateId)(useIt : Option[InputStream] => T) : T = useIt(None)
+  def getModifiedTechniques : Seq[TechniqueId] = Seq()
+
 }

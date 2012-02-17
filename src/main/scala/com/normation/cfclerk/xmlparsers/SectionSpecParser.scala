@@ -45,7 +45,7 @@ import com.normation.utils.Control.{sequence,bestEffort}
 class SectionSpecParser(variableParser:VariableSpecParser) extends Loggable {
 
   
-  def parseSectionsInPolicy(policy: Node, id: PolicyPackageId, policyName: String):SectionSpec = {
+  def parseSectionsInPolicy(policy: Node, id: TechniqueId, policyName: String):SectionSpec = {
     val sections = policy \\ SECTIONS_ROOT
     if (sections.size > 1) {
       val err = "In %s -> %s : Only one <sections> marker is allowed in the entire file".format(id, policyName)
@@ -114,7 +114,7 @@ class SectionSpecParser(variableParser:VariableSpecParser) extends Loggable {
   }
     
   //method that actually parse a <SECTIONS> or <SECTION> tag
-  private[this] def parseSection(root: Node, id: PolicyPackageId, policyName: String): Box[SectionSpec] = {
+  private[this] def parseSection(root: Node, id: TechniqueId, policyName: String): Box[SectionSpec] = {
 
     val name = {
       val n = getAttributeText(root, "name", "")
@@ -152,7 +152,7 @@ class SectionSpecParser(variableParser:VariableSpecParser) extends Loggable {
       Full(sectionSpec)
   }
 
-  private[this] def parseChildren(node: Node, id: PolicyPackageId, policyName: String): Seq[SectionChildSpec] = {
+  private[this] def parseChildren(node: Node, id: TechniqueId, policyName: String): Seq[SectionChildSpec] = {
     assert(node.label == SECTIONS_ROOT || node.label == SECTION)
 
     def parseOneVariable(node: Node) = {
@@ -169,7 +169,7 @@ class SectionSpecParser(variableParser:VariableSpecParser) extends Loggable {
       }
     }
     
-    def parseOneSection(node: Node, id: PolicyPackageId, policyName: String) : SectionSpec = {
+    def parseOneSection(node: Node, id: TechniqueId, policyName: String) : SectionSpec = {
       parseSection(node, id, policyName) match {
         case Full(section) => section
         case Failure(m, _, _) =>

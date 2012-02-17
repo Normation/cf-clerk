@@ -32,17 +32,44 @@
 *************************************************************************************
 */
 
-package com.normation.cfclerk.exceptions
+package com.normation.cfclerk.xmlparsers
 
-import scala.util.control.NoStackTrace
+import com.normation.cfclerk.domain._
+import com.normation.cfclerk.exceptions.ParsingException
+import net.liftweb.common.Loggable
+import scala.xml._
+import CfclerkXmlConstants._
+import CfclerkXmlConstants._
 
 /**
- * An exception that may occur when parsing metadata.xml files.
- * That exception is allowed to be displayed to user, who don't need
- * the stack trace. 
+ * Parse a template file tag in metadata.xml.
+ * 
+ * The tag looks like:
+ * <TML name="someIdentification">
+ *   <OUTPATH>some_out_path_name</OUTPATH> (optional, default to "techniqueId/templateName.cf")
+ *   <INCLUDED>true</INCLUDED> (optional, default to true)
+ * </TML>
  */
-class ParsingException (message:String) extends RuntimeException(message) {
-  def this() = this("Incompatible XML file")
-  
-  override def fillInStackTrace(): Throwable = this
+class Cf3PromisesFileTemplateParser extends Loggable {
+
+  def parseXml(techniqueId: TechniqueId, node: Node): Cf3PromisesFileTemplate = {
+    if(node.label != PROMISE_TEMPLATE) throw new ParsingException("Error: try to parse a <%s> node, but actually get: %s".format(PROMISE_TEMPLATE, node))
+    
+    val name = node.attribute(PROMISE_TEMPLATE_NAME) match {
+      case Some(n) if (n.size == 1) => n.text
+      case _ => throw new ParsingException("Error when parsing node %s. Template name is not defined".format(node))
+    }
+
+    val outPath = (node \ PROMISE_TEMPLATE_OUTPATH).text match {
+      case "" => //set to "techniqueId/templateName.cf
+        "%s/%s/%s.cf".format(techniqueId.name.value, techniqueId.version.toString, name)
+      case path => path
+    }
+
+    logger.trace("Reading node %s for policy %s".format(name, techniqueId))
+    val included = !((node \ PROMISE_TEMPLATE_INCLUDED).text == "false")
+    logger.trace("Node %s included status is %s".format(name, included))
+
+    Cf3PromisesFileTemplate( Cf3PromisesFileTemplateId(techniqueId, name), included, outPath )
+  }
 }

@@ -32,17 +32,30 @@
 *************************************************************************************
 */
 
-package com.normation.cfclerk.exceptions
+package com.normation.cfclerk.services
 
-import scala.util.control.NoStackTrace
+import com.normation.cfclerk.domain.TechniqueId
+import com.normation.eventlog.EventActor
 
 /**
- * An exception that may occur when parsing metadata.xml files.
- * That exception is allowed to be displayed to user, who don't need
- * the stack trace. 
+ * A trait that allows its implementation to get notification 
+ * about Reference Policy Template Library update. 
+ * 
+ * The implementation must be registered to a TechniqueRepository
+ * that allows such notification to be shared. 
+ *
  */
-class ParsingException (message:String) extends RuntimeException(message) {
-  def this() = this("Incompatible XML file")
+trait TechniquesLibraryUpdateNotification {
   
-  override def fillInStackTrace(): Throwable = this
+  /**
+   * A name to identify that callback
+   */
+  def name:String
+
+  /**
+   * That method will be called when techniques are updated.
+   * TODO: perhaps we want something more useful as a return type. 
+   */
+  def updatedTechniques(TechniqueIds:Seq[TechniqueId], actor: EventActor) : Unit
+  
 }

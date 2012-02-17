@@ -65,7 +65,7 @@ import org.eclipse.jgit.errors.StopWalkException
 import org.eclipse.jgit.events.RefsChangedListener
 import org.eclipse.jgit.events.RefsChangedEvent
 import scala.collection.mutable.Buffer
-import com.normation.cfclerk.xmlparsers.PolicyParser
+import com.normation.cfclerk.xmlparsers.TechniqueParser
 import com.normation.cfclerk.services._
 import com.normation.exceptions.TechnicalException
 
@@ -76,7 +76,7 @@ import com.normation.exceptions.TechnicalException
  * If a .git repository is found in it, it is considered as the repository
  * to use, else if none is found, one is created. 
  */
-class GitRepositoryProviderImpl(packageDirectoryPath: String) extends GitRepositoryProvider with Loggable { //we expect to have a .git here
+class GitRepositoryProviderImpl(techniqueDirectoryPath: String) extends GitRepositoryProvider with Loggable { //we expect to have a .git here
   /**
    * Check for root package existence
    */
@@ -106,7 +106,7 @@ class GitRepositoryProviderImpl(packageDirectoryPath: String) extends GitReposit
   }
 
   override val db = {
-    val dir = new File(packageDirectoryPath)
+    val dir = new File(techniqueDirectoryPath)
     checkPackageDirectory(dir)
     checkGitRepos(dir)
   }

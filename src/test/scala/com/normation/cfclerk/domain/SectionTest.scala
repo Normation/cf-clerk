@@ -220,7 +220,7 @@ class SectionTest extends Specification {
 }
 
 case class SectionParser(sectionSpecParser: SectionSpecParser) extends HashcodeCaching  {
-  val id = new PolicyPackageId(new PolicyPackageName("test-policyPackageId"), PolicyVersion("1.0"))
+  val id = new TechniqueId(new TechniqueName("test-TechniqueId"), TechniqueVersion("1.0"))
   val policyName = "test-policyName"
 
   def parseXml(elt: Node): SectionSpec = {

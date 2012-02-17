@@ -32,17 +32,34 @@
 *************************************************************************************
 */
 
-package com.normation.cfclerk.exceptions
+package com.normation.cfclerk.services
 
-import scala.util.control.NoStackTrace
+import com.normation.cfclerk.domain.{Cf3PolicyDraft, Cf3PolicyDraftContainer}
+import net.liftweb.common.Box
 
 /**
- * An exception that may occur when parsing metadata.xml files.
- * That exception is allowed to be displayed to user, who don't need
- * the stack trace. 
+ * Service to handle Containers : create a container, add a policy instance to a container and write the policies corresponding to this container
+ * This is the entry point for any CLI based on cf-clerk
+ * @author Nicolas CHARLES
+ *
  */
-class ParsingException (message:String) extends RuntimeException(message) {
-  def this() = this("Incompatible XML file")
+trait Cf3PolicyDraftContainerService {
+
   
-  override def fillInStackTrace(): Throwable = this
+  /**
+   * Create a container
+   * @param identifier
+   * @param policiesInstancesBeans
+   * @return
+   */
+  def createContainer(identifier: String, cf3PolicyDrafts : Seq[Cf3PolicyDraft]) : Box[Cf3PolicyDraftContainer]
+
+  
+  /**
+   * Add a policy instance to a container
+   * @param container
+   * @param cf3PolicyDraft
+   * @return
+   */
+  def addCf3PolicyDraft(container: Cf3PolicyDraftContainer, cf3PolicyDraft: Cf3PolicyDraft) : Box[Cf3PolicyDraft]
 }

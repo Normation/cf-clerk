@@ -32,17 +32,27 @@
 *************************************************************************************
 */
 
-package com.normation.cfclerk.exceptions
+package com.normation.cfclerk.services
 
-import scala.util.control.NoStackTrace
+import net.liftweb.common.Box
+import com.normation.cfclerk.domain.TechniqueId
+import com.normation.eventlog.EventActor
 
 /**
- * An exception that may occur when parsing metadata.xml files.
- * That exception is allowed to be displayed to user, who don't need
- * the stack trace. 
+ * A trait that allows to update the reference policy
+ * template library. 
  */
-class ParsingException (message:String) extends RuntimeException(message) {
-  def this() = this("Incompatible XML file")
+trait UpdateTechniqueLibrary {
+
+  /**
+   * Update the lib, and return the list of
+   * actually updated policy templates. 
+   */
+  def update(actor:EventActor) : Box[Seq[TechniqueId]]
   
-  override def fillInStackTrace(): Throwable = this
+  /**
+   * Allows callbacks to be called on a Policy Template library update. 
+   */
+  def registerCallback(callback:TechniquesLibraryUpdateNotification) : Unit
+
 }

@@ -43,13 +43,13 @@ import com.normation.cfclerk.services.impl._
 @Configuration
 class TstConfig {
   
-  @Bean def policyPackageReader = new DummyPolicyPackagesReader
+  @Bean def policyPackageReader = new DummyTechniqueReader
   @Bean def variableSpecParser = new VariableSpecParser 
-  @Bean def tmlParser = new TmlParser()
+  @Bean def tmlParser = new Cf3PromisesFileTemplateParser()
   @Bean def sectionSpecParser = new SectionSpecParser(variableSpecParser)
-  @Bean def policyParser = new PolicyParser(variableSpecParser,
+  @Bean def policyParser = new TechniqueParser(variableSpecParser,
        sectionSpecParser,tmlParser,new SystemVariableSpecServiceImpl)
   @Bean def policyTranslator = new DummyPolicyTranslator
-  @Bean def policyService = new DummyPolicyService
-  @Bean def containerService = new ContainerServiceImpl(policyTranslator, policyService)
+  @Bean def techniqueRepository = new DummyTechniqueRepository
+  @Bean def containerService = new Cf3PolicyDraftContainerServiceImpl(policyTranslator, techniqueRepository)
 }

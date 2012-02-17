@@ -36,9 +36,9 @@ package com.normation.cfclerk.services
 
 import com.normation.cfclerk.domain._
 
-class DummyPolicyTranslator extends PromiseWriterService {
+class DummyPolicyTranslator extends Cf3PromisesFileWriterService {
 
-  def prepareTmls(policyContainer : PoliciesContainer, extraVariables : Map[String, Variable]) : PreparedTemplates = {
+  def prepareCf3PromisesFileTemplate(policyContainer : Cf3PolicyDraftContainer, extraVariables : Map[String, Variable]) : PreparedTemplates = {
     null
   }
 
@@ -46,7 +46,7 @@ class DummyPolicyTranslator extends PromiseWriterService {
     null
   }
   
-  def writePromisesFiles(fileSet: Set[TemplateCopyInfo], variableSet: Seq[STVariable], outPath: String): Unit = {
+  def writePromisesFiles(fileSet: Set[Cf3PromisesFileTemplateCopyInfo], variableSet: Seq[STVariable], outPath: String): Unit = {
     null
   }
   
@@ -55,6 +55,6 @@ class DummyPolicyTranslator extends PromiseWriterService {
    * @param policyContainer
    * @return
    */
-  def prepareAllPolicyInstanceVariables(policyContainer: PoliciesContainer) = null
+  def prepareAllCf3PolicyDraftVariables(policyContainer: Cf3PolicyDraftContainer) = null
   
 }

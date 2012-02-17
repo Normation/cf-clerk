@@ -75,10 +75,10 @@ trait JGitPackageReaderSpec extends Specification with Loggable {
   override def map(fs: =>Fragments) = fs ^ Step(deleteDir)
   
   val variableSpecParser = new VariableSpecParser 
-  val policyParser: PolicyParser = new PolicyParser(
+  val policyParser: TechniqueParser = new TechniqueParser(
       variableSpecParser,
       new SectionSpecParser(variableSpecParser),
-      new TmlParser,
+      new Cf3PromisesFileTemplateParser,
       new SystemVariableSpecServiceImpl
   )
 
@@ -91,24 +91,24 @@ trait JGitPackageReaderSpec extends Specification with Loggable {
   } else sys.error("Can not create directory: " + ptLib.getPath)
   
   
-  FileUtils.copyDirectory(new File("src/test/resources/packagesRoot") , ptLib)
+  FileUtils.copyDirectory(new File("src/test/resources/techniquesRoot") , ptLib)
 
   val repo = new GitRepositoryProviderImpl(gitRoot.getAbsolutePath)
     
   //post init hook
   postInitHook
   
-  val reader = new GitPolicyPackagesReader(
+  val reader = new GitTechniqueReader(
                 policyParser
               , new SimpleGitRevisionProvider("refs/heads/master", repo)
               , repo
-              , "policy.xml"
+              , "metadata.xml"
               , "category.xml"
               , relativePathArg
             )
 
-  val infos = reader.readPolicies
-  val § = RootPolicyPackageCategoryId
+  val infos = reader.readTechniques
+  val § = RootTechniqueCategoryId
   
   "The test lib" should { 
     "have 3 categories" in infos.subCategories.size === 3   
@@ -128,13 +128,13 @@ trait JGitPackageReaderSpec extends Specification with Loggable {
   "cat1 sub category" should {
     val cat1 = infos.subCategories( § / "cat1" )
     val packages = cat1.packageIds.toSeq
-    val tmlId = TmlId(packages(0), "theTemplate")
+    val tmlId = Cf3PromisesFileTemplateId(packages(0), "theTemplate")
     "be named 'cat1'" in  cat1.name === "cat1"
     "has no description" in cat1.description === "" 
     "has two packages..." in cat1.packageIds.size === 2
     "...with the same name p1_1" in cat1.packageIds.forall(id => "p1_1" === id.name.value)
-    "...and version 1.0" in packages(0).version === PolicyVersion("1.0")
-    "...and version 2.0" in packages(1).version === PolicyVersion("2.0")
+    "...and version 1.0" in packages(0).version === TechniqueVersion("1.0")
+    "...and version 2.0" in packages(1).version === TechniqueVersion("2.0")
     "...with a template from which we can read 'The template content\\non two lines.'" in {
       reader.getTemplateContent(tmlId){ 
         case None => failure("Can not open an InputStream for " + tmlId.toString)
@@ -159,7 +159,7 @@ trait JGitPackageReaderSpec extends Specification with Loggable {
       Seq("p1_1_1_1", "p1_1_1_2").forall(name => cat1_1_1.packageIds.exists(id => id.name.value == name)) === true
     }
     "...and the same version 1.0" in {
-      cat1_1_1.packageIds.forall(id => id.version === PolicyVersion("1.0"))
+      cat1_1_1.packageIds.forall(id => id.version === TechniqueVersion("1.0"))
     }
   }  
   
@@ -172,7 +172,7 @@ trait JGitPackageReaderSpec extends Specification with Loggable {
     git.commit.setMessage("Modify PT: cat1/p1_1/2.0").call
     
     "have update package" in {
-      reader.getModifiedPolicyPackages.size === 1
+      reader.getModifiedTechniques.size === 1
     }
   }
 
@@ -180,7 +180,7 @@ trait JGitPackageReaderSpec extends Specification with Loggable {
 
 
 /**
- * A test case where git repos and pt lib root are the same
+ * A test case where git repos and technique lib root are the same
  */
 @RunWith(classOf[JUnitRunner])
 class JGitPackageReader_SameRootTest extends JGitPackageReaderSpec {
@@ -192,26 +192,26 @@ class JGitPackageReader_SameRootTest extends JGitPackageReaderSpec {
 
 /**
  * A test case where git repos is on a parent directory
- * of pt lib root. 
+ * of technique lib root. 
  * In that configuration, we also add false categories in an other sub-directory of the
  * git to check that the PT reader does not look outside of its root. 
  */
 @RunWith(classOf[JUnitRunner])
 class JGitPackageReader_ChildRootTest extends JGitPackageReaderSpec {
   lazy val gitRoot = new File("/tmp/test-jgit", System.currentTimeMillis.toString)
-  lazy val ptLibDirName = "policy-templates"
+  lazy val ptLibDirName = "techniques"
   lazy val ptLib = new File(gitRoot, ptLibDirName)
   lazy val relativePathArg = Some("  /" + ptLibDirName + "/  ")
   
   def postInitHook : Unit = {
     //add dummy files
-    val destName = "phantomPTs"
+    val destName = "phantomTechniquess"
     val dest = new File(gitRoot, destName)
-    logger.info("Add false PT outside root in '%s'".format(gitRoot.getPath + "/phantomPTs"))
-    FileUtils.copyDirectory(new File("src/test/resources/phantomPTs") ,dest)
+    logger.info("Add false techniques outside root in '%s'".format(gitRoot.getPath + "/phantomPTs"))
+    FileUtils.copyDirectory(new File("src/test/resources/phantomTechniques") ,dest)
     //commit in git these files
     val git = new Git(repo.db)
     git.add.addFilepattern(destName).call
-    git.commit.setMessage("Commit something looking like a PT but outside PT root directory").call
+    git.commit.setMessage("Commit something looking like a technique but outside PT root directory").call
   }
 }
