@@ -42,7 +42,7 @@ import CfclerkXmlConstants._
 import CfclerkXmlConstants._
 
 /**
- * Parse a template file tag in policy.xml.
+ * Parse a template file tag in metadata.xml.
  * 
  * The tag looks like:
  * <TML name="someIdentification">

@@ -92,9 +92,9 @@ class TechniqueRepositoryImpl(
     try {
       val modifiedPackages = techniqueReader.getModifiedTechniques
       if (modifiedPackages.nonEmpty || /* first time init */ null == techniqueInfosCache) {
-        logger.info("Reloading policy template library, " + {
+        logger.info("Reloading technique library, " + {
           if (modifiedPackages.isEmpty) "no modified techniques found"
-          else "found modified policy package(s): " + modifiedPackages.mkString(", ")
+          else "found modified technique(s): " + modifiedPackages.mkString(", ")
         })
         techniqueInfosCache = techniqueReader.readTechniques
   
@@ -102,16 +102,16 @@ class TechniqueRepositoryImpl(
           try {
             callback.updatedTechniques(modifiedPackages, actor)
           } catch {
-            case e: Exception => logger.error("Error when executing callback '%s' with updated policy templates: '%s'".format(callback.name, modifiedPackages.mkString(", ")), e)
+            case e: Exception => logger.error("Error when executing callback '%s' with updated technique: '%s'".format(callback.name, modifiedPackages.mkString(", ")), e)
           }
         }
   
       } else {
-        logger.debug("Not reloading policy template library as nothing changed since last reload")
+        logger.debug("Not reloading technique library as nothing changed since last reload")
       }
       Full(modifiedPackages)
     } catch {
-      case e:Exception => Failure("Error when trying to read policy package library", Full(e), Empty)
+      case e:Exception => Failure("Error when trying to read technique library", Full(e), Empty)
     }
   }
   
@@ -156,7 +156,7 @@ class TechniqueRepositoryImpl(
   override def get(techniqueId: TechniqueId): Option[Technique] = {
     val result = techniqueInfosCache.techniques.get(techniqueId.name).flatMap(versions => versions.get(techniqueId.version))
     if(!result.isDefined) {
-      logger.debug("Required policy package '%s' was not found".format(techniqueId))
+      logger.debug("Required technique '%s' was not found".format(techniqueId))
     }
     result
   }

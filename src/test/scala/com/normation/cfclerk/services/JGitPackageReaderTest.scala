@@ -91,7 +91,7 @@ trait JGitPackageReaderSpec extends Specification with Loggable {
   } else sys.error("Can not create directory: " + ptLib.getPath)
   
   
-  FileUtils.copyDirectory(new File("src/test/resources/packagesRoot") , ptLib)
+  FileUtils.copyDirectory(new File("src/test/resources/techniquesRoot") , ptLib)
 
   val repo = new GitRepositoryProviderImpl(gitRoot.getAbsolutePath)
     
@@ -102,7 +102,7 @@ trait JGitPackageReaderSpec extends Specification with Loggable {
                 policyParser
               , new SimpleGitRevisionProvider("refs/heads/master", repo)
               , repo
-              , "policy.xml"
+              , "metadata.xml"
               , "category.xml"
               , relativePathArg
             )
@@ -205,13 +205,13 @@ class JGitPackageReader_ChildRootTest extends JGitPackageReaderSpec {
   
   def postInitHook : Unit = {
     //add dummy files
-    val destName = "phantomPTs"
+    val destName = "phantomTechniquess"
     val dest = new File(gitRoot, destName)
-    logger.info("Add false PT outside root in '%s'".format(gitRoot.getPath + "/phantomPTs"))
-    FileUtils.copyDirectory(new File("src/test/resources/phantomPTs") ,dest)
+    logger.info("Add false techniques outside root in '%s'".format(gitRoot.getPath + "/phantomPTs"))
+    FileUtils.copyDirectory(new File("src/test/resources/phantomTechniques") ,dest)
     //commit in git these files
     val git = new Git(repo.db)
     git.add.addFilepattern(destName).call
-    git.commit.setMessage("Commit something looking like a PT but outside PT root directory").call
+    git.commit.setMessage("Commit something looking like a technique but outside PT root directory").call
   }
 }

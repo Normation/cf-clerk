@@ -1,9 +1,7 @@
-<POLICY name="Package 1_1">
+<TECHNIQUE name="falsePT">
     <DESCRIPTION>A package</DESCRIPTION>
     <DISPLAY>true</DISPLAY>
-    <TEMPLATE>
-      <NAME>p1_1/theTemplate</NAME>
-    </TEMPLATE>
+    <TEMPLATE></TEMPLATE>
     <CONFIGURATIONPOLICY>true</CONFIGURATIONPOLICY>
     <TMLS></TMLS>
-</POLICY>   
+</TECHNIQUE>   

@@ -94,12 +94,12 @@ import org.eclipse.jgit.diff.DiffFormatter
  * The convention used about policy techniques and categories are the
  * same than for the FSTechniqueReader, which are:
  * 
- * - all directories which contains a policy.xml file is
+ * - all directories which contains a metadata.xml file is
  *   considered to be a policy package.
  *
  * - template files are looked in the directory
  *
- * - all directory without a policy.xml are considered to be
+ * - all directory without a metadata.xml are considered to be
  *   a category directory.
  *
  * - if a category directory contains a category.xml file,

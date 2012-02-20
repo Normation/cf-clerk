@@ -60,12 +60,12 @@ import com.normation.cfclerk.services._
  *
  * Conventions used:
  *
- * - all directories which contains a policy.xml file is
+ * - all directories which contains a metadata.xml file is
  *   considered to be a policy package.
  *
  * - template files are looked in the directory
  *
- * - all directory without a policy.xml are considered to be
+ * - all directory without a metadata.xml are considered to be
  *   a category directory.
  *
  * - if a category directory contains a category.xml file,
@@ -93,10 +93,10 @@ class FSTechniqueReader(
 
   private def checkTechniqueDirectory(dir: File): Unit = {
     if (!dir.exists) {
-      throw new RuntimeException("Directory %s does not exists, how do you want that I read policy package in it?".format(dir))
+      throw new RuntimeException("Directory %s does not exists, how do you want that I read a technique from it?".format(dir))
     }
     if (!dir.canRead) {
-      throw new RuntimeException("Directory %s is not readable, how do you want that I read policy package in it?".format(dir))
+      throw new RuntimeException("Directory %s is not readable, how do you want that I read a technique from it?".format(dir))
     }
   }
 
@@ -197,12 +197,12 @@ class FSTechniqueReader(
         parentCategoryId match {
           case RootTechniqueCategoryId =>
             val cat = internalTechniquesInfo.rootCategory.getOrElse(
-              throw new RuntimeException("Can not find the parent (root) caterogy %s for package %s".format(packageRootDirectory.getParentFile.getAbsolutePath, pack.id)))
+              throw new RuntimeException("Can not find the parent (root) category %s for technique %s".format(packageRootDirectory.getParentFile.getAbsolutePath, pack.id)))
             internalTechniquesInfo.rootCategory = Some(cat.copy(packageIds = cat.packageIds + pack.id))
 
           case sid: SubTechniqueCategoryId =>
             val cat = internalTechniquesInfo.subCategories.get(sid).getOrElse(
-              throw new RuntimeException("Can not find the parent caterogy %s for package %s".format(packageRootDirectory.getParentFile.getAbsolutePath, pack.id)))
+              throw new RuntimeException("Can not find the parent category %s for technique %s".format(packageRootDirectory.getParentFile.getAbsolutePath, pack.id)))
             internalTechniquesInfo.subCategories(sid) = cat.copy(packageIds = cat.packageIds + pack.id)
 
         }
@@ -279,7 +279,7 @@ class FSTechniqueReader(
           id = parentCategoryId / categoryRootDirectory.getName, name = name, description = desc, isSystem = system)
         parentCategoryId match {
           case RootTechniqueCategoryId =>
-            val parent = internalTechniquesInfo.rootCategory.getOrElse(throw new RuntimeException("Missing root policy category"))
+            val parent = internalTechniquesInfo.rootCategory.getOrElse(throw new RuntimeException("Missing root technique category"))
             internalTechniquesInfo.rootCategory = Some(parent.copy(subCategoryIds = parent.subCategoryIds + category.id))
           case sid: SubTechniqueCategoryId =>
             val parent = internalTechniquesInfo.subCategories(sid)

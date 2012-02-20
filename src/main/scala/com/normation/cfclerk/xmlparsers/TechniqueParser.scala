@@ -44,7 +44,7 @@ import scala.xml._
 import net.liftweb.common._
 
 /**
- * Parse a technique (policy.xml file)
+ * Parse a technique (metadata.xml file)
  */
 
 class TechniqueParser(
