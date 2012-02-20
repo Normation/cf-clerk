@@ -59,15 +59,15 @@ case class Cf3PolicyDraftId(value: String) extends HashcodeCaching
  * That object is part of a node configuration and is the last abstraction used
  * before actual promises are generated. 
 
- * Please note that a PolicyInstance should really have a Variable of the type TrackerVariable,
- * that will hold the id of the policyInstance to be written in the template
+ * Please note that a Directive should really have a Variable of the type TrackerVariable,
+ * that will hold the id of the directive to be written in the template
  *
  */
 class Cf3PolicyDraft(
     val id: Cf3PolicyDraftId
   , val techniqueId: TechniqueId
   , val __variableMap: Map[String, Variable]
-  , val TrackerVariable : TrackerVariable
+  , val trackerVariable : TrackerVariable
   , val priority: Int
   , val serial: Int
 ) extends Loggable {
@@ -188,13 +188,13 @@ class Cf3PolicyDraft(
    * and retrieve it, along with bounded variable (or itself if it's bound to nothing)
    * Can throw a lot of exceptions if something fails
    */
-  def getPolicyInstanceVariable(): (TrackerVariable, Variable) = {
-      TrackerVariable.spec.boundingVariable match {
-        case None | Some("") | Some(null) => (TrackerVariable.copy(), TrackerVariable.copy())
+  def getDirectiveVariable(): (TrackerVariable, Variable) = {
+      trackerVariable.spec.boundingVariable match {
+        case None | Some("") | Some(null) => (trackerVariable.copy(), trackerVariable.copy())
         case Some(value) =>
           variableMap.get(value) match {
-            case None => throw new NotFoundException("No valid bounding found for TrackerVariable " + TrackerVariable.spec.name + " found in policyInstance " + id)
-            case Some(variable) => (TrackerVariable.copy(), Variable.matchCopy(variable))
+            case None => throw new NotFoundException("No valid bounding found for trackerVariable " + trackerVariable.spec.name + " found in directive " + id)
+            case Some(variable) => (trackerVariable.copy(), Variable.matchCopy(variable))
           }
       }
   }
@@ -227,14 +227,14 @@ class Cf3PolicyDraft(
   }
 
   override def clone(): Cf3PolicyDraft = {
-    val returnedPolicy = new Cf3PolicyDraft(id, techniqueId, Map(), TrackerVariable, priority, serial)
+    val returnedPolicy = new Cf3PolicyDraft(id, techniqueId, Map(), trackerVariable, priority, serial)
     returnedPolicy.variableMap ++= this.variableMap.map(x => (x._1 -> x._2.clone))
     returnedPolicy._modificationDate = this._modificationDate
     returnedPolicy
   }
   
   def copy(serial : Int): Cf3PolicyDraft = {
-    val returnedPolicy = new Cf3PolicyDraft(id, techniqueId, Map(), TrackerVariable, priority, serial)
+    val returnedPolicy = new Cf3PolicyDraft(id, techniqueId, Map(), trackerVariable, priority, serial)
     returnedPolicy.variableMap ++= this.variableMap.map(x => (x._1 -> x._2.clone))
     returnedPolicy._modificationDate = this._modificationDate
     returnedPolicy

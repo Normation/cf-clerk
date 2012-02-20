@@ -79,7 +79,7 @@ import com.normation.cfclerk.services._
  *  </xml>
  *
  *  In that implementation, the name of the directory of a category
- *  is used for the PolicyCategoryName.
+ *  is used for the techniqueCategoryName.
  *
  */
 class FSTechniqueReader(

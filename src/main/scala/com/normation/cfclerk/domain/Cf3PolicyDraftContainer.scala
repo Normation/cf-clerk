@@ -39,7 +39,7 @@ import net.liftweb.common._
 
 /**
  * Container for policy instances and the path where we want to write them
- * We put policyInstances in them, as well as an outPath (relative to the base path)
+ * We put directives in them, as well as an outPath (relative to the base path)
  *
  * @author Nicolas CHARLES
  *

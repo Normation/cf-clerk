@@ -223,9 +223,9 @@ object Variable {
       case systemV: SystemVariable =>
         val newSpec = if (setMultivalued) systemV.spec.cloneSetMultivalued else systemV.spec
         systemV.copy(defaultValues = bVals, spec = newSpec)
-      case policyInstance: TrackerVariable =>
-        val newSpec = if (setMultivalued) policyInstance.spec.cloneSetMultivalued else policyInstance.spec
-        policyInstance.copy(defaultValues = bVals, spec = newSpec)
+      case directive: TrackerVariable =>
+        val newSpec = if (setMultivalued) directive.spec.cloneSetMultivalued else directive.spec
+        directive.copy(defaultValues = bVals, spec = newSpec)
     }
   }
 

@@ -82,19 +82,19 @@ class Cf3PromisesFileWriterServiceImpl(
 
     val techniques = techniqueRepository.getByIds(container.getAllIds)
     
-    val tmlsByTechnique : Map[TechniqueId,Set[Cf3PromisesFileTemplateCopyInfo]] = techniques.map{ pt => 
+    val tmlsByTechnique : Map[TechniqueId,Set[Cf3PromisesFileTemplateCopyInfo]] = techniques.map{ technique => 
       (
-          pt.id
-        , pt.templates.map(tml => Cf3PromisesFileTemplateCopyInfo(tml.id, tml.outPath)).toSet
+          technique.id
+        , technique.templates.map(tml => Cf3PromisesFileTemplateCopyInfo(tml.id, tml.outPath)).toSet
       )
     }.toMap
     
     val variablesByTechnique = prepareVariables(container, systemVars ++ extraSystemVariables, techniques)
 
-    techniques.map {pt =>  
+    techniques.map {technique =>  
       (
-          pt.id
-        , PreparedTemplates(tmlsByTechnique(pt.id), variablesByTechnique(pt.id))
+          technique.id
+        , PreparedTemplates(tmlsByTechnique(technique.id), variablesByTechnique(technique.id))
       )
     }.toMap
   }
@@ -209,12 +209,12 @@ class Cf3PromisesFileWriterServiceImpl(
 
     // fill the variable
     (for {
-      pt <- techniques
+      technique <- techniques
     } yield {
-      val ptValues = variablesValues(pt.id)
+      val ptValues = variablesValues(technique.id)
       
       val variables:Seq[Variable] = (for {
-        variableSpec <- pt.getAllVariableSpecs
+        variableSpec <- technique.getAllVariableSpecs
       } yield {
         variableSpec match {
           case x : TrackerVariableSpec => Some(x.toVariable(ptValues(x.name).values))
@@ -241,7 +241,7 @@ class Cf3PromisesFileWriterServiceImpl(
             case e:EmptyBox => throw new VariableException("Wrong type of variable " + v)
           }
       ) }
-      (pt.id,stVariables)
+      (technique.id,stVariables)
     }).toMap
   }
   
@@ -363,36 +363,36 @@ class Cf3PromisesFileWriterServiceImpl(
     
     (for {
       // iterate over each policyName
-      ptId <- cf3PolicyDraftContainer.getAllIds
+      activeTechniqueId <- cf3PolicyDraftContainer.getAllIds
     } yield {
-      val pt = techniqueRepository.get(ptId).getOrElse(
-          throw new RuntimeException("Error, can not find policy with id '%s' and version ".format(ptId.name.value) +
-              "'%s' in the policy service".format(ptId.name.value)))
+      val technique = techniqueRepository.get(activeTechniqueId).getOrElse(
+          throw new RuntimeException("Error, can not find policy with id '%s' and version ".format(activeTechniqueId.name.value) +
+              "'%s' in the policy service".format(activeTechniqueId.name.value)))
       val cf3PolicyDraftVariables = scala.collection.mutable.Map[String, Variable]()
       
       for {
         // over each cf3PolicyDraft for this name
-        (policyInstanceId, cf3PolicyDraft) <- cf3PolicyDraftContainer.findById(ptId)
+        (directiveId, cf3PolicyDraft) <- cf3PolicyDraftContainer.findById(activeTechniqueId)
       } yield {
-        // start by setting the policyInstanceVariable
-        val (policyInstanceVariable, boundingVariable) = cf3PolicyDraft.getPolicyInstanceVariable
+        // start by setting the directiveVariable
+        val (directiveVariable, boundingVariable) = cf3PolicyDraft.getDirectiveVariable
 
-        cf3PolicyDraftVariables.get(policyInstanceVariable.spec.name) match {
+        cf3PolicyDraftVariables.get(directiveVariable.spec.name) match {
           case None =>
-              policyInstanceVariable.values = scala.collection.mutable.Buffer[String]()
-              cf3PolicyDraftVariables.put(policyInstanceVariable.spec.name, policyInstanceVariable)
+              directiveVariable.values = scala.collection.mutable.Buffer[String]()
+              cf3PolicyDraftVariables.put(directiveVariable.spec.name, directiveVariable)
           case Some(x) => // value is already there
         }
   
-        if (pt.isMultiInstance) {
+        if (technique.isMultiInstance) {
          // Only multiinstance policy may have a policyinstancevariable with high cardinal
           var i = 0;
           while (i < boundingVariable.getValuesLength) {
-            cf3PolicyDraftVariables(policyInstanceVariable.spec.name).appendValues(Seq(createValue(cf3PolicyDraft)))
+            cf3PolicyDraftVariables(directiveVariable.spec.name).appendValues(Seq(createValue(cf3PolicyDraft)))
             i += 1
           }
         } else {
-          cf3PolicyDraftVariables(policyInstanceVariable.spec.name).appendValues(Seq(createValue(cf3PolicyDraft)))
+          cf3PolicyDraftVariables(directiveVariable.spec.name).appendValues(Seq(createValue(cf3PolicyDraft)))
         }
   
         // All other variables now
@@ -416,7 +416,7 @@ class Cf3PromisesFileWriterServiceImpl(
             }
           }
         }
-        (ptId, cf3PolicyDraftVariables.toMap)
+        (activeTechniqueId, cf3PolicyDraftVariables.toMap)
       }).toMap
   }
 

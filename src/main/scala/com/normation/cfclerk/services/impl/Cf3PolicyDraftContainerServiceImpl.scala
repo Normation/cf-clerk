@@ -75,7 +75,7 @@ class Cf3PolicyDraftContainerServiceImpl(
   /**
    * Add a CF3 Policy Draft to a container
    * @param container
-   * @param policyInstanceBean
+   * @param directiveBean
    * @return
    */
   def addCf3PolicyDraft(container: Cf3PolicyDraftContainer, cf3PolicyDraft : Cf3PolicyDraft) : Box[Cf3PolicyDraft] = {
@@ -101,7 +101,7 @@ class Cf3PolicyDraftContainerServiceImpl(
     }
     
     container.add(cf3PolicyDraft) flatMap { cf3pd =>
-      //check that pi really is in container
+      //check that directive really is in container
       if(container.get(cf3pd.id).isDefined) {
         logger.info("Successfully added CF3 Policy Draft %s to container %s".format(cf3PolicyDraft, container.outPath))
         Full(cf3pd)

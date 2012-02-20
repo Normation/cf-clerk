@@ -113,7 +113,7 @@ import org.eclipse.jgit.diff.DiffFormatter
  *  </xml>
  *  
  *  In that implementation, the name of the directory of a category
- *  is used for the PolicyCategoryName. 
+ *  is used for the techniqueCategoryName. 
  *
  * @parameter relativePathToGitRepos
  *   The relative path from the root directory of the git repository to
@@ -159,7 +159,7 @@ class GitTechniqueReader(
    * As it is required that the git repository is in  a parent of the
    * ptLib, it's just removing start of the string.
    */
-  private[this] def toPolicyTemplatePath(path:String) : TechniquePath = {
+  private[this] def toTechniquePath(path:String) : TechniquePath = {
     canonizedRelativePath match {
       case Some(relative) if(path.startsWith(relative)) => 
         TechniquePath(path.substring(relative.size, path.size))
@@ -187,7 +187,7 @@ class GitTechniqueReader(
       diffFmt.setRepository(repo.db)
       val diffPathEntries : Set[TechniquePath] = 
         diffFmt.scan(revisionProvider.currentRevTreeId,nextId).flatMap { diffEntry => 
-          Seq(toPolicyTemplatePath(diffEntry.getOldPath), toPolicyTemplatePath(diffEntry.getNewPath))
+          Seq(toTechniquePath(diffEntry.getOldPath), toTechniquePath(diffEntry.getNewPath))
         }.toSet
       diffFmt.release
       
@@ -330,7 +330,7 @@ class GitTechniqueReader(
       //now, for each potential path, look if the cat or policy
       //is valid
       while(tw.next) {
-        val path = toPolicyTemplatePath(tw.getPathString) //we will need it to build the category id
+        val path = toTechniquePath(tw.getPathString) //we will need it to build the category id
         processTechnique(repo.db.open(tw.getObjectId(0)).openStream, path.path, techniqueInfos, parseDescriptor)
       }
   }
@@ -349,7 +349,7 @@ class GitTechniqueReader(
       //now, for each potential path, look if the cat or policy
       //is valid
       while(tw.next) {
-        val path = toPolicyTemplatePath(tw.getPathString) //we will need it to build the category id
+        val path = toTechniquePath(tw.getPathString) //we will need it to build the category id
         registerMaybeCategory(tw.getObjectId(0), path.path, maybeCategories, parseDescriptor)
       }
     

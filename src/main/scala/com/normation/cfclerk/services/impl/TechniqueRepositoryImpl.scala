@@ -48,7 +48,7 @@ import com.normation.eventlog.EventActor
 class TechniqueRepositoryImpl(
     techniqueReader: TechniqueReader
   , refLibCallbacks: Seq[TechniquesLibraryUpdateNotification]
-) extends TechniqueRepository with UpdatePolicyTemplateLibrary with Loggable {
+) extends TechniqueRepository with UpdateTechniqueLibrary with Loggable {
 
   /**
    * Callback to call on PTLib update

@@ -63,67 +63,67 @@ class TechniqueTest extends Specification {
 
   val id = TechniqueId(TechniqueName("foo"), TechniqueVersion("1.0"))
 
-  val pt = techniqueParser.parseXml(doc, id)
+  val technique = techniqueParser.parseXml(doc, id)
   
       
   "The technique described" should {
     
     "have name 'Test technique'" in {
-      pt.name === "Test technique"
+      technique.name === "Test technique"
     }
     
     "have description 'A test technique'" in {
-      pt.description === "A test technique"
+      technique.description === "A test technique"
     }
     
     "be a system technique" in {
-      pt.isSystem === true
+      technique.isSystem === true
     }
     
     "not be multiinstance" in {
-      pt.isMultiInstance === false
+      technique.isMultiInstance === false
     }
     
     "have bundle list: 'bundle1,bundle2'" in {
-      pt.bundlesequence.map( _.name ) === Seq("bundle1","bundle2")
+      technique.bundlesequence.map( _.name ) === Seq("bundle1","bundle2")
     }
     
     "have templates 'tml1, tml2, tml3'" in {
-      pt.templates.map( _.id.name ) === Seq("tml1", "tml2", "tml3")
+      technique.templates.map( _.id.name ) === Seq("tml1", "tml2", "tml3")
     }
     
     "'tml1' is included and has default outpath" in {
-      val tml = pt.templatesMap(Cf3PromisesFileTemplateId(id,"tml1"))
+      val tml = technique.templatesMap(Cf3PromisesFileTemplateId(id,"tml1"))
       tml.included === true and tml.outPath === "foo/1.0/tml1.cf"
     }
     
     "'tml2' is included and has tml2.bar outpath" in {
-      val tml = pt.templatesMap(Cf3PromisesFileTemplateId(id,"tml2"))
+      val tml = technique.templatesMap(Cf3PromisesFileTemplateId(id,"tml2"))
       tml.included === true and tml.outPath === "tml2.bar"
     }
     
     "'tml3' is not included and has default outpath" in {
-      val tml = pt.templatesMap(Cf3PromisesFileTemplateId(id,"tml3"))
+      val tml = technique.templatesMap(Cf3PromisesFileTemplateId(id,"tml3"))
       tml.included === false and tml.outPath === "foo/1.0/tml3.cf"
     }
     
     "system vars are 'BUNDLELIST,COMMUNITY'" in {
-      pt.systemVariableSpecs.map( _.name ) === Set("BUNDLELIST","COMMUNITY")
+      technique.systemVariableSpecs.map( _.name ) === Set("BUNDLELIST","COMMUNITY")
     }
     
     "tracking variable is bound to A" in {
-      pt.trackerVariableSpec.boundingVariable === Some("A")
+      technique.trackerVariableSpec.boundingVariable === Some("A")
     }
     
     "section 'common' is monovalued, not a componed, and has a variable A" in {
-      val section = pt.rootSection.getAllSections.find( _.name == "common").get
+      val section = technique.rootSection.getAllSections.find( _.name == "common").get
       val varA = section.children.head.asInstanceOf[InputVariableSpec]
       section.isComponent === false and section.isMultivalued === false and
       section.children.size === 1 and varA.name === "A"
     }
     
     "section 'section2' is multivalued, a componed bounded to its variable B" in {
-      val section = pt.rootSection.getAllSections.find( _.name == "section2").get
+      val section = technique.rootSection.getAllSections.find( _.name == "section2").get
       val varB = section.children.head.asInstanceOf[InputVariableSpec]
       section.isComponent === true and section.isMultivalued === true and
       section.componentKey === Some("B") and 

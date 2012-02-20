@@ -42,7 +42,7 @@ import com.normation.eventlog.EventActor
  * A trait that allows to update the reference policy
  * template library. 
  */
-trait UpdatePolicyTemplateLibrary {
+trait UpdateTechniqueLibrary {
 
   /**
    * Update the lib, and return the list of

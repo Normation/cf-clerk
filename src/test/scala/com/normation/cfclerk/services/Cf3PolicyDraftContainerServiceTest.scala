@@ -52,7 +52,7 @@ import net.liftweb.common._
 @ContextConfiguration(Array("file:src/test/resources/spring-config-test.xml"))
 class Cf3PolicyDraftContainerServiceTest {
   implicit def str2pId(id: String) = TechniqueId(TechniqueName(id), TechniqueVersion("1.0"))
-  implicit def str2piId(id: String) = Cf3PolicyDraftId(id)
+  implicit def str2directiveId(id: String) = Cf3PolicyDraftId(id)
 
   @Autowired
   val containerService: Cf3PolicyDraftContainerService = null

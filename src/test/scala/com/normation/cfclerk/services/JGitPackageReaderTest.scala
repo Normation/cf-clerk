@@ -180,7 +180,7 @@ trait JGitPackageReaderSpec extends Specification with Loggable {
 
 
 /**
- * A test case where git repos and pt lib root are the same
+ * A test case where git repos and technique lib root are the same
  */
 @RunWith(classOf[JUnitRunner])
 class JGitPackageReader_SameRootTest extends JGitPackageReaderSpec {
@@ -192,7 +192,7 @@ class JGitPackageReader_SameRootTest extends JGitPackageReaderSpec {
 
 /**
  * A test case where git repos is on a parent directory
- * of pt lib root. 
+ * of technique lib root. 
  * In that configuration, we also add false categories in an other sub-directory of the
  * git to check that the PT reader does not look outside of its root. 
  */
