@@ -65,11 +65,10 @@ import com.normation.cfclerk.services._
  *
  * - template files are looked in the directory
  *
- * - all directory without a metadata.xml are considered to be
- *   a category directory.
- *
- * - if a category directory contains a category.xml file,
+ * - a category directory contains a category.xml file, and
  *   information are look from it, else file name is used.
+ * 
+ * - directory without metadata.xml or category.xml are ignored
  *
  *  Category description information are stored in XML files with the expected
  *  structure:
@@ -246,56 +245,50 @@ class FSTechniqueReader(
 
     val categoryDescriptor = new File(categoryRootDirectory, categoryDescriptorName)
 
-    //built the category
-    var (name, desc, system) = {
-      if (categoryDescriptor.exists && categoryDescriptor.isFile && categoryDescriptor.canRead) {
-        logger.debug("Reading package category information from %s".format(categoryDescriptor.getAbsolutePath))
-        try {
-          val xml = loadDescriptorFile(categoryDescriptor)
-          val name = Utils.??!((xml \\ "name").text).getOrElse(categoryRootDirectory.getName)
-          val desc = Utils.??!((xml \\ "description").text).getOrElse("")
-          val system = (Utils.??!((xml \\ "system").text).getOrElse("false")).equalsIgnoreCase("true")
+    if (categoryDescriptor.exists && categoryDescriptor.isFile && categoryDescriptor.canRead) {
+      logger.debug("Reading package category information from %s".format(categoryDescriptor.getAbsolutePath))
+      
+      try {
+        val xml = loadDescriptorFile(categoryDescriptor)
+        val name = Utils.??!((xml \\ "name").text).getOrElse(categoryRootDirectory.getName)
+        val desc = Utils.??!((xml \\ "description").text).getOrElse("")
+        val system = (Utils.??!((xml \\ "system").text).getOrElse("false")).equalsIgnoreCase("true")
 
-          (name, desc, system)
-
-        } catch {
-          case e: Exception =>
-            logger.error("Error when processing category descriptor %s, fail back to simple information".format(categoryDescriptor.getAbsolutePath))
-            (categoryRootDirectory.getName, "", false)
+        //add the category as a child to its parent (if not root) and as new category
+        val newParentId = {
+          if (null == parentCategoryId) {
+            internalTechniquesInfo.rootCategory = Some(RootTechniqueCategory(name, desc, isSystem = system))
+            RootTechniqueCategoryId
+          } else {
+            val category = SubTechniqueCategory(
+              id = parentCategoryId / categoryRootDirectory.getName, name = name, description = desc, isSystem = system)
+            parentCategoryId match {
+              case RootTechniqueCategoryId =>
+                val parent = internalTechniquesInfo.rootCategory.getOrElse(throw new RuntimeException("Missing root technique category"))
+                internalTechniquesInfo.rootCategory = Some(parent.copy(subCategoryIds = parent.subCategoryIds + category.id))
+              case sid: SubTechniqueCategoryId =>
+                val parent = internalTechniquesInfo.subCategories(sid)
+                internalTechniquesInfo.subCategories(parent.id) = parent.copy(subCategoryIds = parent.subCategoryIds + category.id)
+            }
+    
+            internalTechniquesInfo.subCategories(category.id) = category
+            category.id
+          }
         }
-      } else {
-        logger.info("No package category descriptor '%s' for directory '%s', using path for category information".format(categoryDescriptorName, categoryRootDirectory.getAbsolutePath))
-        (categoryRootDirectory.getName, "", false)
-      }
-    }
-
-    //add the category as a child to its parent (if not root) and as new category
-    val newParentId = {
-      if (null == parentCategoryId) {
-        internalTechniquesInfo.rootCategory = Some(RootTechniqueCategory(name, desc, isSystem = system))
-        RootTechniqueCategoryId
-      } else {
-        val category = SubTechniqueCategory(
-          id = parentCategoryId / categoryRootDirectory.getName, name = name, description = desc, isSystem = system)
-        parentCategoryId match {
-          case RootTechniqueCategoryId =>
-            val parent = internalTechniquesInfo.rootCategory.getOrElse(throw new RuntimeException("Missing root technique category"))
-            internalTechniquesInfo.rootCategory = Some(parent.copy(subCategoryIds = parent.subCategoryIds + category.id))
-          case sid: SubTechniqueCategoryId =>
-            val parent = internalTechniquesInfo.subCategories(sid)
-            internalTechniquesInfo.subCategories(parent.id) = parent.copy(subCategoryIds = parent.subCategoryIds + category.id)
+    
+        //process sub-directories
+        categoryRootDirectory.listFiles.foreach { f =>
+          if (f.isDirectory) {
+            processDirectory(newParentId, f, internalTechniquesInfo)
+          }
         }
 
-        internalTechniquesInfo.subCategories(category.id) = category
-        category.id
+      } catch {
+        case e: Exception =>
+          logger.error("Error when processing category descriptor %s, ignoring path".format(categoryDescriptor.getAbsolutePath))
       }
-    }
-
-    //process sub-directories
-    categoryRootDirectory.listFiles.foreach { f =>
-      if (f.isDirectory) {
-        processDirectory(newParentId, f, internalTechniquesInfo)
-      }
+    } else {
+      logger.info("No package category descriptor '%s' for directory '%s', ignoring the path".format(categoryDescriptorName, categoryRootDirectory.getAbsolutePath))
     }
   }
 

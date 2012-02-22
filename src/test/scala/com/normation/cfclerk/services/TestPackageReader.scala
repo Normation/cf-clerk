@@ -61,13 +61,13 @@ class TestPackageReader {
   lazy val reader = new FSTechniqueReader(
     policyParser,
     "src/test/resources/techniquesRoot",
-    "policy.xml",
+    "metadata.xml",
     "category.xml")
 
   @Test
   def testReadPackage() {
     val infos = reader.readTechniques
-    assertEquals(5, infos.subCategories.size)
+    assertEquals(3, infos.subCategories.size)
 
     val rootDir = new File("src/test/resources/techniquesRoot")
     val rootCatId = RootTechniqueCategoryId
@@ -79,9 +79,9 @@ class TestPackageReader {
     assertEquals("p_root_1", rootCat.packageIds.head.name.value)
     assertEquals(TechniqueVersion("1.0"), rootCat.packageIds.head.version)
 
-    assertEquals(2, rootCat.subCategoryIds.size)
+    assertEquals(1, rootCat.subCategoryIds.size)
 
-    val subCatIds = ("cat1" :: "cat2" :: Nil).map(x => rootCatId / x)
+    val subCatIds = ("cat1" :: Nil).map(x => rootCatId / x)
     assertTrue(subCatIds.forall(s => rootCat.subCategoryIds.exists(x => x == s)))
 
       def forAllSubDirs[B](root: File, p: File => Boolean): Boolean = {
@@ -105,14 +105,6 @@ class TestPackageReader {
 
     // test that if a directory contains policy.xml files, its name is a valid policy version name
     assert(forAllSubDirs(new File(reader.techniqueDirectoryPath), isValidTechniqueVersionDir))
-
-    //Cat 2 is empty                                                                    
-    val cat2 = infos.subCategories(subCatIds(1))
-    assertEquals("cat2", cat2.name)
-    assertEquals("", cat2.description)
-
-    assertEquals(1, cat2.subCategoryIds.size)
-    assertEquals(0, cat2.packageIds.size)
 
     //cat 1 : a sub cat, and only one package with two revision 
     //(the second package is ignored)
