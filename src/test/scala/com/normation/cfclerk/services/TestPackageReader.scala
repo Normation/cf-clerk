@@ -60,7 +60,7 @@ class TestPackageReader {
 
   lazy val reader = new FSTechniqueReader(
     policyParser,
-    "src/test/resources/packagesRoot",
+    "src/test/resources/techniquesRoot",
     "policy.xml",
     "category.xml")
 
@@ -69,7 +69,7 @@ class TestPackageReader {
     val infos = reader.readTechniques
     assertEquals(5, infos.subCategories.size)
 
-    val rootDir = new File("src/test/resources/packagesRoot")
+    val rootDir = new File("src/test/resources/techniquesRoot")
     val rootCatId = RootTechniqueCategoryId
     val rootCat = infos.rootCategory
     assertEquals("Root category", rootCat.name)

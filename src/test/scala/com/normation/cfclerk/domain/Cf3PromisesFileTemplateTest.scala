@@ -60,16 +60,18 @@ class Cf3PromisesFileTemplateTest {
   @Autowired
   val tmlParser : Cf3PromisesFileTemplateParser = null
   
+  val filenameTemplate = "testCf3PromisesFileTemplate.xml"
+  	
   val doc = 
     try {
-      XML.load(ClassLoader.getSystemResourceAsStream("testTml.xml"))
+      XML.load(ClassLoader.getSystemResourceAsStream(filenameTemplate))
     } catch {
-      case e:SAXParseException => throw new Exception("Unexpected issue (unvalid xml?) with testTml.xml " )
-      case e : java.net.MalformedURLException => throw new FileNotFoundException("testTml.xml file not found " )
+      case e:SAXParseException => throw new Exception("Unexpected issue (unvalid xml?) with %s".format(filenameTemplate) )
+      case e : java.net.MalformedURLException => throw new FileNotFoundException("%s file not found ".format(filenameTemplate) )
     }
 
   if(doc.isEmpty) {
-    throw new Exception("Unexpected issue (unvalid xml?) with the testTml.xml file " )
+    throw new Exception("Unexpected issue (unvalid xml?) with the %s file ".format(filenameTemplate) )
   }
   
   val askedBundle = Cf3PromisesFileTemplateId(TechniqueId(TechniqueName(""), TechniqueVersion("1.0")),"three")

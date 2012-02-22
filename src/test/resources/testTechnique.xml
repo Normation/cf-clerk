@@ -1,5 +1,5 @@
-<POLICY name="Test policy">
-  <DESCRIPTION>A test policy</DESCRIPTION>
+<TECHNIQUE name="Test technique">
+  <DESCRIPTION>A test technique</DESCRIPTION>
 
   <SYSTEM>true</SYSTEM>
 
@@ -43,4 +43,4 @@
       </INPUT>
     </SECTION>
   </SECTIONS>
-</POLICY>
+</TECHNIQUE>
