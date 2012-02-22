@@ -199,7 +199,7 @@ class JGitPackageReader_SameRootTest extends JGitPackageReaderSpec {
 @RunWith(classOf[JUnitRunner])
 class JGitPackageReader_ChildRootTest extends JGitPackageReaderSpec {
   lazy val gitRoot = new File("/tmp/test-jgit", System.currentTimeMillis.toString)
-  lazy val ptLibDirName = "policy-templates"
+  lazy val ptLibDirName = "techniques"
   lazy val ptLib = new File(gitRoot, ptLibDirName)
   lazy val relativePathArg = Some("  /" + ptLibDirName + "/  ")
   

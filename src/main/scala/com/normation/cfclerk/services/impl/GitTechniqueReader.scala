@@ -78,14 +78,14 @@ import org.eclipse.jgit.diff.DiffFormatter
  * 
  * The root directory on the git repos is assumed to be
  * a parent directory of the root directory of the policy
- * template library. For example, if "policy-template" is
+ * template library. For example, if "techniques" is
  * the root directory of the PT lib:
- * - (1) /some/path/policy-templates/.git [=> OK]
+ * - (1) /some/path/techniques/.git [=> OK]
  * - (2) /some/path/
- *             |- policy-templates
+ *             |- techniques
  *             ` .git  [=> OK]
  * - (3) /some/path/
- *             |-policy-templates
+ *             |-techniques
  *             ` sub/dirs/.git [=> NOT OK]
  * 
  * The relative path from the parent of .git to ptlib root is given in
@@ -121,7 +121,7 @@ import org.eclipse.jgit.diff.DiffFormatter
  *   If the root directory of the git repos is in the PT lib root dir, 
  *   as in example (1) above, None ("") must be used. 
  *   Else, the relative path without leading nor trailing "/" is used. For
- *   example, in example (2), Some("policy-templates") must be used. 
+ *   example, in example (2), Some("techniques") must be used. 
  */
 
 class GitTechniqueReader(
@@ -368,7 +368,7 @@ class GitTechniqueReader(
       techniqueInfos.subCategories ++= maybeCategories.collect { case (sId:SubTechniqueCategoryId, cat:SubTechniqueCategory) => (sId -> cat) }
     
       var root = maybeCategories.get(RootTechniqueCategoryId) match {
-          case None => sys.error("Missing policy-template root category in Git, expecting category descriptor for Git path: '%s'".format( 
+          case None => sys.error("Missing techniques root category in Git, expecting category descriptor for Git path: '%s'".format( 
               repo.db.getWorkTree.getPath + canonizedRelativePath.map( "/" + _ + "/" + categoryDescriptorName).getOrElse("")))
           case Some(sub:SubTechniqueCategory) => sys.error("Bad type for root category, found: " + sub)
           case Some(r:RootTechniqueCategory) => r
