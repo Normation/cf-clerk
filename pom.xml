@@ -30,26 +30,19 @@ along with this program. If not, see <http://www.gnu.org/licenses/agpl.html>.
 
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd" xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.normation.cfclerk</groupId>
-  <artifactId>cfclerk-parent</artifactId>
-  <packaging>pom</packaging>
-  <version>0.10.1-SNAPSHOT</version>
-
+  
   <parent>
     <groupId>com.normation</groupId>
     <artifactId>parent-pom</artifactId>
-    <version>0.10.1-SNAPSHOT</version>
+    <version>0.11.0-SNAPSHOT</version>
   </parent>
-  
-  <modules>
-    <!-- Core API and implementation of promises writer -->
-    <module>cfclerk-core</module>
-  </modules>
 
+  <artifactId>cfclerk</artifactId>
+  
 <!-- ====================================  PROJECT INFORMATION  ==================================== -->
 
   <description>
-    Parent pom module for template writer
+    This is the API/Core lib module that writes the promises of nodes
   </description>
   <url>http://cfclerk.org</url>
   <inceptionYear>2010</inceptionYear>
@@ -107,12 +100,60 @@ along with this program. If not, see <http://www.gnu.org/licenses/agpl.html>.
 <!-- ====================================  /PROJECT INFORMATION  ==================================== -->
 
   <repositories>
-	  <repository>
-		  <id>maven.normation.com</id>
-		  <url>https://maven.normation.com/</url>
-		  <layout>default</layout>
-		  <snapshots><enabled>true</enabled></snapshots>
-	  </repository>
+    <repository>
+      <id>rudder-project</id>
+      <url>http://www.rudder-project.org/maven-repo/</url>
+      <layout>default</layout>
+      <snapshots><enabled>false</enabled></snapshots>
+    </repository>
+    <repository>
+      <id>jgit-repository</id>
+      <url>http://download.eclipse.org/jgit/maven</url>
+      <snapshots><enabled>false</enabled></snapshots>
+    </repository>
   </repositories>
 
+  <dependencies>
+    <dependency>
+      <groupId>com.normation</groupId>
+      <artifactId>utils</artifactId>
+      <version>${rudder-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.normation</groupId>
+      <artifactId>eventlog-api</artifactId>
+      <version>${rudder-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.antlr</groupId>
+      <artifactId>stringtemplate</artifactId>
+      <version>3.2.1</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>${commons-io-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jgit</groupId>
+      <artifactId>org.eclipse.jgit</artifactId>
+      <version>1.1.0.201109151100-r</version>
+    </dependency>
+  
+    <!-- Test dependencies -->
+    <dependency>
+      <groupId>com.normation</groupId>
+      <artifactId>spring-run-dependencies</artifactId>
+      <version>${spring-run-dep-version}</version>
+      <type>pom</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-test</artifactId>
+      <version>${spring-version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+  
 </project>
