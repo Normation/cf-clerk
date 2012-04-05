@@ -107,12 +107,12 @@ along with this program. If not, see <http://www.gnu.org/licenses/agpl.html>.
 <!-- ====================================  /PROJECT INFORMATION  ==================================== -->
 
   <repositories>
-	  <repository>
-		  <id>maven.normation.com</id>
-		  <url>https://maven.normation.com/</url>
-		  <layout>default</layout>
-		  <snapshots><enabled>true</enabled></snapshots>
-	  </repository>
+    <repository>
+      <id>rudder-project</id>
+      <url>http://www.rudder-project.org/maven-repo/</url>
+      <layout>default</layout>
+      <snapshots><enabled>false</enabled></snapshots>
+    </repository>
   </repositories>
 
 </project>
