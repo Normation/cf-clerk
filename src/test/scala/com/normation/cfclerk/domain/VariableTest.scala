@@ -299,11 +299,6 @@ class VariableTest extends Specification {
     }
   }
 
-  def getDescription(description: String = refDescription)(implicit variable: Variable) = {
-    "have description '%s'".format(description) in {
-      variable.spec.description mustEqual description
-    }
-  }
   def haveDescription(description: String = refDescription)(implicit variable: Variable) = {
     "have description '%s'".format(description) in {
       variable.spec.description mustEqual description
