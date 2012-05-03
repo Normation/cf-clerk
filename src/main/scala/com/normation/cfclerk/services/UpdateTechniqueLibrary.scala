@@ -48,7 +48,7 @@ trait UpdateTechniqueLibrary {
    * Update the lib, and return the list of
    * actually updated policy templates. 
    */
-  def update(actor:EventActor) : Box[Seq[TechniqueId]]
+  def update(actor:EventActor, reason: Option[String]) : Box[Seq[TechniqueId]]
   
   /**
    * Allows callbacks to be called on a Policy Template library update. 
