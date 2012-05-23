@@ -72,8 +72,9 @@ class TechniqueRepositoryImpl(
       techniqueReader.readTechniques
     } catch {
       case e:Exception => 
-        logger.error("Error when loading the previously saved policy template library. Trying to update to last library available to overcome the error")
-        this.update(CfclerkEventActor)
+        val msg = "Error when loading the previously saved policy template library. Trying to update to last library available to overcome the error"
+        logger.error(msg)
+        this.update(CfclerkEventActor, Some(msg))
         techniqueReader.readTechniques
     }
   }
@@ -88,7 +89,7 @@ class TechniqueRepositoryImpl(
     callbacks.append(callback)
   }
   
-  override def update(actor:EventActor) : Box[Seq[TechniqueId]] = {
+  override def update(actor:EventActor, reason: Option[String]) : Box[Seq[TechniqueId]] = {
     try {
       val modifiedPackages = techniqueReader.getModifiedTechniques
       if (modifiedPackages.nonEmpty || /* first time init */ null == techniqueInfosCache) {
@@ -100,7 +101,7 @@ class TechniqueRepositoryImpl(
   
         callbacks.foreach { callback =>
           try {
-            callback.updatedTechniques(modifiedPackages, actor)
+            callback.updatedTechniques(modifiedPackages, actor, reason)
           } catch {
             case e: Exception => logger.error("Error when executing callback '%s' with updated technique: '%s'".format(callback.name, modifiedPackages.mkString(", ")), e)
           }

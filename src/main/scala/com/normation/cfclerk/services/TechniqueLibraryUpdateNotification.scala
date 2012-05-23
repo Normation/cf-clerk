@@ -55,7 +55,10 @@ trait TechniquesLibraryUpdateNotification {
   /**
    * That method will be called when techniques are updated.
    * TODO: perhaps we want something more useful as a return type. 
+   * 
+   * Description is a log description to explain why techniques should be updated 
+   * (user action, commit, etc). 
    */
-  def updatedTechniques(TechniqueIds:Seq[TechniqueId], actor: EventActor) : Unit
+  def updatedTechniques(TechniqueIds:Seq[TechniqueId], actor: EventActor, reason: Option[String]) : Unit
   
 }
