@@ -174,7 +174,7 @@ class PromiseWriterServiceImpl(
                 } else if(variable.values.size == 0) {
                   throw new VariableException("Mandatory variable %s is empty, can not write %s".format(variable.name, fileEntry.destination))
                 } else {
-                  logger.trace("Adding variable %s/%: %s values %s".format(
+                  logger.trace("Adding variable %s : %s values %s".format(
                       outPath + "/" + fileEntry.destination, variable.name, variable.values.mkString("[",",","]")))
                   variable.values.foreach { value => template.setAttribute(variable.name, value) 
                   }
