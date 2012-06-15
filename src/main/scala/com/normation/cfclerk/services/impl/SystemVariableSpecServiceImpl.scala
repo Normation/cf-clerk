@@ -71,6 +71,12 @@ class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
     , SystemVariableSpec("CMDBENDPOINT"   , "The cmdb endpoint"
                                           , multivalued = false
       )
+    , SystemVariableSpec("DAVUSER"   	  , "Username for webdav user"
+                                          , multivalued = false
+      )
+    , SystemVariableSpec("DAVPASSWORD"    , "Password for webdav user"
+                                          , multivalued = false
+      )
     , SystemVariableSpec("INPUTLIST"      , "Input list")
     , SystemVariableSpec("BUNDLELIST"     , "Bundle list")
     , SystemVariableSpec("NOVA"           , "The Cfengine Nova agent"
