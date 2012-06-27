@@ -70,6 +70,7 @@ import org.eclipse.jgit.treewalk.FileTreeIterator
 import org.eclipse.jgit.diff.DiffEntry
 import scala.collection.JavaConversions._
 import org.eclipse.jgit.diff.DiffFormatter
+import org.eclipse.jgit.errors.MissingObjectException
 
 /**
  * 
@@ -168,7 +169,19 @@ class GitTechniqueReader(
   }  
   
   
-  private[this] var currentTechniquesInfoCache : TechniquesInfo = processRevTreeId(revisionProvider.currentRevTreeId)
+  private[this] var currentTechniquesInfoCache : TechniquesInfo = {
+    try {
+      processRevTreeId(revisionProvider.currentRevTreeId)
+    } catch {
+      case e:MissingObjectException => //ah, that commit is not know on our repos
+        logger.error("The stored Git revision for the last version of the known Technique Library was not found in the local Git repository. " +
+        		"That may happen if a commit was reverted, the Git repository was deleted and created again, or if LDAP datas where corrupted. Loading the last available Techique library version.")
+        val newRevTreeId = revisionProvider.getAvailableRevTreeId
+        revisionProvider.setCurrentRevTreeId(newRevTreeId)
+        processRevTreeId(newRevTreeId)
+    }
+  }
+  
   private[this] var nextTechniquesInfoCache : (ObjectId,TechniquesInfo) = (revisionProvider.currentRevTreeId, currentTechniquesInfoCache)
   //a non empty list IS the indicator of differences between current and next
   private[this] var modifiedTechniquesCache : Seq[TechniqueId] = Seq()
