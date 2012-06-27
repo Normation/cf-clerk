@@ -85,7 +85,7 @@ class DirectiveAgregationTest {
           isMultiInstance = true
         )
     ) ),
-    new SystemVariableSpecServiceImpl(), "/", "/")
+    new SystemVariableSpecServiceImpl())
 
   def createDirectiveWithBinding(activeTechniqueId:TechniqueId, i: Int): Cf3PolicyDraft = {
     val instance = new Cf3PolicyDraft("id" + i, activeTechniqueId, 

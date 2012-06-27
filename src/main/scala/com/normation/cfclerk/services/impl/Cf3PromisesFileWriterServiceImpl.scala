@@ -54,22 +54,11 @@ import scala.xml._
  *
  */
 class Cf3PromisesFileWriterServiceImpl(
-    techniqueRepository     : TechniqueRepository
+    techniqueRepository      : TechniqueRepository
   , systemVariableSpecService: SystemVariableSpecService
-  , baseFolder               : String //the base folder where policies are written to be read by node
-  , backupFolder             : String //folder where back-up of promises are stored
   ) extends Cf3PromisesFileWriterService with Loggable {
 
-  val newPostfix = ".new"
-  val backupPostfix = ".bkp"
-
-  logger.trace("baseFolder for writting promises files: %s".format(baseFolder))
-
   logger.trace("Repository loaded")
-
-  def getBaseFolder(): String = {
-    baseFolder
-  }
 
   /**
    * Compute the TMLs list to be written

@@ -76,7 +76,7 @@ class Cf3PromisesFileTemplateTest {
   
   val askedBundle = Cf3PromisesFileTemplateId(TechniqueId(TechniqueName(""), TechniqueVersion("1.0")),"three")
   
-  val tmlDependencies = new Cf3PromisesFileWriterServiceImpl(new DummyTechniqueRepository(), new SystemVariableSpecServiceImpl(), "/", "/" )
+  val tmlDependencies = new Cf3PromisesFileWriterServiceImpl(new DummyTechniqueRepository(), new SystemVariableSpecServiceImpl() )
   
   @Test
   def parseDoc {
