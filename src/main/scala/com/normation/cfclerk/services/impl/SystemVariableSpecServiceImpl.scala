@@ -46,7 +46,6 @@ class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
       SystemVariableSpec("ALLOWCONNECT"   , "List of ip allowed to connect to the node (policyserver + children if any)"
                                           , multivalued = true
       )
-    , SystemVariableSpec("BASE_FOLDER"    , "Base folder for the installation")
     , SystemVariableSpec("CLIENTSLIST"    , "List of agent to contact via runagent"
                                           , multivalued = true
                                           , constraint = Constraint(mayBeEmpty=true)
@@ -66,11 +65,6 @@ class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
       )
     , SystemVariableSpec("NODEROLE"       , "List of nodeConfiguration roles")
     , SystemVariableSpec("TOOLS_FOLDER"   , "Tools folder")
-    , SystemVariableSpec("BASE_FOLDER"    , "Base folder for the installation")
-    , SystemVariableSpec("TOOLS_FOLDER"   , "Tools folder")
-    , SystemVariableSpec("CMDBENDPOINT"   , "The cmdb endpoint"
-                                          , multivalued = false
-      )
     , SystemVariableSpec("DAVUSER"   	  , "Username for webdav user"
                                           , multivalued = false
       )
