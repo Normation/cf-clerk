@@ -159,7 +159,8 @@ class PromiseWriterServiceImpl(
       for (fileEntry <- fileSet) {
         policyPackageService.getTemplateContent(fileEntry.source) { optInputStream =>
           optInputStream match {
-            case None => throw new RuntimeException("Can not find base path for policy package with ID %s".format(fileEntry.source.policyPackageId))
+            case None => throw new RuntimeException("Error when trying to open template '%s%s'. Check that the file exists and is correctly commited in Git, or that the metadata for the policy template are corrects.".
+                format(fileEntry.source.toString, ".cf"))
             case Some(inputStream) =>
               logger.trace("Loading template %s (from an input stream relative to %s".format(fileEntry.source, policyPackageService))
               //string template does not allows "." in path name, so we are force to use a templateGroup by polity template (versions have . in them)
