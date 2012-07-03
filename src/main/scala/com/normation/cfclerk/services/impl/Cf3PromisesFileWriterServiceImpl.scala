@@ -148,7 +148,8 @@ class Cf3PromisesFileWriterServiceImpl(
       for (fileEntry <- fileSet) {
         techniqueRepository.getTemplateContent(fileEntry.source) { optInputStream =>
           optInputStream match {
-            case None => throw new RuntimeException("Can not find base path for policy package with ID %s".format(fileEntry.source.techniqueId))
+            case None => throw new RuntimeException("Error when trying to open template '%s%s'. Check that the file exists and is correctly commited in Git, or that the metadata for the technique are corrects.".
+                format(fileEntry.source.toString, Cf3PromisesFileTemplate.templateExtension))
             case Some(inputStream) =>
               logger.trace("Loading template %s (from an input stream relative to %s".format(fileEntry.source, techniqueRepository))
               //string template does not allows "." in path name, so we are force to use a templateGroup by polity template (versions have . in them)
