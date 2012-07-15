@@ -92,13 +92,13 @@ sealed trait SectionChildSpec {
  * Metadata about a section object. 
  */
 case class SectionSpec(
-    name: String
+    name         : String
   , isMultivalued: Boolean = false
-  , isComponent: Boolean = false
+  , isComponent  : Boolean = false
   , componentKey : Option[String] = None
-  , foldable: Boolean = false
-  , description: String = ""
-  , children: Seq[SectionChildSpec] = Seq()
+  , foldable     : Boolean = false
+  , description  : String = ""
+  , children     : Seq[SectionChildSpec] = Seq()
 ) extends SectionChildSpec with HashcodeCaching {
 
   lazy val getDirectVariables : Seq[VariableSpec] = {
