@@ -75,18 +75,18 @@ case class TechniqueId(name: TechniqueName, version: TechniqueVersion) extends O
  *
  */
 case class Technique(
-    id: TechniqueId
-  , name: String
-  , description: String
-  , templates: Seq[Cf3PromisesFileTemplate]
-  , bundlesequence : Seq[Bundle]
+    id                  : TechniqueId
+  , name                : String
+  , description         : String
+  , templates           : Seq[Cf3PromisesFileTemplate]
+  , bundlesequence      : Seq[Bundle]
   , trackerVariableSpec : TrackerVariableSpec
-  , rootSection: SectionSpec
-  , systemVariableSpecs: Set[SystemVariableSpec] = Set()
-  , compatible: Option[Compatible] = None
-  , isMultiInstance: Boolean = false // true if we can have several instance of this policy
-  , longDescription: String = ""
-  , isSystem: Boolean = false
+  , rootSection         : SectionSpec //be careful to not split it from the TechniqueId, else you will not have the good spec for the version
+  , systemVariableSpecs : Set[SystemVariableSpec] = Set()
+  , compatible          : Option[Compatible] = None
+  , isMultiInstance     : Boolean = false // true if we can have several instance of this policy
+  , longDescription     : String = ""
+  , isSystem            : Boolean = false
 
 ) extends HashcodeCaching {
 
