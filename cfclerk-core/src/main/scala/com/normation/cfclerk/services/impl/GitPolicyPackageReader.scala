@@ -369,8 +369,12 @@ class GitPolicyPackagesReader(
       packageInfos.subCategories ++= maybeCategories.collect { case (sId:SubPolicyPackageCategoryId, cat:SubPolicyPackageCategory) => (sId -> cat) }
     
       var root = maybeCategories.get(RootPolicyPackageCategoryId) match {
-          case None => sys.error("Missing root category")
-          case Some(sub:SubPolicyPackageCategory) => sys.error("Bad type for root category, found: " + sub)
+          case None => 
+            logger.error("Missing root category when trying to load the Policy Templates. Please verify that the Policy Templates are present on the file system")
+            sys.error("Missing root category when trying to load the Policy Templates")
+          case Some(sub:SubPolicyPackageCategory) => 
+            logger.error("Invalid root category in the Policy Templates. Please check the hierarchy of categories")
+            sys.error("Bad type for root category, found: " + sub)
           case Some(r:RootPolicyPackageCategory) => r
         }
       
