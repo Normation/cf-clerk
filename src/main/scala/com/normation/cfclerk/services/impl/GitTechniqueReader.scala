@@ -380,10 +380,13 @@ class GitTechniqueReader(
       //update techniqueInfos
       techniqueInfos.subCategories ++= maybeCategories.collect { case (sId:SubTechniqueCategoryId, cat:SubTechniqueCategory) => (sId -> cat) }
     
+
       var root = maybeCategories.get(RootTechniqueCategoryId) match {
           case None => sys.error("Missing techniques root category in Git, expecting category descriptor for Git path: '%s'".format( 
               repo.db.getWorkTree.getPath + canonizedRelativePath.map( "/" + _ + "/" + categoryDescriptorName).getOrElse("")))
-          case Some(sub:SubTechniqueCategory) => sys.error("Bad type for root category, found: " + sub)
+          case Some(sub:SubTechniqueCategory) =>
+            logger.error("Bad type for root category in the Technique Library. Please check the hierarchy of categories")
+            sys.error("Bad type for root category, found: " + sub)
           case Some(r:RootTechniqueCategory) => r
         }
       
