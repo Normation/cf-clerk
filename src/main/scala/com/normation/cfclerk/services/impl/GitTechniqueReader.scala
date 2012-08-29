@@ -241,7 +241,7 @@ class GitTechniqueReader(
       useIt { 
         //now, the treeWalk
         val tw = new TreeWalk(repo.db)
-        tw.setFilter(new TemplateFileFilter(path))
+        tw.setFilter(new FileTreeFilter(canonizedRelativePath, path))
         tw.setRecursive(true)
         tw.reset(revisionProvider.currentRevTreeId)
         var ids = List.empty[ObjectId]
