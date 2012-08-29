@@ -181,27 +181,4 @@ class FileTreeFilter(rootDirectory:Option[String], fileName: String) extends Tre
   override lazy val toString = "[.*/%s]".format(fileName)
 }
 
-/**
- * A filter for a revision tree walk that allows
- * to find only path ending by the given string, 
- * even if the file is in a sub-directory
- * (the filter is recursive)
- */
-class TemplateFileFilter(endPath:String) extends TreeFilter {
-  private[this] var found = false
-  private[this] val fileRawPath = JConstants.encode(endPath)
-  override def include(walker:TreeWalk) : Boolean = {
-    if(found) throw StopWalkException.INSTANCE //early returned after found
-    else if(walker.isSubtree) true
-    else if(walker.isPathSuffix(fileRawPath, fileRawPath.size)) {
-      found = true
-      true
-    } else false
-  }
-  
-  override val shouldBeRecursive = true
-  override def clone = this
-  override lazy val toString = "[.*/%s]".format(endPath)
-}
-
 
