@@ -61,7 +61,7 @@ class TechniqueParser(
         case Some(nameAttr) if (TechniqueParser.isValidId(id.name.value) && nonEmpty(nameAttr.text)) =>
 
           val name = nameAttr.text
-          val compatible = try Some(CompatibleParser.parseXml((node \ COMPAT_TAG).head)) catch { case _ => None }
+          val compatible = try Some(CompatibleParser.parseXml((node \ COMPAT_TAG).head)) catch { case _:Exception => None }
 
           val technique = Technique(
               id
