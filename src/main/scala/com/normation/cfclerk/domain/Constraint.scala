@@ -96,19 +96,19 @@ case class ConstraintImp(typeName: String, default: Option[String], mayBeEmpty: 
         try
           ISODateTimeFormat.dateTimeParser.parseDateTime(varValue)
         catch {
-          case _ =>
+          case _:Exception =>
             throw new ConstraintException(msgErr + " : expecting a datetime")
         }
       case "integer" => try
         varValue.toInt
       catch {
-        case _ =>
+        case _:Exception =>
           throw new ConstraintException(msgErr + " : expecting an integer")
       }
       case "boolean" => try
         varValue.toBoolean
       catch {
-        case _ =>
+        case _:Exception =>
           throw new ConstraintException(msgErr + " : expecting a boolean")
       }
       case _ =>
