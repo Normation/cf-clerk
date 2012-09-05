@@ -80,12 +80,13 @@ class Cf3PolicyDraftContainer(val outPath: String) extends Loggable {
   }
 
   /**
-   * Returns a cf3PolicyDraft by its name (not its id)
+   * Returns cf3PolicyDraft by their techniqueId (might returns several of them) (not its id)
+   * Returns them in their priority order
    * @param policyName
    * @return
    */
   def findById(techniqueId: TechniqueId) = {
-    cf3PolicyDrafts.filter(x => x._2.techniqueId == techniqueId).map(x => (x._1, x._2.clone()))
+    cf3PolicyDrafts.filter(x => x._2.techniqueId == techniqueId).map(x => (x._1, x._2.clone())).toSeq.sortBy(x => x._2.priority)
   }
 
   /**
