@@ -83,7 +83,11 @@ class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
         			"SHARED_FILES_FOLDER"       , "The path to the shared files folder"
                                           , constraint = Constraint(mayBeEmpty=true)
       )
-    
+    , SystemVariableSpec("SYSLOGPORT"     , "Port to use for rsyslog (used by reports)"
+                                          , multivalued = false
+                                          , isUniqueVariable = true
+                                          , constraint = Constraint(typeName = "integer")
+      )
     
   )
   
