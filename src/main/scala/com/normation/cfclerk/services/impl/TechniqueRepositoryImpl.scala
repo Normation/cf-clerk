@@ -44,10 +44,13 @@ import java.io.{ File, InputStream }
 import scala.collection.SortedSet
 import scala.collection.mutable
 import com.normation.eventlog.EventActor
+import com.normation.eventlog.ModificationId
+import com.normation.utils.StringUuidGenerator
 
 class TechniqueRepositoryImpl(
     techniqueReader: TechniqueReader
   , refLibCallbacks: Seq[TechniquesLibraryUpdateNotification]
+  , uuidGen        : StringUuidGenerator
 ) extends TechniqueRepository with UpdateTechniqueLibrary with Loggable {
 
   /**
@@ -74,7 +77,7 @@ class TechniqueRepositoryImpl(
       case e:Exception => 
         val msg = "Error when loading the previously saved policy template library. Trying to update to last library available to overcome the error"
         logger.error(msg)
-        this.update(CfclerkEventActor, Some(msg))
+        this.update(ModificationId(uuidGen.newUuid), CfclerkEventActor, Some(msg))
         techniqueReader.readTechniques
     }
   }
@@ -89,7 +92,7 @@ class TechniqueRepositoryImpl(
     callbacks.append(callback)
   }
   
-  override def update(actor:EventActor, reason: Option[String]) : Box[Seq[TechniqueId]] = {
+  override def update(modId: ModificationId, actor:EventActor, reason: Option[String]) : Box[Seq[TechniqueId]] = {
     try {
       val modifiedPackages = techniqueReader.getModifiedTechniques
       if (modifiedPackages.nonEmpty || /* first time init */ null == techniqueInfosCache) {
@@ -101,7 +104,7 @@ class TechniqueRepositoryImpl(
   
         callbacks.foreach { callback =>
           try {
-            callback.updatedTechniques(modifiedPackages, actor, reason)
+            callback.updatedTechniques(modifiedPackages, modId, actor, reason)
           } catch {
             case e: Exception => logger.error("Error when executing callback '%s' with updated technique: '%s'".format(callback.name, modifiedPackages.mkString(", ")), e)
           }

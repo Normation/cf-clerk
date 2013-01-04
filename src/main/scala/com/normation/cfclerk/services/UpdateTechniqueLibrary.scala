@@ -37,6 +37,7 @@ package com.normation.cfclerk.services
 import net.liftweb.common.Box
 import com.normation.cfclerk.domain.TechniqueId
 import com.normation.eventlog.EventActor
+import com.normation.eventlog.ModificationId
 
 /**
  * A trait that allows to update the reference policy
@@ -48,7 +49,7 @@ trait UpdateTechniqueLibrary {
    * Update the lib, and return the list of
    * actually updated policy templates. 
    */
-  def update(actor:EventActor, reason: Option[String]) : Box[Seq[TechniqueId]]
+  def update(modId: ModificationId, actor:EventActor, reason: Option[String]) : Box[Seq[TechniqueId]]
   
   /**
    * Allows callbacks to be called on a Policy Template library update. 
