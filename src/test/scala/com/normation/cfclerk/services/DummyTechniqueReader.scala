@@ -65,7 +65,7 @@ class DummyTechniqueReader(policies:Seq[Technique]=Seq(Technique(TechniqueId(Tec
       p <- policies
     } {
       packagesPath(p.id) =  rootCategoryId
-      packages(p.id.name) = (packages.getOrElse(p.id.name,collection.SortedMap.empty[TechniqueVersion,Technique]) + (p.id.version -> p))
+      packages(p.id.name) = (packages.getOrElse(p.id.name,collection.immutable.SortedMap.empty[TechniqueVersion,Technique]) + (p.id.version -> p))
       rootCategory = rootCategory.copy( packageIds = rootCategory.packageIds + p.id)
     }
 
