@@ -45,16 +45,16 @@ class DummyPolicyTranslator extends Cf3PromisesFileWriterService {
   def movePromisesToFinalPosition(folders : Seq[PromisesFinalMoveInfo]) : Seq[PromisesFinalMoveInfo]= {
     null
   }
-  
+
   def writePromisesFiles(fileSet: Set[Cf3PromisesFileTemplateCopyInfo], variableSet: Seq[STVariable], outPath: String): Unit = {
     null
   }
-  
+
   /**
    * Concatenate all the variables for each policy Instances.
    * @param policyContainer
    * @return
    */
   def prepareAllCf3PolicyDraftVariables(policyContainer: Cf3PolicyDraftContainer) = null
-  
+
 }

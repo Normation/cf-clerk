@@ -39,26 +39,26 @@ import com.normation.utils.HashcodeCaching
 /**
  * That file store utility case classes about information used to
  * during the promises generation phases, like source and destination path,
- * prepared template, etc. 
- * 
+ * prepared template, etc.
+ *
  * They are used so that API and code reading make more sense
  * (String, String, String) parameter is not really telling.
  */
 
 
 /**
- * A "string template variable" is a variable destinated to be 
+ * A "string template variable" is a variable destinated to be
  * used by String Template so that it can be replaced correctly
- * in templates. 
- * 
+ * in templates.
+ *
  * A STVariable is composed of:
- * - a name : the tag in the template that string template 
+ * - a name : the tag in the template that string template
  *   will look for and replace)
- * - a list of values of type Any which string template will handle 
+ * - a list of values of type Any which string template will handle
  *   accordingly to its formatters
- * - a "mayBeEmpty" flag that allows string template to know how to 
+ * - a "mayBeEmpty" flag that allows string template to know how to
  *   handle empty list of values
- * 
+ *
  */
 case class STVariable(
     name:String
@@ -70,16 +70,16 @@ case class STVariable(
 /**
  * A class that store a list of "prepared template", i.e templates with
  * their destination computed and all the variables to use to replace
- * parameter in them. 
+ * parameter in them.
  */
 case class PreparedTemplates(
     templatesToCopy     : Set[Cf3PromisesFileTemplateCopyInfo]
-  , environmentVariables: Seq[STVariable] 
+  , environmentVariables: Seq[STVariable]
 ) extends HashcodeCaching
 
 /**
- * A class that store information about a template to copy somewhere. 
- * It gives what template to copy where. 
+ * A class that store information about a template to copy somewhere.
+ * It gives what template to copy where.
  */
 case class Cf3PromisesFileTemplateCopyInfo(
     source     : Cf3PromisesFileTemplateId  // the full name where the template is found
@@ -89,9 +89,9 @@ case class Cf3PromisesFileTemplateCopyInfo(
 }
 
 /**
- * A class that holds information about where to copy generated promises 
+ * A class that holds information about where to copy generated promises
  * from their generation directory to their final directory.
- * A back-up folder is also provided to save a copy. 
+ * A back-up folder is also provided to save a copy.
  */
 case class PromisesFinalMoveInfo(
     containerId : String

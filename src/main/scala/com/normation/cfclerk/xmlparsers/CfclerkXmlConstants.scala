@@ -38,41 +38,41 @@ object CfclerkXmlConstants {
 
   /* name of the String Template variable used for the tracking variable */
   val TRACKINGKEY = "TRACKINGKEY"
-  
+
   /* name of the component key for a monovalued section */
   val DEFAULT_COMPONENT_KEY = "None"
-    
+
   val SECTION_ROOT_NAME = "SECTIONS"
-  
-    
-    
-    
+
+
+
+
   /* tag names */
-  
+
   //top level and general
-  val TECHNIQUE_ROOT = "TECHNIQUE"  
+  val TECHNIQUE_ROOT = "TECHNIQUE"
   val TECHNIQUE_NAME = "name" //it's an attribute
   val TECHNIQUE_DESCRIPTION = "DESCRIPTION"
-  val TECHNIQUE_IS_MULTIINSTANCE = "MULTIINSTANCE" 
+  val TECHNIQUE_IS_MULTIINSTANCE = "MULTIINSTANCE"
   val TECHNIQUE_LONG_DESCRIPTION = "LONG_DESCRIPTION"
   val TECHNIQUE_IS_SYSTEM = "SYSTEM"
-    
-    
+
+
   //bundles
   val BUNDLES_ROOT = "BUNDLES"
   val BUNDLE_NAME = "NAME"
-  
+
   //promise templates
   val PROMISE_TEMPLATES_ROOT = "TMLS"
   val PROMISE_TEMPLATE = "TML"
   val PROMISE_TEMPLATE_NAME = "name" //attribte
   val PROMISE_TEMPLATE_OUTPATH = "OUTPATH"
   val PROMISE_TEMPLATE_INCLUDED = "INCLUDED"
-  
+
   //tracking variable
   val TRACKINGVAR = "TRACKINGVARIABLE"
   val TRACKINGVAR_SIZE = "SAMESIZEAS"
-    
+
   //system vars
   val SYSTEMVARS_ROOT = "SYSTEMVARS"
   val SYSTEMVAR_NAME = "NAME"
@@ -81,18 +81,18 @@ object CfclerkXmlConstants {
   val COMPAT_TAG = "COMPATIBLE"
   val COMPAT_OS = "OS"
   val COMPAT_AGENT = "AGENT"
-    
 
-  //sections    
+
+  //sections
   val SECTIONS_ROOT = "SECTIONS"
   val SECTION = "SECTION"
   val SECTION_NAME = "name" //attribute of SECTION
   val SECTION_IS_MULTIVALUED = "multivalued" //attribute of SECTION
-  val SECTION_IS_FOLDABLE = "foldable"//attribute of SECTION 
+  val SECTION_IS_FOLDABLE = "foldable"//attribute of SECTION
   val SECTION_DESCRIPTION = "DESCRIPTION"
   val SECTION_IS_COMPONENT = "component"
-  val SECTION_COMPONENT_KEY = "componentKey"   
- 
+  val SECTION_COMPONENT_KEY = "componentKey"
+
   //section variables
   val INPUT = "INPUT"
   val SELECT1 = "SELECT1"
@@ -112,5 +112,5 @@ object CfclerkXmlConstants {
   val CONSTRAINT_MAYBEEMPTY = "MAYBEEMPTY"
   val CONSTRAINT_DEFAULT = "DEFAULT"
   val CONSTRAINT_REGEX = "REGEX"
-      
+
 }

@@ -67,7 +67,7 @@ import com.normation.cfclerk.services._
  *
  * - a category directory contains a category.xml file, and
  *   information are look from it, else file name is used.
- * 
+ *
  * - directory without metadata.xml or category.xml are ignored
  *
  *  Category description information are stored in XML files with the expected
@@ -121,7 +121,7 @@ class FSTechniqueReader(
         null, //we have to ignore it, so if we don't, a NPE is a good idea.
         reader.techniqueDirectory,
         techniqueInfos)
-      
+
       TechniquesInfo(
         rootCategory = techniqueInfos.rootCategory.getOrElse(throw new RuntimeException("No root category was found")),
         techniquesCategory = techniqueInfos.techniquesCategory.toMap,
@@ -171,7 +171,7 @@ class FSTechniqueReader(
     val children = f.listFiles
     val childrenName = children.map(_.getName)
     val versionsDir = children.filter(_.isDirectory).flatMap(_.listFiles).filter(f => f.getName == techniqueDescriptorName).map(_.getParentFile)
-    
+
     if (versionsDir.size > 0) {
       for (d <- versionsDir) {
         processTechnique(parentCategoryId, d, internalTechniquesInfo)
@@ -179,7 +179,7 @@ class FSTechniqueReader(
     } else {
       processCategory(parentCategoryId, f, internalTechniquesInfo)
     }
-    
+
   }
 
   /**
@@ -191,7 +191,7 @@ class FSTechniqueReader(
     val name = TechniqueName(packageRootDirectory.getParentFile.getName)
     val id = TechniqueId(name, TechniqueVersion(packageRootDirectory.getName))
     val pack = policyParser.parseXml(loadDescriptorFile(new File(packageRootDirectory, techniqueDescriptorName)), id)
-        
+
       def updateParentCat() {
         parentCategoryId match {
           case RootTechniqueCategoryId =>
@@ -224,7 +224,7 @@ class FSTechniqueReader(
               pack.id, packageRootDirectory.getAbsolutePath, internalTechniquesInfo.techniquesCategory(pack.id).toString))
         }
     }
-    
+
   }
 
   /**
@@ -247,7 +247,7 @@ class FSTechniqueReader(
 
     if (categoryDescriptor.exists && categoryDescriptor.isFile && categoryDescriptor.canRead) {
       logger.debug("Reading package category information from %s".format(categoryDescriptor.getAbsolutePath))
-      
+
       try {
         val xml = loadDescriptorFile(categoryDescriptor)
         val name = Utils.??!((xml \\ "name").text).getOrElse(categoryRootDirectory.getName)
@@ -270,12 +270,12 @@ class FSTechniqueReader(
                 val parent = internalTechniquesInfo.subCategories(sid)
                 internalTechniquesInfo.subCategories(parent.id) = parent.copy(subCategoryIds = parent.subCategoryIds + category.id)
             }
-    
+
             internalTechniquesInfo.subCategories(category.id) = category
             category.id
           }
         }
-    
+
         //process sub-directories
         categoryRootDirectory.listFiles.foreach { f =>
           if (f.isDirectory) {

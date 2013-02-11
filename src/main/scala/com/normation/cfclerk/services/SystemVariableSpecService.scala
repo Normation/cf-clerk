@@ -46,14 +46,14 @@ import com.normation.cfclerk.domain.SystemVariableSpec
 trait SystemVariableSpecService {
   /**
    * Get the spec for the system variable with
-   * the given name. 
-   * Throw an exception if no such system variable 
-   * is know, as it is a really unexpected thing. 
+   * the given name.
+   * Throw an exception if no such system variable
+   * is know, as it is a really unexpected thing.
    * @param varName
    * @return
    */
   def get(varName : String) : SystemVariableSpec
-  
+
   /**
    * Get the list of all known system vars spec
    */

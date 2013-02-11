@@ -54,10 +54,10 @@ case class Cf3PolicyDraftId(value: String) extends HashcodeCaching
 /**
  * That policy instance object is an instance of a policy applied (bound)
  * to a particular node, so that its variable can be specialized given the node
- * context. 
- * 
+ * context.
+ *
  * That object is part of a node configuration and is the last abstraction used
- * before actual promises are generated. 
+ * before actual promises are generated.
 
  * Please note that a Directive should really have a Variable of the type TrackerVariable,
  * that will hold the id of the directive to be written in the template
@@ -81,7 +81,7 @@ class Cf3PolicyDraft(
   }
 
   def modificationDate = _modificationDate
-  
+
   /**
    * Add (or update) a Variable in the list of expected variable
    * Return the new value if it is added/updated, usefull for loging modification
@@ -147,7 +147,7 @@ class Cf3PolicyDraft(
   /**
    * Update a policy based on another policy. It will check for var to remove and add, and update the time accordingly
    * Does not check for systemvar.
-   * 
+   *
    * Returned the diff
    */
   def updateCf3PolicyDraft(other: Cf3PolicyDraft): ModifyCf3PolicyDraftDiff = {
@@ -180,7 +180,7 @@ class Cf3PolicyDraft(
     }
 
     ModifyCf3PolicyDraftDiff(this.id, varToRemove, varToAdd, varToUpdate)
-    
+
   }
 
   /**
@@ -232,7 +232,7 @@ class Cf3PolicyDraft(
     returnedPolicy._modificationDate = this._modificationDate
     returnedPolicy
   }
-  
+
   def copy(serial : Int): Cf3PolicyDraft = {
     val returnedPolicy = new Cf3PolicyDraft(id, techniqueId, Map(), trackerVariable, priority, serial)
     returnedPolicy.variableMap ++= this.variableMap.map(x => (x._1 -> x._2.clone))
@@ -240,7 +240,7 @@ class Cf3PolicyDraft(
     returnedPolicy
   }
 
-  
+
 }
 
 case class ModifyCf3PolicyDraftDiff(

@@ -56,29 +56,29 @@ class RepetitionComputerTest {
   def testDaysManipulation() {
 
     // this is a wednesday
-    val localDate =  ISODateTimeFormat.localDateParser.parseDateTime("2010-05-12").toLocalDate 
+    val localDate =  ISODateTimeFormat.localDateParser.parseDateTime("2010-05-12").toLocalDate
 
     assert(localDate.dayOfWeek.get == DateTimeConstants.WEDNESDAY)
-    
+
     val monday = localDate.dayOfWeek().setCopy(DateTimeConstants.MONDAY);
-        
+
     assert(monday.dayOfWeek.get == DateTimeConstants.MONDAY)
     assert(monday.dayOfMonth.get == 10)
-    
+
     val wednesday = localDate.dayOfWeek().setCopy(DateTimeConstants.WEDNESDAY);
 
     assert(wednesday.dayOfWeek.get == DateTimeConstants.WEDNESDAY)
     assert(wednesday.dayOfMonth.get == 12)
-    
-    
+
+
     val sunday =  ISODateTimeFormat.localDateParser.parseDateTime("2010-05-16").toLocalDate
-    
+
     assert(sunday.dayOfWeek.get == DateTimeConstants.SUNDAY)
-    
+
     val prevMonday = sunday.dayOfWeek().setCopy(DateTimeConstants.MONDAY);
-  
+
     assert(prevMonday.dayOfWeek.get == DateTimeConstants.MONDAY)
     assert(prevMonday.dayOfMonth.get == 10)
   }
-  
+
 }

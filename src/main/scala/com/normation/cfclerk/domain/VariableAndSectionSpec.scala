@@ -41,14 +41,14 @@ import com.normation.cfclerk.xmlparsers.CfclerkXmlConstants._
 import com.normation.utils.HashcodeCaching
 
 /**
- * This file define the model for metadata of object 
- * contained in SECTIONS. 
- * A section may contains other section or variables. 
+ * This file define the model for metadata of object
+ * contained in SECTIONS.
+ * A section may contains other section or variables.
  */
 
 
 /**
- * Generic trait for object in a section. 
+ * Generic trait for object in a section.
  */
 sealed trait SectionChildSpec {
   def name: String
@@ -67,7 +67,7 @@ sealed trait SectionChildSpec {
     case v:SectionVariableSpec => Seq()
     case s:SectionSpec => s +: s.children.flatMap( _.getAllSections )
   }
-  
+
   // get current variables and variables in sub section
   def getAllVariables: Seq[VariableSpec] = this match {
     case variable: SectionVariableSpec => Seq(variable)
@@ -89,7 +89,7 @@ sealed trait SectionChildSpec {
 
 
 /**
- * Metadata about a section object. 
+ * Metadata about a section object.
  */
 case class SectionSpec(
     name         : String
@@ -104,11 +104,11 @@ case class SectionSpec(
   lazy val getDirectVariables : Seq[VariableSpec] = {
     children.collect { case v:VariableSpec => v }
   }
-  
+
   lazy val getDirectSections : Seq[SectionSpec] = {
     children.collect { case s:SectionSpec => s }
   }
-  
+
   def copyWithoutSystemVars: SectionSpec =
     filterChildren {
       case variable: VariableSpec => !variable.isSystem
@@ -168,7 +168,7 @@ sealed trait VariableSpec {
   def isUniqueVariable: Boolean
   def multivalued: Boolean
 
-  // if true, check that the value set match the type  
+  // if true, check that the value set match the type
   // Some value shouldn't be checked : when we set their value, we don't check anything
   def checked: Boolean
 
@@ -183,7 +183,7 @@ sealed trait VariableSpec {
    */
   def cloneSetMultivalued: T
 
-  // it is a system variable only if the class extending this trait is 
+  // it is a system variable only if the class extending this trait is
   //  a SystemVariableSpec or a TrackerVariableSpec
   def isSystem: Boolean = {
     this match {
@@ -208,7 +208,7 @@ case class SystemVariableSpec(
   val checked: Boolean = true,
 
   val constraint: Constraint = Constraint()
-  
+
 ) extends VariableSpec with HashcodeCaching {
 
   override type T = SystemVariableSpec
@@ -233,7 +233,7 @@ case class TrackerVariableSpec(
   override val checked: Boolean = false
 
   val constraint: Constraint = Constraint()
- 
+
   override val multivalued = true
   override val longDescription = ""
   override def cloneSetMultivalued: TrackerVariableSpec = this.copy()
@@ -242,7 +242,7 @@ case class TrackerVariableSpec(
 
 /**
  * Here we have all the variable that can be declared in sections
- * (all but system vars). 
+ * (all but system vars).
  */
 sealed trait SectionVariableSpec extends SectionChildSpec with VariableSpec {
   override type T <: SectionVariableSpec
@@ -270,7 +270,7 @@ case class SelectVariableSpec(
   val checked: Boolean = true,
 
   val constraint: Constraint = Constraint()
-  
+
 ) extends ValueLabelVariableSpec with HashcodeCaching {
 
   override type T = SelectVariableSpec
@@ -330,7 +330,7 @@ case class InputVariableSpec(
  * A more plugable architecture (partial function, pipeline...)
  * will have to be set-up to achieve such a goal.
  */
-object SectionVariableSpec {  
+object SectionVariableSpec {
   def markerNames = List(INPUT, SELECT1, SELECT)
 
   def isVariable(variableName: String) = markerNames contains variableName
