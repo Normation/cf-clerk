@@ -45,22 +45,22 @@ import scala.collection.SortedSet
  *
  */
 class DummyTechniqueReader(policies:Seq[Technique]=Seq(Technique(TechniqueId(TechniqueName("dummy"), TechniqueVersion("1.0")),"dummy", "DESCRIPTION",Seq(), Seq(), TrackerVariableSpec(), SectionSpec("ROOT")))) extends TechniqueReader {
- 
+
   def this() = this(Seq()) //Spring need that...
-     
+
   val rootCategoryId = RootTechniqueCategoryId / "rootCategory"
 
   //they are all under root
   def readTechniques(): TechniquesInfo = {
     val packagesPath = MutMap[TechniqueId,TechniqueCategoryId]()
     val packages = MutMap[TechniqueName , collection.immutable.SortedMap[TechniqueVersion,Technique]]()
-    
+
     var rootCategory = RootTechniqueCategory(
         "Root category",
         "The main category under witch all other are",
         Set(), SortedSet(), true
     )
-    
+
     for {
       p <- policies
     } {
@@ -71,7 +71,7 @@ class DummyTechniqueReader(policies:Seq[Technique]=Seq(Technique(TechniqueId(Tec
 
     TechniquesInfo(rootCategory, packagesPath.toMap, packages.toMap, Map())
   }
-  
+
   def getTemplateContent[T](templateName: Cf3PromisesFileTemplateId)(useIt : Option[InputStream] => T) : T = useIt(None)
   def getModifiedTechniques : Seq[TechniqueId] = Seq()
 

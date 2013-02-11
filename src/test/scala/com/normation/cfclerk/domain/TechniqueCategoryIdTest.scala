@@ -55,27 +55,27 @@ class TechniqueCategoryIdTest extends Specification {
    * C   D   H
    *    / \   \
    *   E   F   I
-   *  
+   *
    * The order is: A B C D E F G H I
    */
-  
+
   val a = RootTechniqueCategoryId / "A"
   val b = a / "B"
   val c = a / "B" / "C"
   val d = a / "B" / "D"
   val e = a / "B" / "D" / "E"
   val f = a / "B" / "D" / "F"
-  val g = a / "G" 
+  val g = a / "G"
   val h = a / "G" / "H"
   val i = a / "G" / "H" / "I"
-  
+
   val tree = Set(a, b, c, d, e, f, g, h, i)
-  
+
   "A string representation of a node" should {
     "be" in { a.toString === "/A" }
     "be" in { e.toString === "/A/B/D/E" }
   }
-  
+
   "Two node build differently" should {
     "be equals" in {
       b === SubTechniqueCategoryId(TechniqueCategoryName("B"),
@@ -83,50 +83,50 @@ class TechniqueCategoryIdTest extends Specification {
             )
     }
   }
-    
+
   "A tree describe in the comment" should {
     "have 9 nodes" in {
       tree.size === 9
     }
   }
-  
+
   "A path could be transformed to root" should {
     "when it is empty" in {
       TechniqueCategoryId.buildId("") === RootTechniqueCategoryId
     }
-    
+
     "when it is only a slash" in {
       TechniqueCategoryId.buildId("/") === RootTechniqueCategoryId
     }
-    
+
     "when it is only several slashes" in {
       TechniqueCategoryId.buildId("////") === RootTechniqueCategoryId
     }
-    
+
     "when it is only blanck chars" in {
       TechniqueCategoryId.buildId(" ") === RootTechniqueCategoryId
       TechniqueCategoryId.buildId("\n") === RootTechniqueCategoryId
       TechniqueCategoryId.buildId("\t") === RootTechniqueCategoryId
       TechniqueCategoryId.buildId("  \n  \t") === RootTechniqueCategoryId
     }
-    
+
     "when it is only several slashes and blank chars" in {
       TechniqueCategoryId.buildId(" /\n/  ") === RootTechniqueCategoryId
     }
   }
-  
+
   "A path could be transformed to an id" should {
     "when it is root" in {
       TechniqueCategoryId.buildId("root") === RootTechniqueCategoryId / "root"
     }
-    
+
     "when it is composed by several levels" in {
-      TechniqueCategoryId.buildId("/a/b/c") === 
+      TechniqueCategoryId.buildId("/a/b/c") ===
         RootTechniqueCategoryId / "a" / "b" / "c"
     }
-    
+
     "when some level are blank and are ignored" in {
-      TechniqueCategoryId.buildId("/a//b/ \t /c/") === 
+      TechniqueCategoryId.buildId("/a//b/ \t /c/") ===
         RootTechniqueCategoryId / "a" / "b" / "c"
     }
   }

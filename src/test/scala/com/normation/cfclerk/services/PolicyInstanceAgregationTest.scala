@@ -55,7 +55,7 @@ class DirectiveAgregationTest {
     assertEquals(expected.size, actual1.size)
     assertEquals(expected.size, actual2.size)
     val actual = actual1.zip(actual2)
-    
+
     expected.foreach { e =>
       assertEquals(expected.groupBy(x => x), actual.groupBy(x => x))
     }
@@ -67,28 +67,28 @@ class DirectiveAgregationTest {
 
   val activeTechniqueId1 = TechniqueId(TechniqueName("name"), TechniqueVersion("1.0"))
   val activeTechniqueId2 = TechniqueId(TechniqueName("other"), TechniqueVersion("1.0"))
-  
+
   val templateDependencies = new Cf3PromisesFileWriterServiceImpl(
     new DummyTechniqueRepository(Seq(
         Technique(
-          activeTechniqueId1, 
-          "name", "DESCRIPTION", Seq(), Seq(), 
+          activeTechniqueId1,
+          "name", "DESCRIPTION", Seq(), Seq(),
           trackerVariableSpec,
-          SectionSpec(name="root", children=Seq()), 
+          SectionSpec(name="root", children=Seq()),
           isMultiInstance = true
         )
       , Technique(
-          activeTechniqueId2, 
-          "name", "DESCRIPTION", Seq(), Seq(), 
+          activeTechniqueId2,
+          "name", "DESCRIPTION", Seq(), Seq(),
           trackerVariableSpec,
-          SectionSpec(name="root", children=Seq()), 
+          SectionSpec(name="root", children=Seq()),
           isMultiInstance = true
         )
     ) ),
     new SystemVariableSpecServiceImpl())
 
   def createDirectiveWithBinding(activeTechniqueId:TechniqueId, i: Int): Cf3PolicyDraft = {
-    val instance = new Cf3PolicyDraft("id" + i, activeTechniqueId, 
+    val instance = new Cf3PolicyDraft("id" + i, activeTechniqueId,
         Map(), trackerVariable, priority = 0, serial = 0)
 
     val variable = new InputVariable(InputVariableSpec("card", "varDescription1"), Seq())
@@ -171,7 +171,7 @@ class DirectiveAgregationTest {
   def arrayedDirectiveTest() {
     val machineA = new Cf3PolicyDraftContainer("machineA")
 
-    val instance = new Cf3PolicyDraft("id", TechniqueId(TechniqueName("name"), TechniqueVersion("1.0")), 
+    val instance = new Cf3PolicyDraft("id", TechniqueId(TechniqueName("name"), TechniqueVersion("1.0")),
         Map(), trackerVariable, priority = 0, serial = 0)
     machineA.add(createDirectiveWithArrayBinding(activeTechniqueId1,1))
     machineA.add(createDirectiveWithArrayBinding(activeTechniqueId1,2))

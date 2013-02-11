@@ -67,7 +67,7 @@ trait Variable extends Loggable {
 
   // selected values
   protected val defaultValues: Seq[String] // override in subclasses
-  protected val internalValues: Buffer[String] = defaultValues.toBuffer // this is the internal representation of the data 
+  protected val internalValues: Buffer[String] = defaultValues.toBuffer // this is the internal representation of the data
 
   override def toString() = "%s %s : %s".format(spec.name, spec.description, internalValues)
 
@@ -136,10 +136,10 @@ trait Variable extends Loggable {
   def getValuesLength() = {
     internalValues.size
   }
-  
+
   protected def castValue(x: String) : Box[Any] = {
     val typeName = spec.constraint.typeName.toLowerCase
-    
+
     //we don't want to check constraint on empty value
     // when the variable is optionnal
     if(this.spec.constraint.mayBeEmpty && x.length < 1) Full("")
@@ -202,7 +202,7 @@ case class SelectOneVariable(
 
 
 object Variable {
-  // define our own alternatives of matchCopy because we want v.values to be the default 
+  // define our own alternatives of matchCopy because we want v.values to be the default
   // values
   def matchCopy(v: Variable): Variable = matchCopy(v, false)
   def matchCopy(v: Variable, setMultivalued: Boolean): Variable = matchCopy(v, v.values, setMultivalued)

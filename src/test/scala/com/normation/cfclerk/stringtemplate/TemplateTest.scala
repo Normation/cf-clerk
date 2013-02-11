@@ -52,7 +52,7 @@ import com.normation.cfclerk.domain._
 
 @RunWith(classOf[BlockJUnit4ClassRunner])
 class TemplateTest {
-  
+
   @Test
   def helloWorldTest {
     val hello = new StringTemplate("Hello, &name&", classOf[NormationAmpersandTemplateLexer]);
@@ -70,16 +70,16 @@ class TemplateTest {
     hello.setAttribute("list2", "bazz");
 
     assert("chi:barfou:bazzmi:" == hello.toString)
-        
+
     val nonTemplated = new StringTemplate("$(sys.workdir)/bin/cf-agent -f failsafe.cf \\&\\& $(sys.workdir)/bin/cf-agent", classOf[NormationAmpersandTemplateLexer]);
     assert("$(sys.workdir)/bin/cf-agent -f failsafe.cf && $(sys.workdir)/bin/cf-agent" == nonTemplated.toString)
   }
-  
+
   @Test
   def templateLoadingTest {
     val group =  new StringTemplateGroup("myGroup", classOf[NormationAmpersandTemplateLexer]);
     val templatetest = group.getInstanceOf("template");
-    
+
     templatetest.setAttribute("title", "test of a template")
     assert("<title>test of a template</title>" == templatetest.toString)
   }
@@ -88,13 +88,13 @@ class TemplateTest {
   def multiTemplatesLoadingTest {
     val group =  new StringTemplateGroup("myGroup", classOf[NormationAmpersandTemplateLexer]);
     val templatetest = group.getInstanceOf("templates1/templatetest");
-    
+
     templatetest.setAttribute("title", "test of a template")
     assert("<title>test of a template</title>" == templatetest.toString)
-    
-    
+
+
     val template2test = group.getInstanceOf("templates2/templatetest");
-    
+
     template2test.setAttribute("title", "test of a template")
     assert("<boo>test of a template</boo>" == template2test.toString)
   }
@@ -103,43 +103,43 @@ class TemplateTest {
   def templatesWithVarsTest {
     val group =  new StringTemplateGroup("myGroup", classOf[NormationAmpersandTemplateLexer]);
     val templatetest = group.getInstanceOf("templates1/vartest");
-    
+
     assert("\"cfserved\" string => \"$POLICY_SERVER\";\n\"$(file[$(fileParameters)][1])\"" == templatetest.toString)
 
     val amptest = group.getInstanceOf("templates1/amptest");
   }
-  
-  
+
+
   @Test ( expected = classOf[ IllegalArgumentException ] )
   def notExistingTemplateTest {
     val group =  new StringTemplateGroup("myGroup", classOf[NormationAmpersandTemplateLexer]);
     val templatetest = group.getInstanceOf("templates1/azertyui");
-    
+
   }
-  
+
   @Test
   def dateRenderingTest {
     val vared = new StringTemplate("&date;format=\"cfengine_datetime\"&", classOf[NormationAmpersandTemplateLexer]);
-    val date =ISODateTimeFormat.dateTimeParser.parseDateTime("2010-01-24T21:28:32.309+01:00") 
-      
+    val date =ISODateTimeFormat.dateTimeParser.parseDateTime("2010-01-24T21:28:32.309+01:00")
+
     vared.setAttribute("date", date);
     val dateRenderer = new DateRenderer()
     vared.registerRenderer(classOf[DateTime], dateRenderer);
     assert("2010:01:24:09:28:32" == vared.toString)
   }
-  
+
   @Test
   def nativeDateRenderingTest {
     val vared = new StringTemplate("&date;format=\"cfengine_datetime\"&", classOf[NormationAmpersandTemplateLexer]);
-    val date =ISODateTimeFormat.dateTimeParser.parseDateTime("2010-01-24T21:28:32.309+01:00") 
-    
+    val date =ISODateTimeFormat.dateTimeParser.parseDateTime("2010-01-24T21:28:32.309+01:00")
+
     val variable = new InputVariable(InputVariableSpec("date", "this is a native date object", constraint = Constraint("datetime")))
     variable.saveValue(date.toString)
-    
+
     vared.setAttribute("date", variable.getTypedValues.get.head)
     val dateRenderer = new DateRenderer()
     vared.registerRenderer(classOf[DateTime], dateRenderer)
-    
+
     assert("2010:01:24:09:28:32" == vared.toString)
   }
 
@@ -156,16 +156,16 @@ class TemplateTest {
     assertEquals("foo",foo.toString)
 
   }
-  
-/*  
-  @Test 
+
+/*
+  @Test
   def invalidTemplateTest {
     val group =  new StringTemplateGroup("myGroup", classOf[NormationAmpersandTemplateLexer]);
-    
-    val errorListener = group.getErrorListener() 
-  
+
+    val errorListener = group.getErrorListener()
+
     val templatetest = group.getInstanceOf("templates1/invalid");
-    
+
     templatetest.setAttribute("title", "a non existing variable")
   }
 */

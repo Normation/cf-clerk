@@ -43,7 +43,7 @@ import CfclerkXmlConstants._
 
 /**
  * Parse a template file tag in metadata.xml.
- * 
+ *
  * The tag looks like:
  * <TML name="someIdentification">
  *   <OUTPATH>some_out_path_name</OUTPATH> (optional, default to "techniqueId/templateName.cf")
@@ -54,7 +54,7 @@ class Cf3PromisesFileTemplateParser extends Loggable {
 
   def parseXml(techniqueId: TechniqueId, node: Node): Cf3PromisesFileTemplate = {
     if(node.label != PROMISE_TEMPLATE) throw new ParsingException("Error: try to parse a <%s> node, but actually get: %s".format(PROMISE_TEMPLATE, node))
-    
+
     val name = node.attribute(PROMISE_TEMPLATE_NAME) match {
       case Some(n) if (n.size == 1) => n.text
       case _ => throw new ParsingException("Error when parsing node %s. Template name is not defined".format(node))

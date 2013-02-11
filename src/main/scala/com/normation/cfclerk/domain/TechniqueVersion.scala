@@ -68,14 +68,14 @@ final class TechniqueVersion(val epoch: Int, val upsreamTechniqueVersion: Upstre
     if (epoch != v.epoch) epoch compare v.epoch
     else upsreamTechniqueVersion compare v.upsreamTechniqueVersion
   }
-  
+
   override def equals(other:Any) : Boolean = other match {
     case that:TechniqueVersion => this.epoch == that.epoch && this.upsreamTechniqueVersion == that.upsreamTechniqueVersion
     case _ => false
   }
-  
+
   override lazy val hashCode : Int = 7 + 13 * epoch + 41 * upsreamTechniqueVersion.hashCode
-  
+
   override lazy val toString = {
     if(epoch < 1) upsreamTechniqueVersion.value
     else epoch.toString + ":" + upsreamTechniqueVersion.value
@@ -205,5 +205,5 @@ case class UpstreamTechniqueVersion(value: String) extends Ordered[UpstreamTechn
 }
 
 
-  
-    
+
+

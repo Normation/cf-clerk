@@ -39,12 +39,12 @@ import net.liftweb.common._
 import com.normation.utils.HashcodeCaching
 
 case class OperatingSystem(name: String="", version: String="") extends HashcodeCaching {
-    override def toString = if (version == "") name 
+    override def toString = if (version == "") name
   	else name + " " + version
 }
 
 case class Agent(name: String="", version: String="") extends HashcodeCaching {
-    override def toString = if (version == "") name 
+    override def toString = if (version == "") name
   	else name + " " + version
 }
 

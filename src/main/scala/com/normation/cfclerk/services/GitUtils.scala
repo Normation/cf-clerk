@@ -39,15 +39,15 @@ import org.eclipse.jgit.lib.Repository
 import org.eclipse.jgit.lib.ObjectId
 
 /**
- * A service that gives access to the Git 
- * porcelain API of the repository. 
+ * A service that gives access to the Git
+ * porcelain API of the repository.
  */
 trait GitRepositoryProvider {
   /**
-   * Obtain access to JGit porcelain API. 
+   * Obtain access to JGit porcelain API.
    */
   def git : Git
-  
+
   def db : Repository
 }
 
@@ -56,12 +56,12 @@ trait GitRepositoryProvider {
 /**
  * A service that allows to know what is the
  * commit used as "the current one", and what
- * is the last available in the repository. 
- * 
+ * is the last available in the repository.
+ *
  * A method also allowed to change the commit
- * to use as reference. 
- * 
- * All object Ids in that service are RevTree ids, 
+ * to use as reference.
+ *
+ * All object Ids in that service are RevTree ids,
  * and can be used for example in:
  * <pre>
  * val tw = new TreeWalk(repository)
@@ -71,20 +71,20 @@ trait GitRepositoryProvider {
 trait GitRevisionProvider {
   /**
    * Return the last RevTree objectId that
-   * is accessible in the repository. 
+   * is accessible in the repository.
    */
   def getAvailableRevTreeId : ObjectId
-  
+
   /**
-   * Return the commit currently used as the 
-   * "current version". 
+   * Return the commit currently used as the
+   * "current version".
    */
-  def currentRevTreeId : ObjectId 
+  def currentRevTreeId : ObjectId
 
   /**
    * Update the reference to current commit
-   * to the provided one. 
+   * to the provided one.
    */
   def setCurrentRevTreeId(id:ObjectId) : Unit
-  
+
 }

@@ -54,27 +54,27 @@ import org.eclipse.jgit.api.Git
 
 /**
  * Details of tests executed in each instances of
- * the test. 
- * To see values for gitRoot, ptLib, etc, see at the end 
- * of that file. 
+ * the test.
+ * To see values for gitRoot, ptLib, etc, see at the end
+ * of that file.
  */
 trait JGitPackageReaderSpec extends Specification with Loggable {
-  
+
   def gitRoot : File
   def ptLib : File
   def relativePathArg : Option[String]
-    
+
   def deleteDir = {
     logger.info("Deleting directory " + gitRoot.getAbsoluteFile)
     FileUtils.deleteDirectory(gitRoot)
   }
-  
+
   //hook to allows to make some more initialisation
   def postInitHook : Unit
-  
+
   override def map(fs: =>Fragments) = fs ^ Step(deleteDir)
-  
-  val variableSpecParser = new VariableSpecParser 
+
+  val variableSpecParser = new VariableSpecParser
   val policyParser: TechniqueParser = new TechniqueParser(
       variableSpecParser,
       new SectionSpecParser(variableSpecParser),
@@ -84,20 +84,20 @@ trait JGitPackageReaderSpec extends Specification with Loggable {
 
   //copy the directory with testing policy templates lib in some temp place
   //we use a different directory for git repos and ptlib
-  
+
   if(true == ptLib.mkdirs) {
     logger.info("Created a new directory to store the policy template library: " + ptLib.getPath)
     logger.info("Git repository will be in: " + gitRoot.getPath)
   } else sys.error("Can not create directory: " + ptLib.getPath)
-  
-  
+
+
   FileUtils.copyDirectory(new File("src/test/resources/techniquesRoot") , ptLib)
 
   val repo = new GitRepositoryProviderImpl(gitRoot.getAbsolutePath)
-    
+
   //post init hook
   postInitHook
-  
+
   val reader = new GitTechniqueReader(
                 policyParser
               , new SimpleGitRevisionProvider("refs/heads/master", repo)
@@ -109,11 +109,11 @@ trait JGitPackageReaderSpec extends Specification with Loggable {
 
   val infos = reader.readTechniques
   val § = RootTechniqueCategoryId
-  
-  "The test lib" should { 
-    "have 3 categories" in infos.subCategories.size === 3   
+
+  "The test lib" should {
+    "have 3 categories" in infos.subCategories.size === 3
   }
-  
+
   "The root category" should {
     val rootCat = infos.rootCategory
     "be named 'Root category'" in "Root category" === rootCat.name
@@ -130,13 +130,13 @@ trait JGitPackageReaderSpec extends Specification with Loggable {
     val packages = cat1.packageIds.toSeq
     val tmlId = Cf3PromisesFileTemplateId(packages(0), "theTemplate")
     "be named 'cat1'" in  cat1.name === "cat1"
-    "has no description" in cat1.description === "" 
+    "has no description" in cat1.description === ""
     "has two packages..." in cat1.packageIds.size === 2
     "...with the same name p1_1" in cat1.packageIds.forall(id => "p1_1" === id.name.value)
     "...and version 1.0" in packages(0).version === TechniqueVersion("1.0")
     "...and version 2.0" in packages(1).version === TechniqueVersion("2.0")
     "...with a template from which we can read 'The template content\\non two lines.'" in {
-      reader.getTemplateContent(tmlId){ 
+      reader.getTemplateContent(tmlId){
         case None => failure("Can not open an InputStream for " + tmlId.toString)
         case Some(is) => IOUtils.toString(is) === "The template content\non two lines."
       }
@@ -146,14 +146,14 @@ trait JGitPackageReaderSpec extends Specification with Loggable {
   "cat1/cat1_1 sub category" should {
     val cat1_1 = infos.subCategories( § / "cat1" / "cat1_1" )
     "be named 'Category 1.1 name'" in  cat1_1.name === "Category 1.1 name"
-    "has description 'Category 1.1 description'" in cat1_1.description === "Category 1.1 description" 
+    "has description 'Category 1.1 description'" in cat1_1.description === "Category 1.1 description"
     "has 0 package " in cat1_1.packageIds.size === 0
   }
 
   "cat1/cat1_1/cat1_1_1 sub category" should {
     val cat1_1_1 = infos.subCategories( § / "cat1" / "cat1_1" / "cat1_1_1" )
     "be named 'Category 1.1 name'" in  cat1_1_1.name === "cat1_1_1"
-    "has no description" in cat1_1_1.description === "" 
+    "has no description" in cat1_1_1.description === ""
     "has two packages..." in cat1_1_1.packageIds.size === 2
     "...with name p1_1_1_1 and p1_1_1_2" in {
       Seq("p1_1_1_1", "p1_1_1_2").forall(name => cat1_1_1.packageIds.exists(id => id.name.value == name)) === true
@@ -161,8 +161,8 @@ trait JGitPackageReaderSpec extends Specification with Loggable {
     "...and the same version 1.0" in {
       cat1_1_1.packageIds.forall(id => id.version === TechniqueVersion("1.0"))
     }
-  }  
-  
+  }
+
   "if we modify policy cat1/p1_1/2.0, it" should {
     val newPath = reader.canonizedRelativePath.map( _ + "/").getOrElse("") + "cat1/p1_1/2.0/newFile.st"
     val newFile = new File(gitRoot.getAbsoluteFile + "/" + newPath)
@@ -170,7 +170,7 @@ trait JGitPackageReaderSpec extends Specification with Loggable {
     val git = new Git(repo.db)
     git.add.addFilepattern(newPath).call
     git.commit.setMessage("Modify PT: cat1/p1_1/2.0").call
-    
+
     "have update package" in {
       reader.getModifiedTechniques.size === 1
     }
@@ -192,9 +192,9 @@ class JGitPackageReader_SameRootTest extends JGitPackageReaderSpec {
 
 /**
  * A test case where git repos is on a parent directory
- * of technique lib root. 
+ * of technique lib root.
  * In that configuration, we also add false categories in an other sub-directory of the
- * git to check that the PT reader does not look outside of its root. 
+ * git to check that the PT reader does not look outside of its root.
  */
 @RunWith(classOf[JUnitRunner])
 class JGitPackageReader_ChildRootTest extends JGitPackageReaderSpec {
@@ -202,7 +202,7 @@ class JGitPackageReader_ChildRootTest extends JGitPackageReaderSpec {
   lazy val ptLibDirName = "techniques"
   lazy val ptLib = new File(gitRoot, ptLibDirName)
   lazy val relativePathArg = Some("  /" + ptLibDirName + "/  ")
-  
+
   def postInitHook : Unit = {
     //add dummy files
     val destName = "phantomTechniquess"

@@ -41,7 +41,7 @@ import net.liftweb.common._
 
 
 class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
-  
+
   private[this] val varSpecs : Seq[SystemVariableSpec] = Seq(
       SystemVariableSpec("ALLOWCONNECT"   , "List of ip allowed to connect to the node (policyserver + children if any)"
                                           , multivalued = true
@@ -88,11 +88,11 @@ class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
                                           , isUniqueVariable = true
                                           , constraint = Constraint(typeName = "integer")
       )
-    
+
   )
-  
+
   private[this] val varSpecsMap = varSpecs.map(x => (x.name -> x)).toMap
-  
+
   override def get(varName : String) : SystemVariableSpec = varSpecsMap(varName)
   override def getAll() : Seq[SystemVariableSpec] = varSpecs
 }

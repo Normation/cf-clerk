@@ -57,7 +57,7 @@ object CompatibleParser {
    */
   def parseXml(node: Node): Compatible = {
     if(node.label != COMPAT_TAG) throw new ParsingException("CompatibleParser was expecting a <%s> node and get:\n%s".format(COMPAT_TAG, node))
-    val os = node \ COMPAT_OS map (n => 
+    val os = node \ COMPAT_OS map (n =>
       OperatingSystem(n.text, (n \ "@version").text))
     val agents = node \ COMPAT_AGENT map (n =>
       Agent(n.text, (n \ "@version").text))

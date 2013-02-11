@@ -39,15 +39,15 @@ import com.normation.eventlog.EventActor
 import com.normation.eventlog.ModificationId
 
 /**
- * A trait that allows its implementation to get notification 
- * about Reference Policy Template Library update. 
- * 
+ * A trait that allows its implementation to get notification
+ * about Reference Policy Template Library update.
+ *
  * The implementation must be registered to a TechniqueRepository
- * that allows such notification to be shared. 
+ * that allows such notification to be shared.
  *
  */
 trait TechniquesLibraryUpdateNotification {
-  
+
   /**
    * A name to identify that callback
    */
@@ -55,11 +55,11 @@ trait TechniquesLibraryUpdateNotification {
 
   /**
    * That method will be called when techniques are updated.
-   * TODO: perhaps we want something more useful as a return type. 
-   * 
-   * Description is a log description to explain why techniques should be updated 
-   * (user action, commit, etc). 
+   * TODO: perhaps we want something more useful as a return type.
+   *
+   * Description is a log description to explain why techniques should be updated
+   * (user action, commit, etc).
    */
   def updatedTechniques(TechniqueIds:Seq[TechniqueId], modId: ModificationId, actor: EventActor, reason: Option[String]) : Unit
-  
+
 }

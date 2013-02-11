@@ -106,9 +106,9 @@ class TestPackageReader {
     // test that if a directory contains policy.xml files, its name is a valid policy version name
     assert(forAllSubDirs(new File(reader.techniqueDirectoryPath), isValidTechniqueVersionDir))
 
-    //cat 1 : a sub cat, and only one package with two revision 
+    //cat 1 : a sub cat, and only one package with two revision
     //(the second package is ignored)
-    //simple name, category.xml is broken                                               
+    //simple name, category.xml is broken
     val cat1 = infos.subCategories(subCatIds(0))
     assertEquals("cat1", cat1.name)
     assertEquals("", cat1.description)
@@ -131,7 +131,7 @@ class TestPackageReader {
     assertEquals(1, cat1.subCategoryIds.size)
     assertEquals(subCatIds2, cat1.subCategoryIds.head)
 
-    //cat 1_1 : has package info, and one sub cat                                       
+    //cat 1_1 : has package info, and one sub cat
     val cat1_1 = infos.subCategories(subCatIds2)
     assertEquals("Category 1.1 name", cat1_1.name)
     assertEquals("Category 1.1 description", cat1_1.description)

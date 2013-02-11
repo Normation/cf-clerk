@@ -58,40 +58,40 @@ class TechniqueRepositoryImpl(
    */
   private[this] val callbacks = scala.collection.mutable.Buffer(refLibCallbacks:_*)
 
-  
+
   /*
    * TechniquesInfo:
    * - techniquesCategory: Map[TechniqueId, TechniqueCategoryId]
-   * - techniques: Map[TechniqueName, SortedMap[TechniqueVersion, Technique]] 
+   * - techniques: Map[TechniqueName, SortedMap[TechniqueVersion, Technique]]
    * - categories: SortedMap[TechniqueCategoryId, TechniqueCategory]
    */
   private[this] var techniqueInfosCache: TechniquesInfo = {
     /*
-     * readTechniques result is updated only on 
+     * readTechniques result is updated only on
      * techniqueReader.getModifiedTechniques,
-     * so we don't call that method at boot time. 
+     * so we don't call that method at boot time.
      */
     try {
       techniqueReader.readTechniques
     } catch {
-      case e:Exception => 
+      case e:Exception =>
         val msg = "Error when loading the previously saved policy template library. Trying to update to last library available to overcome the error"
         logger.error(msg)
         this.update(ModificationId(uuidGen.newUuid), CfclerkEventActor, Some(msg))
         techniqueReader.readTechniques
     }
   }
-    
+
   ////// end constructor /////
-  
-  
+
+
   /**
    * Register a new callback
    */
   override def registerCallback(callback:TechniquesLibraryUpdateNotification) : Unit = {
     callbacks.append(callback)
   }
-  
+
   override def update(modId: ModificationId, actor:EventActor, reason: Option[String]) : Box[Seq[TechniqueId]] = {
     try {
       val modifiedPackages = techniqueReader.getModifiedTechniques
@@ -101,7 +101,7 @@ class TechniqueRepositoryImpl(
           else "found modified technique(s): " + modifiedPackages.mkString(", ")
         })
         techniqueInfosCache = techniqueReader.readTechniques
-  
+
         callbacks.foreach { callback =>
           try {
             callback.updatedTechniques(modifiedPackages, modId, actor, reason)
@@ -109,7 +109,7 @@ class TechniqueRepositoryImpl(
             case e: Exception => logger.error("Error when executing callback '%s' with updated technique: '%s'".format(callback.name, modifiedPackages.mkString(", ")), e)
           }
         }
-  
+
       } else {
         logger.debug("Not reloading technique library as nothing changed since last reload")
       }
@@ -118,7 +118,7 @@ class TechniqueRepositoryImpl(
       case e:Exception => Failure("Error when trying to read technique library", Full(e), Empty)
     }
   }
-  
+
 
 
 

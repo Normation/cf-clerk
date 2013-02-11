@@ -39,7 +39,7 @@ import scala.collection.SortedSet
 import net.liftweb.common._
 
 /**
- * A policy category name. 
+ * A policy category name.
  * It must be unique only in the context of
  * a parent category (i.e: all subcategories of
  * a given categories must have different names)
@@ -52,27 +52,27 @@ object RootTechniqueCategoryName extends TechniqueCategoryName("/")
 
 
 sealed abstract class TechniqueCategoryId(val name:TechniqueCategoryName) {
-  
+
   /**
-   * Allows to build a subcategory with 
+   * Allows to build a subcategory with
    * catId / "subCatName"
    */
-  def /(subCategoryName:String) : SubTechniqueCategoryId = 
+  def /(subCategoryName:String) : SubTechniqueCategoryId =
     SubTechniqueCategoryId(TechniqueCategoryName(subCategoryName),this)
-  
+
   /**
    * The toString of a SubTechniqueCategoryId is its path
    * from root with "/" as separator
    */
   override lazy val toString = getPathFromRoot.tail.map( _.value ).mkString("/", "/", "")
-  
+
   /**
    * The list of category from root to that one
    * (including that one)
    */
   lazy val getPathFromRoot = TechniqueCategoryId.pathFrom(this).reverse
   lazy val getIdPathFromRoot = TechniqueCategoryId.idPathFrom(this).reverse
-  
+
   /**
    * The list of category from root to the
    * parent of that one (son excluding that one)
@@ -81,7 +81,7 @@ sealed abstract class TechniqueCategoryId(val name:TechniqueCategoryName) {
     case RootTechniqueCategoryId => Nil
     case s:SubTechniqueCategoryId => TechniqueCategoryId.pathFrom(s)
   }
-  
+
   lazy val getParentIdPathFromRoot = this match {
     case RootTechniqueCategoryId => Nil
     case s:SubTechniqueCategoryId => TechniqueCategoryId.idPathFrom(s)
@@ -94,48 +94,48 @@ case class SubTechniqueCategoryId(
     override val name: TechniqueCategoryName,
     parentId : TechniqueCategoryId
 ) extends TechniqueCategoryId(name) with HashcodeCaching {
-  
+
 
 }
 
 object TechniqueCategoryId {
-  
+
   /**
    * Build the path from the given TechniqueCategory
    * up to the root
    */
-  def pathFrom(id:TechniqueCategoryId) : List[TechniqueCategoryName] = 
+  def pathFrom(id:TechniqueCategoryId) : List[TechniqueCategoryName] =
     id match {
       case RootTechniqueCategoryId => id.name :: Nil
       case SubTechniqueCategoryId(name, pId) => id.name :: pathFrom(pId)
     }
 
-  def idPathFrom(id:TechniqueCategoryId) : List[TechniqueCategoryId] = 
+  def idPathFrom(id:TechniqueCategoryId) : List[TechniqueCategoryId] =
     id match {
       case RootTechniqueCategoryId => id :: Nil
       case SubTechniqueCategoryId(name, pId) => id :: idPathFrom(pId)
-    } 
-  
-    
+    }
+
+
   private[this] val empty = """^[\s]*$""".r
 
   /**
-   * Build a category id from a path. 
-   * The path must follow the unix syntaxe (a/b/c). 
+   * Build a category id from a path.
+   * The path must follow the unix syntaxe (a/b/c).
    * If it does not start with a "slash", it is assumed that it
-   * is relative to root so that the only difference between relative and absolute 
-   * paths is the root. 
+   * is relative to root so that the only difference between relative and absolute
+   * paths is the root.
    * Trailing slashes are removed (i.e /a/b == /a/b/ == /a/b//)
    * Each part is checck to be non-empty (i.e: /a/b == /a//b == //a///b)
    * No other verification are done on the last element.
    * A path must contains at least one non empty element to be a valid path,
    * root being considered as a valid non empty element, so that :
    * - "/" is valid
-   * - "/    " is valid and == "/" == "    /   / " (because in the last case, 
+   * - "/    " is valid and == "/" == "    /   / " (because in the last case,
    *   root is appended to the relative path, and then all other element are empty
    * - "    " is valid and == "/"
    */
-  def buildId(path:String) : TechniqueCategoryId = {    
+  def buildId(path:String) : TechniqueCategoryId = {
     val absPath = "/" + path
     val parts = absPath.split("/").filterNot(x => empty.findFirstIn(x).isDefined)
     ( (RootTechniqueCategoryId:TechniqueCategoryId) /: parts) { (id,name) =>
@@ -161,8 +161,8 @@ sealed trait TechniqueCategory {
   val subCategoryIds: Set[SubTechniqueCategoryId]
   val packageIds : SortedSet[TechniqueId]
   val isSystem : Boolean
-  
-  require(subCategoryIds.forall(sc => sc.parentId == id), 
+
+  require(subCategoryIds.forall(sc => sc.parentId == id),
       "Unconsistancy in the Technique Category; one of the subcategories is not marked as having [%s] as parent. Subcategory ids: %s".format(
           id.toString,
           subCategoryIds.map( _.toString).mkString("\n", "\n", "\n")

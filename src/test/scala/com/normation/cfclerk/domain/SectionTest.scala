@@ -56,55 +56,55 @@ import com.normation.utils.HashcodeCaching
 class SectionTest extends Specification {
   val doc = readFile("testSections.xml")
   def sectionsTag(example:String) = (doc \\ "examples" \ example \ "SECTIONS").head
-  
+
   val sectionSpecParser = new SectionSpecParser(new VariableSpecParser)
 
   val sectionParser = SectionParser(sectionSpecParser)
-  
-  
+
+
   "Example <variableUnderSections>" should {
     "leads to a parsing exception due to variable under <SECTIONS> tag" in {
-      sectionParser.parseXml(sectionsTag("variableUnderSections")) must throwA[ParsingException].like { case e => 
+      sectionParser.parseXml(sectionsTag("variableUnderSections")) must throwA[ParsingException].like { case e =>
         e.getMessage must =~("<%s> must contain only <%s> children".format(SECTIONS_ROOT, SECTION))
       }
     }
-  }  
-  
+  }
+
   "Example <nonUniqueSectionNames>" should {
     "leads to a parsing exception due to multiple section with the same name" in {
-      sectionParser.parseXml(sectionsTag("nonUniqueSectionNames")) must throwA[ParsingException].like { case e => 
+      sectionParser.parseXml(sectionsTag("nonUniqueSectionNames")) must throwA[ParsingException].like { case e =>
         e.getMessage must =~("At least two sections have the same name")
       }
     }
   }
-  
+
   "Example <nonUniqueVariableNames>" should {
     "leads to a parsing exception due to multiple variables with the same name" in {
-      sectionParser.parseXml(sectionsTag("nonUniqueVariableNames")) must throwA[ParsingException].like { case e => 
+      sectionParser.parseXml(sectionsTag("nonUniqueVariableNames")) must throwA[ParsingException].like { case e =>
         e.getMessage must =~("At least two variables have the same name")
       }
     }
-  }  
-  
-  
+  }
+
+
   ///// test on the well formed example /////
-  
-  
+
+
   val rootSectionsOk = sectionParser.parseXml(sectionsTag("ok"))
-    
+
   "the test sections <ok>" should {
-    val vars = "A" :: "B" :: "C" :: "D" :: "E" :: "F" :: Nil 
-    val sects = SECTION_ROOT_NAME :: "sectA" :: "sect1" :: "sect2" :: 
+    val vars = "A" :: "B" :: "C" :: "D" :: "E" :: "F" :: Nil
+    val sects = SECTION_ROOT_NAME :: "sectA" :: "sect1" :: "sect2" ::
       "sect3" :: "emptySect" :: "component" :: "sectF" ::Nil
-    
+
     "have variables %s".format(vars.mkString("[", "," , "]")) in {
       vars === rootSectionsOk.getAllVariables.map( _.name )
     }
-    
+
     "have sections %s".format(sects.mkString("[", "," , "]")) in {
       sects === rootSectionsOk.getAllSections.map( _.name )
     }
-    
+
   }
 
   "section named sect1" should {
@@ -115,14 +115,14 @@ class SectionTest extends Specification {
 
   "section named sect2" should {
     implicit val section = getUniqueSection("sect2")
-    haveNbChildren(2) 
+    haveNbChildren(2)
     //all children are variables
     containNbVariables(2)
   }
 
   "section named sect3" should {
     implicit val section = getUniqueSection("sect3")
-    haveNbChildren(1) 
+    haveNbChildren(1)
     //all children are variables
     containNbVariables(1)
   }
@@ -132,21 +132,21 @@ class SectionTest extends Specification {
     beEmpty
     haveNbChildren(0)
   }
-  
+
   "section named component" should {
     implicit val section = getUniqueSection("component")
     beEmpty
     haveNbChildren(0)
-    
+
     "be a component" in {
       section.isComponent must beTrue
     }
-    
+
     "have component key C" in {
       section.componentKey === Some("C")
     }
   }
-  
+
   private[this] def getUniqueSection(name: String): SectionSpec = {
     implicit val sects = rootSectionsOk.filterByName(name)
     beUnique
@@ -202,7 +202,7 @@ class SectionTest extends Specification {
     }
   }
 
-  
+
   private[this] def readFile(fileName:String) : Elem = {
     val doc =
       try {
@@ -216,7 +216,7 @@ class SectionTest extends Specification {
     }
     doc
   }
-  
+
 }
 
 case class SectionParser(sectionSpecParser: SectionSpecParser) extends HashcodeCaching  {
@@ -224,6 +224,6 @@ case class SectionParser(sectionSpecParser: SectionSpecParser) extends HashcodeC
   val policyName = "test-policyName"
 
   def parseXml(elt: Node): SectionSpec = {
-    sectionSpecParser.parseSectionsInPolicy(elt,id, policyName) 
+    sectionSpecParser.parseSectionsInPolicy(elt,id, policyName)
   }
 }
