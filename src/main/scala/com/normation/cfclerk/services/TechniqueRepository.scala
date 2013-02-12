@@ -86,10 +86,10 @@ trait TechniqueRepository {
   def getByIds(techniqueIds: Seq[TechniqueId]): Seq[Technique]
 
   /**
-   * For the given TechniqueName, retrieve all available 
-   * versions. 
+   * For the given TechniqueName, retrieve all available
+   * versions.
    * If the policyName is unknown, the returned collection will
-   * be empty. 
+   * be empty.
    */
   def getTechniqueVersions(name:TechniqueName) : SortedSet[TechniqueVersion]
 

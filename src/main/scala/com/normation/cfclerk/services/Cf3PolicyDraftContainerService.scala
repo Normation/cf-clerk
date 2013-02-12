@@ -45,7 +45,7 @@ import net.liftweb.common.Box
  */
 trait Cf3PolicyDraftContainerService {
 
-  
+
   /**
    * Create a container
    * @param identifier
@@ -54,7 +54,7 @@ trait Cf3PolicyDraftContainerService {
    */
   def createContainer(identifier: String, cf3PolicyDrafts : Seq[Cf3PolicyDraft]) : Box[Cf3PolicyDraftContainer]
 
-  
+
   /**
    * Add a policy instance to a container
    * @param container

@@ -59,10 +59,10 @@ class Cf3PromisesFileTemplateTest {
 
   @Autowired
   val tmlParser : Cf3PromisesFileTemplateParser = null
-  
+
   val filenameTemplate = "testCf3PromisesFileTemplate.xml"
-  	
-  val doc = 
+
+  val doc =
     try {
       XML.load(ClassLoader.getSystemResourceAsStream(filenameTemplate))
     } catch {
@@ -73,11 +73,11 @@ class Cf3PromisesFileTemplateTest {
   if(doc.isEmpty) {
     throw new Exception("Unexpected issue (unvalid xml?) with the %s file ".format(filenameTemplate) )
   }
-  
+
   val askedBundle = Cf3PromisesFileTemplateId(TechniqueId(TechniqueName(""), TechniqueVersion("1.0")),"three")
-  
+
   val tmlDependencies = new Cf3PromisesFileWriterServiceImpl(new DummyTechniqueRepository(), new SystemVariableSpecServiceImpl() )
-  
+
   @Test
   def parseDoc {
     val templateMap = new HashMap[Cf3PromisesFileTemplateId, Cf3PromisesFileTemplate]
@@ -92,18 +92,18 @@ class Cf3PromisesFileTemplateTest {
   @Test
   def orderBundles {
     val templateMap = new HashMap[Cf3PromisesFileTemplateId, Tml]
-    
+
     for (elt <- (doc \\"TMLS"\ "TML")) {
       val tml = Tml.parseXml("", elt)
-      
+
       templateMap += tml.name -> tml
     }
-    
+
     assert(templateMap.size==3)
-    
+
     val tmls = tmlDependencies.manageDependencies(Set(askedBundle), templateMap)
     assert(tmls.size==3)
-    
+
     assert(tmls(0) == Cf3PromisesFileTemplateId("","one"))
     assert(tmls(1) == Cf3PromisesFileTemplateId("","two"))
     assert(tmls(2) == Cf3PromisesFileTemplateId("","three"))

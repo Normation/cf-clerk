@@ -41,18 +41,18 @@ import com.normation.eventlog.ModificationId
 
 /**
  * A trait that allows to update the reference policy
- * template library. 
+ * template library.
  */
 trait UpdateTechniqueLibrary {
 
   /**
    * Update the lib, and return the list of
-   * actually updated policy templates. 
+   * actually updated policy templates.
    */
   def update(modId: ModificationId, actor:EventActor, reason: Option[String]) : Box[Seq[TechniqueId]]
-  
+
   /**
-   * Allows callbacks to be called on a Policy Template library update. 
+   * Allows callbacks to be called on a Policy Template library update.
    */
   def registerCallback(callback:TechniquesLibraryUpdateNotification) : Unit
 

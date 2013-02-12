@@ -53,7 +53,7 @@ class TechniqueParser(
   , cf3PromisesFileTemplateParser: Cf3PromisesFileTemplateParser
   , systemVariableSpecService    : SystemVariableSpecService
 ) extends Loggable {
-  
+
   def parseXml(node: Node, id: TechniqueId): Technique = {
     //check that node is <TECHNIQUE> and has a name attribute
     if (node.label.toUpperCase == TECHNIQUE_ROOT) {
@@ -77,7 +77,7 @@ class TechniqueParser(
             , longDescription = ??!((node \ TECHNIQUE_LONG_DESCRIPTION).text).getOrElse("")
             , isSystem = ((node \ TECHNIQUE_IS_SYSTEM).text.equalsIgnoreCase("true"))
           )
-          
+
           /*
            * Check that if the policy info variable spec has a bounding variable, that
            * variable actually exists
@@ -92,7 +92,7 @@ class TechniqueParser(
               throw new ParsingException("The bouding variable '%s' for policy info variable does not exists".format(bound))
             }
           }
-                    
+
           technique
 
         case _ => throw new ParsingException("Not a policy node, missing 'name' attribute: %s".format(node))
@@ -101,11 +101,11 @@ class TechniqueParser(
       throw new ParsingException("Not a policy node, bad node name. Was expecting <%s>, got: %s".format(TECHNIQUE_ROOT,node))
     }
   }
-  
+
   private[this] def checkUniqueness(seq:Seq[String])(errorMsg:String) : Unit = {
     if(seq.distinct.size != seq.size) {
-      throw new ParsingException(errorMsg + seq.groupBy(identity).collect { 
-                  case(k, x) if x.size > 1 => k 
+      throw new ParsingException(errorMsg + seq.groupBy(identity).collect {
+                  case(k, x) if x.size > 1 => k
       }.mkString("[", "," , "]") )
     }
   }
@@ -122,15 +122,15 @@ class TechniqueParser(
       }
     } else throw new ParsingException("Only one <%s> tag is allowed the the document, but found %s".format(TRACKINGVAR,trackerVariableSpecs.size))
   }
-  
+
   /*
    * Parse the list of system vars used by that policy package.
-   * 
+   *
    */
   private[this] def parseSysvarSpecs(node: Node, id:TechniqueId) : Set[SystemVariableSpec] = {
     (node \ SYSTEMVARS_ROOT \ SYSTEMVAR_NAME).map(x => systemVariableSpecService.get(x.text)).toSet
   }
-  
+
 }
 
 object TechniqueParser {

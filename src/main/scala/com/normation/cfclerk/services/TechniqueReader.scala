@@ -48,7 +48,7 @@ case class TechniquesInfo(
   , techniques: Map[TechniqueName, SortedMap[TechniqueVersion, Technique]]
     //head of categories is the root category
   , subCategories: Map[SubTechniqueCategoryId, TechniqueCategory]
-) extends HashcodeCaching 
+) extends HashcodeCaching
 
 //a mutable version of TechniquesInfo, for internal use only !
 private[services] class InternalTechniquesInfo(
@@ -71,10 +71,10 @@ trait TechniqueReader {
    * read the policies from the source directory.
    * return the policy package and the the full path to its
    * root directory for the "current" revision of the
-   * reference library. "current" pointer update is 
+   * reference library. "current" pointer update is
    * implementation dependent, some implementation doesn't
    * have any notion of version, other using getModifiedTechniques
-   * for updating the available "next" state. 
+   * for updating the available "next" state.
    */
   def readTechniques(): TechniquesInfo
 
@@ -82,17 +82,17 @@ trait TechniqueReader {
    * Read the content of a template, if the template is known by that
    * TechniqueReader.
    * If the template exists, then a Some(input stream), open at the
-   * beginning of the template is given to the caller. 
-   * If not, a None is given. 
+   * beginning of the template is given to the caller.
+   * If not, a None is given.
    * The implementation must take care of correct closing of the input
-   * stream and any I/O exception. 
+   * stream and any I/O exception.
    */
   def getTemplateContent[T](templateName: Cf3PromisesFileTemplateId)(useIt : Option[InputStream] => T) : T
- 
+
   /**
-   * An indicator that the underlying policy template library changed and that the content 
+   * An indicator that the underlying policy template library changed and that the content
    * should be read again.
-   * If the sequence is empty, then nothing changed. Else, the list of Technique with 
+   * If the sequence is empty, then nothing changed. Else, the list of Technique with
    * *any* change will be given
    */
   def getModifiedTechniques : Seq[TechniqueId]

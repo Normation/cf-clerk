@@ -96,7 +96,7 @@ class VariableTest extends Specification {
 
     var variables = Map[String, Variable]()
     for {
-      elt <- (doc \\ "VARIABLES") 
+      elt <- (doc \\ "VARIABLES")
       specNode <- elt.nonEmptyChildren
       if(!specNode.isInstanceOf[Text])
     } {
@@ -105,11 +105,11 @@ class VariableTest extends Specification {
     }
     variables
   }
-  
+
   "SYSTEM_VARIABLE tag" should {
     "lead to an exception" in {
       val sysvar = (for {
-        elt <- (XML.load(ClassLoader.getSystemResourceAsStream("testSystemVariable.xml")) \\ "VARIABLES") 
+        elt <- (XML.load(ClassLoader.getSystemResourceAsStream("testSystemVariable.xml")) \\ "VARIABLES")
         specNode <- elt.nonEmptyChildren
         if(!specNode.isInstanceOf[Text])
       } yield {

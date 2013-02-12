@@ -42,13 +42,13 @@ import com.normation.utils.XmlUtils._
 import com.normation.cfclerk.exceptions._
 
 class VariableSpecParser {
-  
-  
+
+
   private[this] val reservedVariableName = DEFAULT_COMPONENT_KEY :: TRACKINGKEY :: Nil
 
   /*
-     * check if the given value is the text token for 
-     * the given variable category. 
+     * check if the given value is the text token for
+     * the given variable category.
      * Used in pattern guard
      */
   private def isA(value: String, categoryName: String): Boolean = categoryName.toLowerCase == value.toLowerCase
@@ -60,8 +60,8 @@ class VariableSpecParser {
       Full(TrackerVariableSpec((node \ TRACKINGVAR_SIZE).headOption.map( _.text )))
     }
   }
-  
-  
+
+
   def parseSectionVariableSpec(elt: Node): Box[SectionVariableSpec] = {
 
     val markerName = elt.label
@@ -76,7 +76,7 @@ class VariableSpecParser {
           case (_, "") => Failure("Description is mandatory but wasn't found for variable spec elt: " + elt)
 
           case (name, desc) =>
-            
+
             reservedVariableName.find(reserved => name == reserved).foreach { reserved =>
               throw new ParsingException("Name '%s' is reserved and can not be used for a variable".format(reserved))
             }
@@ -99,7 +99,7 @@ class VariableSpecParser {
             }
 
             val checked = "true" == getUniqueNodeText(elt, VAR_IS_CHECKED, "true").toLowerCase
-            
+
             Full(SectionVariableSpec(
               varName = name,
               description = desc,

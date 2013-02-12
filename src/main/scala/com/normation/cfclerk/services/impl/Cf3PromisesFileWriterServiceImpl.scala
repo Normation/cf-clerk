@@ -70,25 +70,25 @@ class Cf3PromisesFileWriterServiceImpl(
     val systemVars = prepareBundleVars(container)
 
     val techniques = techniqueRepository.getByIds(container.getAllIds)
-    
-    val tmlsByTechnique : Map[TechniqueId,Set[Cf3PromisesFileTemplateCopyInfo]] = techniques.map{ technique => 
+
+    val tmlsByTechnique : Map[TechniqueId,Set[Cf3PromisesFileTemplateCopyInfo]] = techniques.map{ technique =>
       (
           technique.id
         , technique.templates.map(tml => Cf3PromisesFileTemplateCopyInfo(tml.id, tml.outPath)).toSet
       )
     }.toMap
-    
+
     val variablesByTechnique = prepareVariables(container, systemVars ++ extraSystemVariables, techniques)
 
-    techniques.map {technique =>  
+    techniques.map {technique =>
       (
           technique.id
         , PreparedTemplates(tmlsByTechnique(technique.id), variablesByTechnique(technique.id))
       )
     }.toMap
   }
-  
-  
+
+
   /**
    * Move the generated promises from the new folder to their final folder, backuping previous promises in the way
    * @param folder : (Container identifier, (base folder, new folder of the policies, backup folder of the policies) )
@@ -157,7 +157,7 @@ class Cf3PromisesFileWriterServiceImpl(
               template.registerRenderer(classOf[DateTime], new DateRenderer());
               template.registerRenderer(classOf[LocalDate], new LocalDateRenderer());
               template.registerRenderer(classOf[LocalTime], new LocalTimeRenderer());
-              
+
               for (variable <- variableSet) {
                 if ( (variable.mayBeEmpty) && ((variable.values.size == 0) || (variable.values.size ==1 && variable.values.head == "") ) ) {
                   template.setAttribute(variable.name, null)
@@ -166,7 +166,7 @@ class Cf3PromisesFileWriterServiceImpl(
                 } else {
                   logger.trace("Adding variable %s : %s values %s".format(
                       outPath + "/" + fileEntry.destination, variable.name, variable.values.mkString("[",",","]")))
-                  variable.values.foreach { value => template.setAttribute(variable.name, value) 
+                  variable.values.foreach { value => template.setAttribute(variable.name, value)
                   }
                 }
               }
@@ -187,7 +187,7 @@ class Cf3PromisesFileWriterServiceImpl(
 
   }
 
-  
+
   private[this] def prepareVariables(
       container: Cf3PolicyDraftContainer
     , systemVars: Map[String, Variable]
@@ -202,7 +202,7 @@ class Cf3PromisesFileWriterServiceImpl(
       technique <- techniques
     } yield {
       val ptValues = variablesValues(technique.id)
-      
+
       val variables:Seq[Variable] = (for {
         variableSpec <- technique.getAllVariableSpecs
       } yield {
@@ -221,7 +221,7 @@ class Cf3PromisesFileWriterServiceImpl(
           case x : SectionVariableSpec => Some(x.toVariable(ptValues(x.name).values))
         }
       }).flatten
-      
+
       //return STVariable in place of Rudder variables
       val stVariables = variables.map { v => STVariable(
           name = v.spec.name
@@ -234,7 +234,7 @@ class Cf3PromisesFileWriterServiceImpl(
       (technique.id,stVariables)
     }).toMap
   }
-  
+
   /**
    * Compute the TMLs list to be written and their variables
    * @param container : the container of the policies we want to write
@@ -243,7 +243,7 @@ class Cf3PromisesFileWriterServiceImpl(
    */
   private[this] def prepareBundleVars(container: Cf3PolicyDraftContainer) : Map[String,Variable] = {
   //prepareCf3PromisesFileTemplateAndBundleVars
-    
+
     logger.trace("Preparing bundle list and input list for container : %s ".format(container))
 
     val inputs = scala.collection.mutable.Buffer[String]() // all the include file
@@ -253,7 +253,7 @@ class Cf3PromisesFileWriterServiceImpl(
 
     for {
       tml <- policies.flatMap(p => p.templates)
-    } {	
+    } {
 //      files += Cf3PromisesFileTemplateCopyInfo(tml.name, tml.outPath)
       if (tml.included) inputs += tml.outPath
     }
@@ -269,10 +269,10 @@ class Cf3PromisesFileWriterServiceImpl(
           val bundleSet = policies.flatMap(x => x.bundlesequence.map(x =>x.name))
           val variable = SystemVariable(systemVariableSpecService.get("BUNDLELIST"))
           val value = bundleSet.mkString("\"", "\",\"", "\"")
-          
+
           if(value.length == 0) variable.saveValue(value)
           else variable.saveValue(", " + value)
-          
+
           (variable.spec.name, variable)
         }
     )
@@ -338,7 +338,7 @@ class Cf3PromisesFileWriterServiceImpl(
 
   /**
    * Concatenate all the variables for each policy Instances.
-   * 
+   *
    * The serialization is done
    */
   override def prepareAllCf3PolicyDraftVariables(cf3PolicyDraftContainer: Cf3PolicyDraftContainer): Map[TechniqueId, Map[String, Variable]] = {
@@ -350,7 +350,7 @@ class Cf3PromisesFileWriterServiceImpl(
         cf3PolicyDraft.id.value + "@@" + cf3PolicyDraft.serial
       }
 
-    
+
     (for {
       // iterate over each policyName
       activeTechniqueId <- cf3PolicyDraftContainer.getAllIds
@@ -359,7 +359,7 @@ class Cf3PromisesFileWriterServiceImpl(
           throw new RuntimeException("Error, can not find policy with id '%s' and version ".format(activeTechniqueId.name.value) +
               "'%s' in the policy service".format(activeTechniqueId.name.value)))
       val cf3PolicyDraftVariables = scala.collection.mutable.Map[String, Variable]()
-      
+
       for {
         // over each cf3PolicyDraft for this name
         (directiveId, cf3PolicyDraft) <- cf3PolicyDraftContainer.findById(activeTechniqueId)
@@ -373,7 +373,7 @@ class Cf3PromisesFileWriterServiceImpl(
               cf3PolicyDraftVariables.put(directiveVariable.spec.name, directiveVariable)
           case Some(x) => // value is already there
         }
-  
+
         if (technique.isMultiInstance) {
          // Only multiinstance policy may have a policyinstancevariable with high cardinal
           var i = 0;
@@ -384,7 +384,7 @@ class Cf3PromisesFileWriterServiceImpl(
         } else {
           cf3PolicyDraftVariables(directiveVariable.spec.name).appendValues(Seq(createValue(cf3PolicyDraft)))
         }
-  
+
         // All other variables now
         for (variable <- cf3PolicyDraft.getVariables) {
           variable._2 match {
@@ -400,7 +400,7 @@ class Cf3PromisesFileWriterServiceImpl(
                         logger.warn("Attempt to append value into a non multivalued variable, bad things may happen")
                       }
                       existingVariable.appendValues(newVar.values)
-  
+
                   }
                 }
             }

@@ -44,7 +44,7 @@ import com.normation.utils.Control.{sequence,bestEffort}
 
 class SectionSpecParser(variableParser:VariableSpecParser) extends Loggable {
 
-  
+
   def parseSectionsInPolicy(policy: Node, id: TechniqueId, policyName: String):SectionSpec = {
     val sections = policy \\ SECTIONS_ROOT
     if (sections.size > 1) {
@@ -57,23 +57,23 @@ class SectionSpecParser(variableParser:VariableSpecParser) extends Loggable {
       SectionSpec(SECTION_ROOT_NAME)
     else {
       val root = SectionSpec(SECTION_ROOT_NAME, children = parseChildren(sections.head, id, policyName))
-      
+
       /*
        * check that all section names and all variable names are unique
        */
       val variableNames = root.getAllVariables.map( _.name )
-      
+
       /*
-       * check that all variable and seciont names are unique 
+       * check that all variable and seciont names are unique
        */
       checkUniqueness(variableNames) {
         "At least two variables have the same name (case unsensitive), what is forbiden: "
       }
-      
+
       checkUniqueness(root.getAllSections.map(_.name)) {
         "At least two sections have the same name (case unsensitive), what is forbiden: "
       }
-          
+
       /*
        * Check that all section with defined component key reference existing
        * variables
@@ -97,22 +97,22 @@ class SectionSpecParser(variableParser:VariableSpecParser) extends Loggable {
         case f:Failure => throw new ParsingException("<%s> must contain only <%s> children : %s".format(SECTIONS_ROOT, SECTION, f.messageChain))
         case _ => //OK
       }
-      
+
       root
     }
-  }  
-  
+  }
+
   // utility method that check duplicate elements in a string sequence case-unsensitive
   private[this] def checkUniqueness(seq:Seq[String])(errorMsg:String) : Unit = {
-    val duplicates = seq.groupBy( _.toLowerCase ).collect { 
+    val duplicates = seq.groupBy( _.toLowerCase ).collect {
       case(k, x) if x.size > 1 => x.mkString("(",",",")")
     }
-    
+
     if(duplicates.nonEmpty) {
       throw new ParsingException(errorMsg + duplicates.mkString("[", "," , "]") )
     }
   }
-    
+
   //method that actually parse a <SECTIONS> or <SECTION> tag
   private[this] def parseSection(root: Node, id: TechniqueId, policyName: String): Box[SectionSpec] = {
 
@@ -126,17 +126,17 @@ class SectionSpecParser(variableParser:VariableSpecParser) extends Loggable {
         else throw new ParsingException("Section must have name. Missing name for: " + root)
       }
     }
-    
+
     val isMultivalued = "true" == getAttributeText(root, SECTION_IS_MULTIVALUED, "false").toLowerCase
     val foldable = "true" == getAttributeText(root, SECTION_IS_FOLDABLE, "false").toLowerCase
     val description = getUniqueNodeText(root, SECTION_DESCRIPTION, "")
-    
+
     val isComponent = "true"  == getAttributeText(root, SECTION_IS_COMPONENT, "false").toLowerCase
     val componentKey = (root \ ("@" + SECTION_COMPONENT_KEY)).headOption.map( _.text) match {
       case null | Some("") => None
       case x => x
     }
-    
+
     /**
      * A key must be define if and only if we are in a multivalued, component section.
      */
@@ -168,7 +168,7 @@ class SectionSpecParser(variableParser:VariableSpecParser) extends Loggable {
           throw new ParsingException(err)
       }
     }
-    
+
     def parseOneSection(node: Node, id: TechniqueId, policyName: String) : SectionSpec = {
       parseSection(node, id, policyName) match {
         case Full(section) => section
@@ -181,7 +181,7 @@ class SectionSpecParser(variableParser:VariableSpecParser) extends Loggable {
           throw new ParsingException("Couldn't parse Section")
       }
     }
-      
+
     for {
       child <- node.child
       if !child.isEmpty && child.label != "#PCDATA"

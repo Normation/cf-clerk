@@ -72,9 +72,9 @@ import com.normation.exceptions.TechnicalException
 
 /**
  * A default implementation that uses the given root directory
- * as the directory to control for revision. 
+ * as the directory to control for revision.
  * If a .git repository is found in it, it is considered as the repository
- * to use, else if none is found, one is created. 
+ * to use, else if none is found, one is created.
  */
 class GitRepositoryProviderImpl(techniqueDirectoryPath: String) extends GitRepositoryProvider with Loggable { //we expect to have a .git here
   /**
@@ -90,8 +90,8 @@ class GitRepositoryProviderImpl(techniqueDirectoryPath: String) extends GitRepos
   }
 
   /**
-   * Ckeck git repos existence. 
-   * If no git repos is found, create one. 
+   * Ckeck git repos existence.
+   * If no git repos is found, create one.
    */
   private def checkGitRepos(root:File) : Repository = {
     val db = new FileRepositoryBuilder().setWorkTree(root).build
@@ -110,7 +110,7 @@ class GitRepositoryProviderImpl(techniqueDirectoryPath: String) extends GitRepos
     checkPackageDirectory(dir)
     checkGitRepos(dir)
   }
-  
+
   override val git = new Git(db)
 }
 
@@ -118,62 +118,62 @@ class GitRepositoryProviderImpl(techniqueDirectoryPath: String) extends GitRepos
 
 /**
  * A Git revision provider that always return the RevTree matching the
- * configured revPath. 
+ * configured revPath.
  * It checks the path existence, but does not do anything special if
- * the reference does not exists (safe a error message). 
- * 
- * TODO: reading policy packages should be a Box method, 
- * so that it can  fails in a knowable way. 
- * 
+ * the reference does not exists (safe a error message).
+ *
+ * TODO: reading policy packages should be a Box method,
+ * so that it can  fails in a knowable way.
+ *
  * WARNING : the current revision is not persisted between creation of that class !
  */
 class SimpleGitRevisionProvider(refPath:String,repo:GitRepositoryProvider) extends GitRevisionProvider with Loggable {
-  
+
   if(!refPath.startsWith("refs/")) {
     logger.warn("The configured reference path for the Git repository of Policy Template User Library does "+
         "not start with 'refs/'. Are you sure you don't mistype something ?")
   }
-  
+
   private[this] var currentId = getAvailableRevTreeId
-  
+
   override def getAvailableRevTreeId : ObjectId = {
     val treeId = repo.db.resolve(refPath)
-    
+
     if(null == treeId) {
       val message = "The reference branch '%s' is not found in the Policy Templates User Library's git repository".format(refPath)
       logger.error(message)
       throw new TechnicalException(message)
     }
-    
+
     val rw = new RevWalk(repo.db)
     val id = rw.parseTree(treeId).getId
     rw.dispose
     id
   }
-  
+
   override def currentRevTreeId = currentId
-  
+
   override def setCurrentRevTreeId(id:ObjectId) : Unit = currentId = id
 }
 
 /**
  * A git filter that choose only file with the exact given name,
  * even if the file is in a sub-directory (the filter is
- * recursive). 
- * 
+ * recursive).
+ *
  * If given, the rootDirectory value must NOT start nor end with a
- * slash ("/"). 
+ * slash ("/").
  */
 class FileTreeFilter(rootDirectory:Option[String], fileName: String) extends TreeFilter {
   private[this] val fileRawPath = JConstants.encode("/" + fileName)
-  
+
   private[this] val rawRootPath = {
     rootDirectory match {
       case None => JConstants.encode("")
       case Some(path) => JConstants.encode(path)
     }
   }
-  
+
   override def include(walker:TreeWalk) : Boolean = {
     (rawRootPath.size == 0 || (walker.isPathPrefix(rawRootPath,rawRootPath.size) == 0)) && //same root
     ( walker.isSubtree || walker.isPathSuffix(fileRawPath, fileRawPath.size) )

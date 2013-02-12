@@ -51,7 +51,7 @@ class Cf3PolicyDraftContainer(val outPath: String) extends Loggable {
   /**
    * Add a policy instance
    * @param policy
-   * @return Full(the added policy) in case of success, Fail in case of error. 
+   * @return Full(the added policy) in case of success, Fail in case of error.
    */
   def add(cf3PolicyDraft: Cf3PolicyDraft) : Box[Cf3PolicyDraft] = {
     cf3PolicyDrafts.get(cf3PolicyDraft.id) match {
@@ -64,15 +64,15 @@ class Cf3PolicyDraftContainer(val outPath: String) extends Loggable {
     }
   }
 
-  /** 
+  /**
    * Update a policyinstance, returns log entry only if variables have been modified (in this cf3PolicyDraft or another)
    * @param cf3PolicyDraft
-   * @return Full(the updated cf3PolicyDraft) in case of success, the error else. 
+   * @return Full(the updated cf3PolicyDraft) in case of success, the error else.
    */
   def update(cf3PolicyDraft: Cf3PolicyDraft) : Box[Cf3PolicyDraft] = {
     cf3PolicyDrafts.get(cf3PolicyDraft.id) match {
       case None => Failure("No instance of the cf3PolicyDraft with the given identifier '%s' exists".format(cf3PolicyDraft.id))
-      case Some(x) => 
+      case Some(x) =>
         x.updateCf3PolicyDraft(cf3PolicyDraft)
         updateAllUniqueVariables(cf3PolicyDraft)
         Full(x)

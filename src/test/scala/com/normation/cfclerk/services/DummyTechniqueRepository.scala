@@ -98,7 +98,7 @@ class DummyTechniqueRepository(policies: Seq[Technique] = Seq()) extends Techniq
 //      case "foo" =>
 //        List(InputVariableSpec("$bar", "bar"))
 //    }
-//  
+//
   override def getTechniqueVersions(name:TechniqueName) : SortedSet[TechniqueVersion] = SortedSet.empty[TechniqueVersion]
 
   def manageDependencies(chosenTemplate: Seq[Cf3PromisesFileTemplateId] , includeExternalDependencies : Boolean = true) : Seq[Cf3PromisesFileTemplateId] = {

@@ -58,20 +58,20 @@ class Cf3PolicyDraftContainerServiceTest {
   val containerService: Cf3PolicyDraftContainerService = null
 
   val identifier = "identifier"
-  
+
   var policy1 : Cf3PolicyDraft = null
-  
+
   var policy2 : Cf3PolicyDraft = null
-  
+
   def config() {
-    
+
     val variable1 = new InputVariable(InputVariableSpec("$variable1", "description"))
     variable1.values = Seq("var1")
     val variable2 = new InputVariable(InputVariableSpec("$variable2", "description"))
     variable2.values = Seq("var2")
     val variable22 = new InputVariable(InputVariableSpec("$variable22", "description"))
     variable22.values = Seq("var22")
-    
+
     policy1 = new Cf3PolicyDraft(
     		new Cf3PolicyDraftId("uuid1"),
     		TechniqueId(TechniqueName("policy1"), TechniqueVersion("1.0")),
@@ -89,8 +89,8 @@ class Cf3PolicyDraftContainerServiceTest {
     		priority =0,
     		serial = 0
     )
-    
-    
+
+
   }
 
   @Test

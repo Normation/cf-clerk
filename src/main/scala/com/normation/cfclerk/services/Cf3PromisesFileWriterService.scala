@@ -43,7 +43,7 @@ import com.normation.cfclerk.domain._
  *
  */
 trait Cf3PromisesFileWriterService {
- 
+
 
   /**
    * Write the current seq of template file a the path location, replacing the variables found in variableSet
@@ -52,7 +52,7 @@ trait Cf3PromisesFileWriterService {
    * @param path : where to write the files
    */
   def writePromisesFiles(fileSet: Set[Cf3PromisesFileTemplateCopyInfo], variableSet: Seq[STVariable], outPath: String): Unit
-  
+
   /**
    * Move the promises from the new folder to their final folder, backuping previous promises in the way
    * Throw an exception if something fails during the move (all the data will be restored)

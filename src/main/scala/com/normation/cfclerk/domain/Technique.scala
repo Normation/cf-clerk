@@ -105,8 +105,8 @@ case class Technique(
       description,
       templates.mkString(" : "))
   }
-  
-  val getAllVariableSpecs = this.rootSection.getAllVariables ++ this.systemVariableSpecs :+ this.trackerVariableSpec 
+
+  val getAllVariableSpecs = this.rootSection.getAllVariables ++ this.systemVariableSpecs :+ this.trackerVariableSpec
 }
 
 /**

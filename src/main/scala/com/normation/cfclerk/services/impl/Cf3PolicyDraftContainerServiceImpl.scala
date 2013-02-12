@@ -54,14 +54,14 @@ class Cf3PolicyDraftContainerServiceImpl(
    * @return
    */
   def createContainer(identifier: String, cf3PolicyDrafts: Seq[Cf3PolicyDraft]) : Box[Cf3PolicyDraftContainer] = {
-  
+
       if (cf3PolicyDrafts.size==0) {
         logger.error("There should be at least one CF3 policy draft to configure the container")
         return ParamFailure[Seq[Cf3PolicyDraft]]("No CF3 policy draft", Full(new NotFoundException("No CF3 policy draft defined")), Empty, cf3PolicyDrafts)
       }
-    
-      val container = new Cf3PolicyDraftContainer(identifier)      
-      
+
+      val container = new Cf3PolicyDraftContainer(identifier)
+
       for {
        res <- sequence(cf3PolicyDrafts) { policytoAdd =>
          addPolicy(container, policytoAdd)
@@ -71,7 +71,7 @@ class Cf3PolicyDraftContainerServiceImpl(
       }
   }
 
-  
+
   /**
    * Add a CF3 Policy Draft to a container
    * @param container
@@ -80,26 +80,26 @@ class Cf3PolicyDraftContainerServiceImpl(
    */
   def addCf3PolicyDraft(container: Cf3PolicyDraftContainer, cf3PolicyDraft : Cf3PolicyDraft) : Box[Cf3PolicyDraft] = {
     addPolicy(container, cf3PolicyDraft)
-  }  
-  
-  
+  }
+
+
   /**
    * Adding a policy to a container
    */
   private def addPolicy(container: Cf3PolicyDraftContainer, cf3PolicyDraft : Cf3PolicyDraft) : Box[Cf3PolicyDraft] = {
-     
+
     // check the legit character of the policy
     if (container.get(cf3PolicyDraft.id) != None) {
       logger.warn("Cannot add a CF3 Policy Draft with the same id than an already existing one " + cf3PolicyDraft.id)
       return ParamFailure[Cf3PolicyDraft]("Duplicate CF3 Policy Draft", Full(new TechniqueException("Duplicate CF3 Policy Draft " +cf3PolicyDraft.id)), Empty, cf3PolicyDraft)
     }
-    
+
     val policy = techniqueRepository.get(cf3PolicyDraft.techniqueId).getOrElse(return Failure("Error, can not find CF3 Policy Draft with name '%s' with CF3 Policy Draft service".format(cf3PolicyDraft.techniqueId)))
     if (container.findById(cf3PolicyDraft.techniqueId).filter(x => policy.isMultiInstance==false).size>0) {
       logger.warn("Cannot add a CF3 Policy Draft from the same non duplicable policy than an already existing one " + cf3PolicyDraft.techniqueId)
       return ParamFailure[Cf3PolicyDraft]("Duplicate unique policy", Full(new TechniqueException("Duplicate unique policy " +cf3PolicyDraft.techniqueId)), Empty, cf3PolicyDraft)
     }
-    
+
     container.add(cf3PolicyDraft) flatMap { cf3pd =>
       //check that directive really is in container
       if(container.get(cf3pd.id).isDefined) {

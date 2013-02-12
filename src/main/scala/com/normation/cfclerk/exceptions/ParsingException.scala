@@ -39,10 +39,10 @@ import scala.util.control.NoStackTrace
 /**
  * An exception that may occur when parsing metadata.xml files.
  * That exception is allowed to be displayed to user, who don't need
- * the stack trace. 
+ * the stack trace.
  */
 class ParsingException (message:String) extends RuntimeException(message) {
   def this() = this("Incompatible XML file")
-  
+
   override def fillInStackTrace(): Throwable = this
 }
