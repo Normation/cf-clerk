@@ -195,6 +195,8 @@ sealed trait VariableSpec {
   def constraint: Constraint
 }
 
+// A SystemVariable is automatically filled by Rudder
+// It has the RAW constraint, meaning it is *NOT* escaped
 case class SystemVariableSpec(
   override val name: String,
   val description: String,
@@ -207,7 +209,8 @@ case class SystemVariableSpec(
   // we expect that by default the variable will be checked
   val checked: Boolean = true,
 
-  val constraint: Constraint = Constraint()
+  // A system variable is always of the "raw" type, meaning it won't be escaped
+  val constraint: Constraint = Constraint(typeName = "raw")
 
 ) extends VariableSpec with HashcodeCaching {
 

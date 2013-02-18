@@ -54,18 +54,21 @@ import org.joda.time.format._
 import org.junit.runner._
 import org.specs2.mutable._
 import org.specs2.runner._
-import net.liftweb.common.Failure
+import net.liftweb.common._
 
 @RunWith(classOf[JUnitRunner])
 class VariableTest extends Specification {
   def variableSpecParser = new VariableSpecParser()
 
-  val nbVariables = 10
+  val nbVariables = 11
   val refName = "name"
   val refDescription = "description"
   val refValue = "value"
   val dateValue = "2010-01-16T12:00:00.000+01:00"
   val listValue = "value1;value2"
+
+  val rawValue = """This is a test \ " \\ """
+  val escapedTo = """This is a test \\ \" \\\\ """
 
   val refItem = Seq(ValueLabel("value", "label"), ValueLabel("value2", "label2"))
 
@@ -81,6 +84,7 @@ class VariableTest extends Specification {
   val mailVar = "$MAIL"
   val ipVar = "$IP"
   val varList = "varlist"
+  val rawVar = "raw_type"
 
   val variables = {
     val doc =
@@ -130,6 +134,7 @@ class VariableTest extends Specification {
       variables must haveKey(sizeVar)
       variables must haveKey(mailVar)
       variables must haveKey(ipVar)
+      variables must haveKey(rawVar)
     }
   }
 
@@ -255,6 +260,20 @@ class VariableTest extends Specification {
     implicit val listVariable = variables(varList)
     haveType("string")
     notBeMultivalued
+  }
+
+  "Raw variable" should {
+    implicit val rawVariable = variables(rawVar)
+    haveType("raw")
+    rawVariable.saveValue(rawValue)
+    rawVariable.getTypedValues.openOrThrowException("Invalid content for the raw variable") must containTheSameElementsAs(Seq(rawValue))
+  }
+
+  "Simple variable " should {
+    implicit val simpleVariable = variables(simpleName)
+    haveType("string")
+    simpleVariable.saveValue(rawValue)
+    simpleVariable.getTypedValues.openOrThrowException("Invalid content for the escaped variable") must containTheSameElementsAs(Seq(escapedTo))
   }
 
   checkType("size-kb", sizeVar)
