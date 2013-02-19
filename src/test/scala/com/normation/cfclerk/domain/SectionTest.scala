@@ -111,6 +111,7 @@ class SectionTest extends Specification {
     implicit val section = getUniqueSection("sect1")
     containNbVariables(4)
     beMultivalued
+    beHighPriority
   }
 
   "section named sect2" should {
@@ -118,6 +119,7 @@ class SectionTest extends Specification {
     haveNbChildren(2)
     //all children are variables
     containNbVariables(2)
+    beHighPriority
   }
 
   "section named sect3" should {
@@ -125,6 +127,7 @@ class SectionTest extends Specification {
     haveNbChildren(1)
     //all children are variables
     containNbVariables(1)
+    beLowPriority
   }
 
   "section named emptySect" should {
@@ -202,6 +205,17 @@ class SectionTest extends Specification {
     }
   }
 
+  private[this] def beHighPriority(implicit section: SectionSpec) = {
+    "be of high priority (default) " in {
+      section.displayPriority mustEqual HighDisplayPriority
+    }
+  }
+  
+  private[this] def beLowPriority(implicit section: SectionSpec) = {
+    "be of low priority (non default) " in {
+      section.displayPriority mustEqual LowDisplayPriority
+    }
+  }
 
   private[this] def readFile(fileName:String) : Elem = {
     val doc =
