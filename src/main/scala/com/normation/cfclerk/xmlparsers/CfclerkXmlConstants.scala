@@ -97,6 +97,7 @@ object CfclerkXmlConstants {
   val INPUT = "INPUT"
   val SELECT1 = "SELECT1"
   val SELECT = "SELECT"
+  val PASSWORD = "PASSWORD"
 
   val VAR_NAME = "NAME"
   val VAR_DESCRIPTION = "DESCRIPTION"
@@ -112,5 +113,6 @@ object CfclerkXmlConstants {
   val CONSTRAINT_MAYBEEMPTY = "MAYBEEMPTY"
   val CONSTRAINT_DEFAULT = "DEFAULT"
   val CONSTRAINT_REGEX = "REGEX"
+  val PASSWORD_HASH_ALGO = "HASH"
 
 }
