@@ -79,6 +79,17 @@ trait TechniqueReader {
   def readTechniques(): TechniquesInfo
 
   /**
+   * Read the content of the metadata file of a technique, if the technique
+   * is known by that TechniqueReader.
+   * If the technique exists, then a Some(input stream), open at the
+   * beginning of the template is given to the caller.
+   * If not, a None is given.
+   * The implementation must take care of correct closing of the input
+   * stream and any I/O exception.
+   */
+  def getMetadataContent[T](techniqueId: TechniqueId)(useIt : Option[InputStream] => T) : T
+
+  /**
    * Read the content of a template, if the template is known by that
    * TechniqueReader.
    * If the template exists, then a Some(input stream), open at the
