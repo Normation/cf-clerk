@@ -56,7 +56,8 @@ case class Section(val spec: SectionSpec) extends SectionChild with HashcodeCach
  * @author nicolas
  *
  */
-trait Variable extends Loggable {
+
+sealed trait Variable extends Loggable {
 
   //define in sub classes
   type T <: VariableSpec
@@ -148,8 +149,28 @@ trait Variable extends Loggable {
       x.replaceAll("""\\""", """\\\\""").replaceAll(""""""","""\\"""")
   }
 
-  protected def castValue(x: String) : Box[Any] = {
+  protected def castValue(input: String) : Box[Any] = {
     val typeName = spec.constraint.typeName.toLowerCase
+    /*
+     * Special case for a password: we want to remove the
+     * algo part.
+     * We also want to check that the algo match what we specified
+     */
+    val x = this.spec match {
+      case p:PasswordVariableSpec if(input != null && input != "") =>
+
+        (p.hashAlgo match {
+          //not sure we want to force algo comformance here
+          //so that, if the value "md5:xxx" is saved but the constraint is to
+          //sha1, that leads to a deployment error ?
+          case Some(constraint) => constraint.unserialize(input)
+          case None => HashAlgoConstraint.unserialize(input).map( _._2 )
+        }) match {
+          case Full(s) => s
+          case eb:EmptyBox => return eb
+        }
+      case _ => input
+    }
 
     //we don't want to check constraint on empty value
     // when the variable is optionnal
@@ -204,6 +225,13 @@ case class InputVariable(
   type T = InputVariableSpec
 }
 
+case class PasswordVariable(
+  override val spec: PasswordVariableSpec,
+  protected val defaultValues: Seq[String] = Seq()
+) extends SectionVariable with HashcodeCaching {
+  type T = PasswordVariableSpec
+}
+
 case class SelectVariable(
   override val spec: SelectVariableSpec,
   protected val defaultValues: Seq[String] = Seq()) extends SectionVariable with HashcodeCaching {
@@ -230,6 +258,9 @@ object Variable {
       case iv: InputVariable =>
         val newSpec = if (setMultivalued) iv.spec.cloneSetMultivalued else iv.spec
         iv.copy(defaultValues = bVals, spec = newSpec)
+      case pv: PasswordVariable =>
+        val newSpec = if (setMultivalued) pv.spec.cloneSetMultivalued else pv.spec
+        pv.copy(defaultValues = bVals, spec = newSpec)
       case sv: SelectVariable =>
         val newSpec = if (setMultivalued) sv.spec.cloneSetMultivalued else sv.spec
         sv.copy(defaultValues = bVals, spec = newSpec)
@@ -242,6 +273,7 @@ object Variable {
       case directive: TrackerVariable =>
         val newSpec = if (setMultivalued) directive.spec.cloneSetMultivalued else directive.spec
         directive.copy(defaultValues = bVals, spec = newSpec)
+      case x:SectionVariable => x
     }
   }
 

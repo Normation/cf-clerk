@@ -325,6 +325,26 @@ case class InputVariableSpec(
   def toVariable(values: Seq[String] = Seq()): InputVariable = InputVariable(this, values)
 }
 
+case class PasswordVariableSpec(
+    override val name: String
+  , override val description: String
+  ,          val hashAlgo: Option[HashAlgoConstraint] // none mean that the algo will be user defined
+  , override val longDescription: String = ""
+    // a uniqueVariable has the same values over each policies
+  , override val isUniqueVariable: Boolean = false
+  , override val multivalued: Boolean = false
+
+    // we expect that by default the variable will be checked
+  , override val checked: Boolean = true
+
+  , override val constraint: Constraint = Constraint()
+) extends SectionVariableSpec with HashcodeCaching {
+
+  override type T = PasswordVariableSpec
+  override type V = PasswordVariable
+  override def cloneSetMultivalued: PasswordVariableSpec = this.copy(multivalued = true)
+  def toVariable(values: Seq[String] = Seq()): PasswordVariable = PasswordVariable(this, values)
+}
 
 /**
  * This object is the central parser for VariableSpec, so
@@ -334,7 +354,7 @@ case class InputVariableSpec(
  * will have to be set-up to achieve such a goal.
  */
 object SectionVariableSpec {
-  def markerNames = List(INPUT, SELECT1, SELECT)
+  def markerNames = List(INPUT, SELECT1, SELECT, PASSWORD)
 
   def isVariable(variableName: String) = markerNames contains variableName
 
@@ -353,11 +373,15 @@ object SectionVariableSpec {
     isUniqueVariable: Boolean = false,
     multivalued: Boolean = false,
     checked: Boolean = true,
-    constraint: Constraint = Constraint()): SectionVariableSpec = {
+    constraint: Constraint = Constraint(),
+    passwordHashAlgo: Option[HashAlgoConstraint]
+): SectionVariableSpec = {
 
     markerName match {
       case INPUT => InputVariableSpec(varName, description, longDescription,
         isUniqueVariable, multivalued, checked, constraint)
+      case PASSWORD => PasswordVariableSpec(varName, description, passwordHashAlgo,
+          longDescription, isUniqueVariable, multivalued, checked, constraint)
       case SELECT => SelectVariableSpec(varName, description, longDescription,
         valueslabels, isUniqueVariable, multivalued, checked, constraint)
       case SELECT1 => SelectOneVariableSpec(varName, description, longDescription,

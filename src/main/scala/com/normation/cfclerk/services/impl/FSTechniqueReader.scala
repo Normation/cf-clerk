@@ -322,7 +322,7 @@ class FSTechniqueReader(
       try {
         XML.loadFile(file)
       } catch {
-        case e: SAXParseException =>0
+        case e: SAXParseException =>
           throw new ParsingException("Unexpected issue with the descriptor file %s: %s".format(file,e.getMessage))
         case e: java.net.MalformedURLException =>
           throw new ParsingException("Descriptor file not found: " + file)

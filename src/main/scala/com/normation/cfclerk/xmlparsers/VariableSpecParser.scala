@@ -40,6 +40,7 @@ import scala.xml._
 import net.liftweb.common._
 import com.normation.utils.XmlUtils._
 import com.normation.cfclerk.exceptions._
+import com.normation.exceptions.TechnicalException
 
 class VariableSpecParser {
 
@@ -100,6 +101,15 @@ class VariableSpecParser {
 
             val checked = "true" == getUniqueNodeText(elt, VAR_IS_CHECKED, "true").toLowerCase
 
+            val hashAlgo = {
+              getUniqueNodeText(elt, PASSWORD_HASH_ALGO, "user").toLowerCase match {
+                case "user" => None
+                case algo => HashAlgoConstraint.fromString(algo).orElse(
+                    throw new TechnicalException(s"Unknown hash algorithm '${algo}' for password. Accepted one are: ${HashAlgoConstraint.algoNames}, user.")
+                )
+              }
+            }
+
             Full(SectionVariableSpec(
               varName = name,
               description = desc,
@@ -109,7 +119,9 @@ class VariableSpecParser {
               isUniqueVariable = isUniqueVariable,
               multivalued = multiValued,
               checked = checked,
-              constraint = constraint))
+              constraint = constraint,
+              passwordHashAlgo = hashAlgo
+            ))
         }
   }
 

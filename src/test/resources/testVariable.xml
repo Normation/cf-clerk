@@ -5,6 +5,20 @@
     <DESCRIPTION>Simple variable</DESCRIPTION>
   </INPUT>
 
+  <SELECT1>
+    <NAME>SELECT1_TEST</NAME>
+    <DESCRIPTION>Constrained variable</DESCRIPTION>
+    <ITEM>
+      <VALUE>value</VALUE>
+      <LABEL>label</LABEL>
+    </ITEM>
+    <ITEM>
+      <VALUE>value2</VALUE>
+      <LABEL>label2</LABEL>
+    </ITEM>
+    <MULTIVALUED>true</MULTIVALUED>
+  </SELECT1>
+
   <SELECT>
     <NAME>$VARIABLEITEM</NAME>
     <DESCRIPTION>Constrained variable</DESCRIPTION>
@@ -84,11 +98,48 @@
     </CONSTRAINT>
   </INPUT>
 
-		<INPUT>
-			<NAME>raw_type</NAME>
-			<DESCRIPTION>a variable that isn't automatically escaped</DESCRIPTION>
-			<CONSTRAINT>
-				<TYPE>raw</TYPE>
-			</CONSTRAINT>
-		</INPUT>
+  <INPUT>
+	<NAME>raw_type</NAME>
+	<DESCRIPTION>a variable that isn't automatically escaped</DESCRIPTION>
+	<CONSTRAINT>
+		<TYPE>raw</TYPE>
+	</CONSTRAINT>
+  </INPUT>
+
+  <PASSWORD>
+    <NAME>password1</NAME>
+    <DESCRIPTION>Some password</DESCRIPTION>
+  </PASSWORD>
+  <PASSWORD>
+    <NAME>password2</NAME>
+    <DESCRIPTION>Some password</DESCRIPTION>
+    <HASH>PLAIN</HASH>
+  </PASSWORD>
+  <PASSWORD>
+    <NAME>password3</NAME>
+    <DESCRIPTION>Some password</DESCRIPTION>
+    <HASH>MD5</HASH>
+  </PASSWORD>
+  <PASSWORD>
+    <NAME>password4</NAME>
+    <DESCRIPTION>Some password, case irrelavant</DESCRIPTION>
+    <HASH>md5</HASH>
+  </PASSWORD>
+  <PASSWORD>
+    <NAME>password5</NAME>
+    <DESCRIPTION>Some password</DESCRIPTION>
+    <HASH>SHA1</HASH>
+  </PASSWORD>
+  <PASSWORD>
+    <NAME>password6</NAME>
+    <DESCRIPTION>Some password</DESCRIPTION>
+    <HASH>SHA256</HASH>
+  </PASSWORD>
+  <PASSWORD>
+    <NAME>password7</NAME>
+    <DESCRIPTION>Some password</DESCRIPTION>
+    <HASH>USER</HASH>
+  </PASSWORD>
+
+>>>>>>> 8a75768... Fixes #3283: add a PASSWORD field for Techniques
 </VARIABLES>

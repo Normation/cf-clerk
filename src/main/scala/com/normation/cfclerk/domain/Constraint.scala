@@ -45,7 +45,6 @@ trait Constraint {
   val default: Option[String]
   val mayBeEmpty: Boolean
   val regex: RegexConstraint
-
   def check(varValue: String, varName: String) : Unit
 }
 
