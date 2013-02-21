@@ -229,6 +229,45 @@ class GitTechniqueReader(
     }
   }
 
+  override def getMetadataContent[T](techniqueId: TechniqueId)(useIt : Option[InputStream] => T) : T = {
+    //build a treewalk with the path, given by metadata.xml
+    val path = techniqueId.toString + "/" + techniqueDescriptorName
+    //has package id are unique among the whole tree, we are able to find a
+    //template only base on the packageId + name.
+
+    var is : InputStream = null
+    try {
+      useIt {
+        //now, the treeWalk
+        val tw = new TreeWalk(repo.db)
+        tw.setFilter(new FileTreeFilter(canonizedRelativePath, path))
+        tw.setRecursive(true)
+        tw.reset(revisionProvider.currentRevTreeId)
+        var ids = List.empty[ObjectId]
+        while(tw.next) {
+          ids = tw.getObjectId(0) :: ids
+        }
+        ids match {
+          case Nil =>
+            logger.error("Metadata file %s was not found for technique with id %s.".format(techniqueDescriptorName, techniqueId))
+            None
+          case h :: Nil =>
+            is = repo.db.open(h).openStream
+            Some(is)
+          case _ =>
+            logger.error("More than exactly one ids were found in the git tree for metadata of technique %s, I can not know which one to choose. IDs: %s".format(techniqueId,ids.mkString(", ")))
+            None
+      } }
+    } catch {
+      case ex:FileNotFoundException =>
+        logger.debug( () => "Template %s does not exists".format(path),ex)
+        useIt(None)
+    } finally {
+      if(null != is) {
+        is.close
+      }
+    }
+  }
 
   override def getTemplateContent[T](cf3PromisesFileTemplateId: Cf3PromisesFileTemplateId)(useIt : Option[InputStream] => T) : T = {
     //build a treewalk with the path, given by Cf3PromisesFileTemplateId.toString
@@ -557,7 +596,7 @@ class GitTechniqueReader(
       try {
         XML.load(is)
       } catch {
-        case e: SAXParseException =>0
+        case e: SAXParseException =>
           throw new ParsingException("Unexpected issue with the descriptor file %s: %s".format(filePath,e.getMessage))
         case e: java.net.MalformedURLException =>
           throw new ParsingException("Descriptor file not found: " + filePath)
