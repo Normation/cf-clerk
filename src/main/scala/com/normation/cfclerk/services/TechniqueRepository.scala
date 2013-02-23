@@ -52,10 +52,16 @@ import scala.collection.SortedSet
 trait TechniqueRepository {
 
   /**
+   * Retrieve the metadata file content
+   * (for example,to display it)
+   */
+  def getMetadataContent[T](techniqueId: TechniqueId)(useIt: Option[InputStream] => T): T
+
+  /**
    * Retrieve the template path for templateName relative to
    * the root of the policy package category tree
    */
-  def getTemplateContent(templateName: Cf3PromisesFileTemplateId)(useIt: Option[InputStream] => Unit): Unit
+  def getTemplateContent[T](templateName: Cf3PromisesFileTemplateId)(useIt: Option[InputStream] => T): T
 
   //  def packageDirectory : File
 

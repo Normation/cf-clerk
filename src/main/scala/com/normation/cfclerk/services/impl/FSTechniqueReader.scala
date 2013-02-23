@@ -130,6 +130,26 @@ class FSTechniqueReader(
     }
   }
 
+  override def getMetadataContent[T](techniqueId: TechniqueId)(useIt: Option[InputStream] => T): T = {
+    var is: InputStream = null
+    try {
+      useIt {
+        readTechniques.techniquesCategory.get(techniqueId).map { catPath =>
+          is = new FileInputStream(techniqueDirectory.getAbsolutePath + "/" + catPath + "/" + techniqueDescriptorName)
+          is
+        }
+      }
+    } catch {
+      case ex: FileNotFoundException =>
+        logger.debug(() => "Can not find %s for Technique with ID %s".format(techniqueDescriptorName, techniqueId), ex)
+        useIt(None)
+    } finally {
+      if (null != is) {
+        is.close
+      }
+    }
+  }
+
   override def getTemplateContent[T](templateId: Cf3PromisesFileTemplateId)(useIt: Option[InputStream] => T): T = {
     var is: InputStream = null
     try {

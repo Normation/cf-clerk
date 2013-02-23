@@ -51,6 +51,7 @@ import net.liftweb.common._
 @RunWith(classOf[SpringJUnit4ClassRunner])
 @ContextConfiguration(Array("file:src/test/resources/spring-config-test.xml"))
 class Cf3PolicyDraftContainerServiceTest {
+  import scala.language.implicitConversions
   implicit def str2pId(id: String) = TechniqueId(TechniqueName(id), TechniqueVersion("1.0"))
   implicit def str2directiveId(id: String) = Cf3PolicyDraftId(id)
 
@@ -121,7 +122,7 @@ class Cf3PolicyDraftContainerServiceTest {
       case _ => fail("Couldn't create the container")
     }
 
-    containerService.addCf3PolicyDraft(container.open_!, policy2)
+    containerService.addCf3PolicyDraft(container.openOrThrowException("I'm a failing test"), policy2)
 
     container match {
       case Full(x) =>

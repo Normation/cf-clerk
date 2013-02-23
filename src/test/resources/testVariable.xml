@@ -1,87 +1,87 @@
 <VARIABLES>
 
-		<INPUT>
-			<NAME>$SIMPLEVARIABLE</NAME>
-			<DESCRIPTION>Simple variable</DESCRIPTION>
-		</INPUT>
+  <INPUT>
+    <NAME>$SIMPLEVARIABLE</NAME>
+    <DESCRIPTION>Simple variable</DESCRIPTION>
+  </INPUT>
 
-		<SELECT>
-			<NAME>$VARIABLEITEM</NAME>
-			<DESCRIPTION>Constrained variable</DESCRIPTION>
-			<ITEM>
-				<VALUE>value</VALUE>
-				<LABEL>label</LABEL>
-			</ITEM>
-			<ITEM>
-				<VALUE>value2</VALUE>
-				<LABEL>label2</LABEL>
-			</ITEM>
-      <MULTIVALUED>true</MULTIVALUED>
-		</SELECT>
+  <SELECT>
+    <NAME>$VARIABLEITEM</NAME>
+    <DESCRIPTION>Constrained variable</DESCRIPTION>
+    <ITEM>
+      <VALUE>value</VALUE>
+      <LABEL>label</LABEL>
+    </ITEM>
+    <ITEM>
+      <VALUE>value2</VALUE>
+      <LABEL>label2</LABEL>
+    </ITEM>
+    <MULTIVALUED>true</MULTIVALUED>
+  </SELECT>
 
-		<INPUT>
-			<NAME>$CARDNUMBER</NAME>
-			<DESCRIPTION>Card Number</DESCRIPTION>
-			<CONSTRAINT>
-				<REGEX error="must resemble 1234-1234-1234-1234">
-					\d\d\d\d-\d\d\d\d-\d\d\d\d-\d\d\d\d
-				</REGEX>
-			</CONSTRAINT>
-		</INPUT>
+  <INPUT>
+    <NAME>$CARDNUMBER</NAME>
+    <DESCRIPTION>Card Number</DESCRIPTION>
+    <CONSTRAINT>
+      <REGEX error="must resemble 1234-1234-1234-1234">
+        \d\d\d\d-\d\d\d\d-\d\d\d\d-\d\d\d\d
+      </REGEX>
+    </CONSTRAINT>
+  </INPUT>
 
-		<INPUT>
-			<NAME>$SIZE</NAME>
-			<DESCRIPTION>Constrained variable</DESCRIPTION>
-			<CONSTRAINT>
-				<TYPE>size-kb</TYPE>
-			</CONSTRAINT>
-		</INPUT>
+  <INPUT>
+    <NAME>$SIZE</NAME>
+    <DESCRIPTION>Constrained variable</DESCRIPTION>
+    <CONSTRAINT>
+      <TYPE>size-kb</TYPE>
+    </CONSTRAINT>
+  </INPUT>
 
-		<INPUT>
-			<NAME>$MAIL</NAME>
-			<DESCRIPTION>mail variable</DESCRIPTION>
-			<CONSTRAINT>
-				<TYPE>mail</TYPE>
-			</CONSTRAINT>
-		</INPUT>
+  <INPUT>
+    <NAME>$MAIL</NAME>
+    <DESCRIPTION>mail variable</DESCRIPTION>
+    <CONSTRAINT>
+      <TYPE>mail</TYPE>
+    </CONSTRAINT>
+  </INPUT>
 
-		<INPUT>
-			<NAME>$IP</NAME>
-			<DESCRIPTION>ip variable</DESCRIPTION>
-			<CONSTRAINT>
-				<TYPE>ip</TYPE>
-			</CONSTRAINT>
-		</INPUT>
+  <INPUT>
+    <NAME>$IP</NAME>
+    <DESCRIPTION>ip variable</DESCRIPTION>
+    <CONSTRAINT>
+      <TYPE>ip</TYPE>
+    </CONSTRAINT>
+  </INPUT>
 
-		<SELECT>
-			<NAME>$VARMACHINE</NAME>
-			<DESCRIPTION>Variable Machine</DESCRIPTION>
-			<FIELD>name</FIELD>
-		</SELECT>
+  <SELECT>
+    <NAME>$VARMACHINE</NAME>
+    <DESCRIPTION>Variable Machine</DESCRIPTION>
+    <FIELD>name</FIELD>
+  </SELECT>
 
-		<INPUT>
-			<NAME>$VARDATE</NAME>
-			<DESCRIPTION>Variable Date</DESCRIPTION>
-			<CONSTRAINT>
-				<TYPE>datetime</TYPE>
-			</CONSTRAINT>
-		</INPUT>
+  <INPUT>
+    <NAME>$VARDATE</NAME>
+    <DESCRIPTION>Variable Date</DESCRIPTION>
+    <CONSTRAINT>
+      <TYPE>datetime</TYPE>
+    </CONSTRAINT>
+  </INPUT>
 
-		<INPUT>
-			<NAME>varlist</NAME>
-			<DESCRIPTION>Variable list</DESCRIPTION>
-			<CONSTRAINT>
-				<TYPE>string</TYPE>
-				<MAYBEEMPTY>true</MAYBEEMPTY>
-			</CONSTRAINT>
-		</INPUT>
+  <INPUT>
+    <NAME>varlist</NAME>
+    <DESCRIPTION>Variable list</DESCRIPTION>
+    <CONSTRAINT>
+      <TYPE>string</TYPE>
+      <MAYBEEMPTY>true</MAYBEEMPTY>
+    </CONSTRAINT>
+  </INPUT>
 
-		<INPUT>
-			<NAME>gui_only</NAME>
-			<DESCRIPTION>a gui only variable</DESCRIPTION>
-			<CONSTRAINT>
-				<TYPE>integer</TYPE>
-			</CONSTRAINT>
-		</INPUT>
+  <INPUT>
+    <NAME>gui_only</NAME>
+    <DESCRIPTION>a gui only variable</DESCRIPTION>
+    <CONSTRAINT>
+      <TYPE>integer</TYPE>
+    </CONSTRAINT>
+  </INPUT>
 
 </VARIABLES>

@@ -72,6 +72,7 @@ class DummyTechniqueReader(policies:Seq[Technique]=Seq(Technique(TechniqueId(Tec
     TechniquesInfo(rootCategory, packagesPath.toMap, packages.toMap, Map())
   }
 
+  def getMetadataContent[T](techniqueId: TechniqueId)(useIt : Option[InputStream] => T) : T = useIt(None)
   def getTemplateContent[T](templateName: Cf3PromisesFileTemplateId)(useIt : Option[InputStream] => T) : T = useIt(None)
   def getModifiedTechniques : Seq[TechniqueId] = Seq()
 
