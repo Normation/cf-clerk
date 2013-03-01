@@ -37,44 +37,128 @@ package com.normation.cfclerk.domain
 import com.normation.utils.Utils
 import org.joda.time.format.ISODateTimeFormat
 import com.normation.utils.HashcodeCaching
+import com.normation.utils.Control
+import net.liftweb.common._
 
 class ConstraintException(val msg: String) extends Exception(msg)
 
-trait Constraint {
-  val typeName: String
-  val default: Option[String]
-  val mayBeEmpty: Boolean
-  val regex: RegexConstraint
-  def check(varValue: String, varName: String) : Unit
+/**
+ * A constraint about the type of a variable
+ */
+sealed trait VTypeConstraint {
+  def name: String
+
+  //check if the value is compatible with that type constrain.
+  //return a Failure on error, the checked value on success.
+  def getTypedValue(value:String, forField:String) : Box[Any] = Full(value)
 }
 
-object Constraint {
-  val sizeTypes = "size-b" :: "size-kb" :: "size-mb" :: "size-gb" :: "size-tb" :: Nil
-  val regexTypes = "mail" :: "ip" :: Nil
-  val stringTypes = "string" :: "perm" :: "textarea" :: Nil ::: regexTypes ::: sizeTypes
-  val validTypes = "integer" :: "uploadedfile" :: "destinationfullpath" :: "date" :: "datetime" :: "time" ::
-    "boolean" :: Nil ::: stringTypes
+object VTypeConstraint {
+  val sizeTypes: List[VTypeConstraint] =
+    SizebVType() :: SizekbVType() :: SizembVType() :: SizegbVType() :: SizetbVType() :: Nil
+  val regexTypes: List[VTypeConstraint] =
+    MailVType :: IpVType :: Nil
+  def stringTypes(r: Option[RegexConstraint]): List[VTypeConstraint] =
+    DateVType(r) :: DateTimeVType(r) :: TimeVType(r) ::
+    IntegerVType(r) :: BasicStringVType(r) :: TextareaVType(r) ::
+    Nil ::: regexTypes ::: sizeTypes
+  def validTypes(r: Option[RegexConstraint], algos:Seq[HashAlgoConstraint]) : List[VTypeConstraint] =
+    PermVType :: PasswordVType(algos) :: UploadedFileVType :: DestinationPathVType ::
+    BooleanVType :: Nil ::: stringTypes(r)
 
-  def apply(typeName: String = "string", default: Option[String] = None, mayBeEmpty: Boolean = false, regex: RegexConstraint = RegexConstraint()): Constraint = {
+  def fromString(s:String, r: Option[RegexConstraint], algos:Seq[HashAlgoConstraint]) : Option[VTypeConstraint] = validTypes(r,algos).find(t => t.name == s)
 
-    if (!validTypes.contains(typeName))
-      throw new ConstraintException("'%s' is an invalid type.\n A type may be one of the next list : %s".format(
-        typeName, validTypes.mkString(", ")))
+  val allTypeNames = validTypes(None,Seq()).map( _.name ).mkString(", ")
+}
 
-    if (regexTypes.contains(typeName) && regex != RegexConstraint())
-      throw new ConstraintException("type '%s' already has a predifined regex, you can't define a regex with these types : %s.".format(regexTypes.mkString(",")))
+sealed trait StringVType extends VTypeConstraint {
+  def regex: Option[RegexConstraint]
 
-    typeName match {
-      case "ip" => ConstraintImp(typeName, default, mayBeEmpty, IpRegex)
-      case "mail" => ConstraintImp(typeName, default, mayBeEmpty, MailRegex)
-      case _ => ConstraintImp(typeName, default, mayBeEmpty, regex)
-    }
+  override def getTypedValue(value:String, forField:String) : Box[Any] = regex match {
+    case None => Full(value)
+    case Some(regex) => regex.check(value, forField)
+  }
+}
+case class BasicStringVType(regex: Option[RegexConstraint] = None) extends StringVType { override val name = "string" }
+case class TextareaVType(regex: Option[RegexConstraint] = None)  extends StringVType { override val name = "textarea" }
+
+sealed trait FixedRegexVType extends StringVType
+object IpVType extends FixedRegexVType {
+  override val name = "ip"
+  override val regex = Some(IpRegex)
+}
+object MailVType extends FixedRegexVType {
+  override val name = "mail"
+  override val regex = Some(MailRegex)
+}
+
+case class IntegerVType(regex: Option[RegexConstraint] = None) extends VTypeConstraint {
+  override val name = "integer"
+  override def getTypedValue(value:String, forField:String) : Box[Any] = {
+    super.getTypedValue(value, forField).flatMap( _ =>
+      try {
+        Full(value.toInt)
+      } catch {
+        case _:Exception => Failure(s"Wrong value ${value} for field '${forField}': expecting an integer.")
+      }
+    )
   }
 }
 
-case class ConstraintImp(typeName: String, default: Option[String], mayBeEmpty: Boolean, regex: RegexConstraint) extends Constraint with HashcodeCaching {
+sealed trait SizeVType extends StringVType
+case class SizebVType(regex: Option[RegexConstraint] = None) extends SizeVType { override val name = "size-b" }
+case class SizekbVType(regex: Option[RegexConstraint] = None) extends SizeVType { override val name = "size-kb" }
+case class SizembVType(regex: Option[RegexConstraint] = None) extends SizeVType { override val name = "size-mb" }
+case class SizegbVType(regex: Option[RegexConstraint] = None) extends SizeVType { override val name = "size-gb" }
+case class SizetbVType(regex: Option[RegexConstraint] = None) extends SizeVType { override val name = "size-tb" }
 
-  def check(varValue: String, varName: String) = {
+case class DateTimeVType(regex: Option[RegexConstraint] = None) extends VTypeConstraint {
+  override val name = "datetime"
+  override def getTypedValue(value:String, forField:String) : Box[Any] = {
+    super.getTypedValue(value, forField).flatMap( _ =>
+      try
+        Full(ISODateTimeFormat.dateTimeParser.parseDateTime(value))
+      catch {
+        case _:Exception => Failure(s"Wrong value ${value} for field '${forField}': expecting a datetime in ISO 8601 standard.")
+      }
+    )
+  }
+}
+case class DateVType(regex: Option[RegexConstraint] = None) extends VTypeConstraint { override val name = "date" }
+case class TimeVType(regex: Option[RegexConstraint] = None) extends VTypeConstraint { override val name = "time" }
+
+
+//other types
+
+//password: the list of hashes must be non-empty
+case class PasswordVType(authorizedHash:Seq[HashAlgoConstraint]) extends VTypeConstraint {
+  override val name = "password"
+  override def getTypedValue(value:String, forField:String) : Box[Any] = {
+    HashAlgoConstraint.unserialize(value).map( _._2 )
+  }
+}
+case object BooleanVType extends VTypeConstraint {
+  override val name = "boolean"
+  override def getTypedValue(value:String, forField:String) : Box[Any] = {
+      try {
+        Full(value.toBoolean)
+      } catch {
+        case _:Exception => Failure(s"Wrong value ${value} for field '${forField}': expecting a boolean")
+      }
+  }
+}
+case object UploadedFileVType extends VTypeConstraint { override val name = "uploadedfile" }
+case object DestinationPathVType extends VTypeConstraint { override val name = "destinationfullpath" }
+case object PermVType extends VTypeConstraint { override val name = "perm" }
+
+
+case class Constraint(
+    typeName: VTypeConstraint = BasicStringVType()
+  , default: Option[String] = None
+  , mayBeEmpty: Boolean = false
+) extends HashcodeCaching {
+
+  def check(varValue: String, varName: String) : Unit = {
     //only check for non-empty variable
     if(varValue == null || varValue.length < 1) {
       if(mayBeEmpty) {
@@ -83,34 +167,12 @@ case class ConstraintImp(typeName: String, default: Option[String], mayBeEmpty: 
         throw new ConstraintException("'%s' field must not be empty".format(varName))
       }
     } else {
-      checkType(varValue, varName)
-      regex.check(varValue, varName)
-    }
-  }
-
-  private[this] def checkType(varValue: String, fieldName: String): Any = {
-    val msgErr = "Wrong value " + varValue + " for field '" + fieldName + "'"
-    typeName match {
-      case "datetime" =>
-        try
-          ISODateTimeFormat.dateTimeParser.parseDateTime(varValue)
-        catch {
-          case _:Exception =>
-            throw new ConstraintException(msgErr + " : expecting a datetime")
-        }
-      case "integer" => try
-        varValue.toInt
-      catch {
-        case _:Exception =>
-          throw new ConstraintException(msgErr + " : expecting an integer")
+      typeName.getTypedValue(varValue, varName) match {
+        case Full(_) => //OK
+        case f:Failure => throw new ConstraintException(f.messageChain)
+        //we don't want that to happen
+        case Empty => throw new ConstraintException(s"An unknown error occured when checking type constaint of value '${varValue}' for field '${varName}'.")
       }
-      case "boolean" => try
-        varValue.toBoolean
-      catch {
-        case _:Exception =>
-          throw new ConstraintException(msgErr + " : expecting a boolean")
-      }
-      case _ =>
     }
   }
 }

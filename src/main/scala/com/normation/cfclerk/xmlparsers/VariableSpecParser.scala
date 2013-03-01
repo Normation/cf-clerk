@@ -41,6 +41,7 @@ import net.liftweb.common._
 import com.normation.utils.XmlUtils._
 import com.normation.cfclerk.exceptions._
 import com.normation.exceptions.TechnicalException
+import com.normation.utils.Control
 
 class VariableSpecParser {
 
@@ -101,15 +102,6 @@ class VariableSpecParser {
 
             val checked = "true" == getUniqueNodeText(elt, VAR_IS_CHECKED, "true").toLowerCase
 
-            val hashAlgo = {
-              getUniqueNodeText(elt, PASSWORD_HASH_ALGO, "user").toLowerCase match {
-                case "user" => None
-                case algo => HashAlgoConstraint.fromString(algo).orElse(
-                    throw new TechnicalException(s"Unknown hash algorithm '${algo}' for password. Accepted one are: ${HashAlgoConstraint.algoNames}, user.")
-                )
-              }
-            }
-
             Full(SectionVariableSpec(
               varName = name,
               description = desc,
@@ -119,8 +111,7 @@ class VariableSpecParser {
               isUniqueVariable = isUniqueVariable,
               multivalued = multiValued,
               checked = checked,
-              constraint = constraint,
-              passwordHashAlgo = hashAlgo
+              constraint = constraint
             ))
         }
   }
@@ -147,7 +138,24 @@ class VariableSpecParser {
   }
 
   def parseConstraint(elt: Node): Constraint = {
-    val typeName: String = getUniqueNodeText(elt, CONSTRAINT_TYPE, "string")
+
+    val passwordHashes = getUniqueNodeText(elt, CONSTRAINT_PASSWORD_HASH, "")
+
+    val regexConstraint = getUniqueNode(elt, CONSTRAINT_REGEX) match {
+      case x: EmptyBox => None
+      case Full(x) => Some(RegexConstraint(x.text.trim, (x \ "@error").text))
+    }
+
+
+    val e = getUniqueNodeText(elt, CONSTRAINT_TYPE, "string")
+
+    def regexError(vt:VTypeConstraint) = throw new ConstraintException(s"type '${vt.name}' already has a predifined regex (you can't define a regex with these types : ${VTypeConstraint.regexTypes.map( _.name).mkString(",")}).")
+    val typeName: VTypeConstraint = VTypeConstraint.fromString(e, regexConstraint, parseAlgoList(passwordHashes)) match {
+      case None =>  throw new ConstraintException(s"'${e}' is an invalid type.\n A type may be one of the next list : ${VTypeConstraint.allTypeNames}")
+      case Some(r:FixedRegexVType) => if(regexConstraint.isDefined) regexError(r) else r
+      case Some(t) => t
+    }
+
 
     val mayBeEmpty = "true" == getUniqueNodeText(elt, CONSTRAINT_MAYBEEMPTY, "false").toLowerCase
 
@@ -156,12 +164,20 @@ class VariableSpecParser {
       case s: NodeSeq => Some(s.text)
     }
 
-    val regexConstraint = getUniqueNode(elt, CONSTRAINT_REGEX) match {
-      case x: EmptyBox => RegexConstraint()
-      case Full(x) => RegexConstraint(x.text.trim, (x \ "@error").text)
-    }
 
-    Constraint(typeName, defaultValue, mayBeEmpty, regexConstraint)
+    Constraint(typeName, defaultValue, mayBeEmpty)
+  }
+
+  private[this] def parseAlgoList(algos:String) : Seq[HashAlgoConstraint] = {
+    if(algos.trim.isEmpty) HashAlgoConstraint.algorithmes
+    else {
+      Control.sequence(algos.split(",")) { algo =>
+        HashAlgoConstraint.fromString( algo.trim )
+      } match {
+        case Full(seq) => seq
+        case eb:EmptyBox => throw new ConstraintException( (eb ?~! s"Error when parsing the list of password hash: '${algos}'").messageChain )
+      }
+    }
   }
 
 }

@@ -44,10 +44,14 @@ import org.apache.commons.codec.binary.Hex
 object HashAlgoConstraint {
 
   def algorithmes = PLAIN :: MD5 :: SHA1 :: SHA256 :: Nil
-  def algoNames =  algorithmes.map( _.prefix ).mkString(", ")
+  def algoNames(algos:Seq[HashAlgoConstraint]) =  algos.map( _.prefix ).mkString(", ")
+
+  def fromStringIn(algos:Seq[HashAlgoConstraint], algoName:String) = {
+    algos.find( a => a.prefix == algoName.toLowerCase)
+  }
 
   def fromString(algo:String) : Option[HashAlgoConstraint] = {
-    algorithmes.find( a => a.prefix == algo.toLowerCase)
+    fromStringIn(algorithmes, algo)
   }
 
   /*
@@ -56,12 +60,16 @@ object HashAlgoConstraint {
    */
 
   private[this] val format = """([\w]+):(.*)""".r
-  def unserialize(value:String): Box[(HashAlgoConstraint, String)] = value match {
-    case format(algo,h) => HashAlgoConstraint.fromString(algo) match {
-      case None => Failure(s"Unknow algorithm ${algo}. List of know algorithme: ${HashAlgoConstraint.algoNames}")
+  def unserializeIn(algos: Seq[HashAlgoConstraint], value:String): Box[(HashAlgoConstraint, String)] = value match {
+    case format(algo,h) => HashAlgoConstraint.fromStringIn(algos, algo) match {
+      case None => Failure(s"Unknown algorithm ${algo}. List of know algorithme: ${algoNames(algos)}")
       case Some(a) => Full((a,h))
     }
-    case _ => Failure(s"Bad format of serialized hashed value, expexted format is: 'algorithme:hash', with algorithm among: ${HashAlgoConstraint.algoNames}")
+    case _ => Failure(s"Bad format of serialized hashed value, expexted format is: 'algorithme:hash', with algorithm among: ${algoNames(algos)}")
+  }
+
+  def unserialize(value:String): Box[(HashAlgoConstraint, String)] = {
+    unserializeIn(algorithmes, value)
   }
 }
 

@@ -138,54 +138,11 @@ sealed trait Variable extends Loggable {
     internalValues.size
   }
 
-  protected def castValue(input: String) : Box[Any] = {
-    val typeName = spec.constraint.typeName.toLowerCase
-    /*
-     * Special case for a password: we want to remove the
-     * algo part.
-     * We also want to check that the algo match what we specified
-     */
-    val x = this.spec match {
-      case p:PasswordVariableSpec if(input != null && input != "") =>
-
-        (p.hashAlgo match {
-          //not sure we want to force algo comformance here
-          //so that, if the value "md5:xxx" is saved but the constraint is to
-          //sha1, that leads to a deployment error ?
-          case Some(constraint) => constraint.unserialize(input)
-          case None => HashAlgoConstraint.unserialize(input).map( _._2 )
-        }) match {
-          case Full(s) => s
-          case eb:EmptyBox => return eb
-        }
-      case _ => input
-    }
-
+  protected def castValue(x: String) : Box[Any] = {
     //we don't want to check constraint on empty value
     // when the variable is optionnal
     if(this.spec.constraint.mayBeEmpty && x.length < 1) Full("")
-    else if(Constraint.stringTypes.contains(typeName)) Full(x)
-    else typeName match {
-      case "datetime" =>
-        try
-          Full(ISODateTimeFormat.dateTimeParser.parseDateTime(x))
-        catch {
-          case e:Exception => Failure("Wrong variable value " + x + " for variable name " + spec.name + " : expecting a datetime")
-        }
-      case "integer" => try
-        Full(x.toInt)
-      catch {
-        case e:Exception => Failure("Wrong variable value " + x + " for variable name " + spec.name + " : expecting an integer")
-      }
-      case "boolean" => try
-        Full(x.toBoolean)
-      catch {
-        case e:Exception => Failure("Wrong variable value " + x + " for variable name " + spec.name + " : expecting a boolean")
-      }
-      case _ =>
-        logger.error("Wrong variable type %s for variable name %s".format(typeName, spec.name))
-        Failure("Wrong variable type " + typeName + " for variable name " + spec.name)
-    }
+    else spec.constraint.typeName.getTypedValue(x,spec.name)
   }
 }
 
@@ -207,13 +164,6 @@ case class InputVariable(
   override val spec: InputVariableSpec,
   protected val defaultValues: Seq[String] = Seq()) extends SectionVariable with HashcodeCaching {
   type T = InputVariableSpec
-}
-
-case class PasswordVariable(
-  override val spec: PasswordVariableSpec,
-  protected val defaultValues: Seq[String] = Seq()
-) extends SectionVariable with HashcodeCaching {
-  type T = PasswordVariableSpec
 }
 
 case class SelectVariable(
@@ -242,9 +192,6 @@ object Variable {
       case iv: InputVariable =>
         val newSpec = if (setMultivalued) iv.spec.cloneSetMultivalued else iv.spec
         iv.copy(defaultValues = bVals, spec = newSpec)
-      case pv: PasswordVariable =>
-        val newSpec = if (setMultivalued) pv.spec.cloneSetMultivalued else pv.spec
-        pv.copy(defaultValues = bVals, spec = newSpec)
       case sv: SelectVariable =>
         val newSpec = if (setMultivalued) sv.spec.cloneSetMultivalued else sv.spec
         sv.copy(defaultValues = bVals, spec = newSpec)

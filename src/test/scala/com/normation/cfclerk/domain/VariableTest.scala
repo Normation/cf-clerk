@@ -201,7 +201,7 @@ class VariableTest extends Specification {
 
   "Boolean variable" should {
     implicit val variable = new InputVariable(InputVariableSpec(refName, refDescription,
-      constraint = Constraint("boolean")))
+      constraint = Constraint(BooleanVType)))
 
     variable.saveValue("true")
     haveName()
@@ -211,7 +211,7 @@ class VariableTest extends Specification {
 
   "Boolean variable" should {
     implicit val variable = new InputVariable(InputVariableSpec(refName, refDescription,
-      constraint = Constraint("boolean")))
+      constraint = Constraint(BooleanVType)))
 
     variable.saveValue("false")
     haveValue(false)
@@ -283,7 +283,12 @@ class VariableTest extends Specification {
     val input = variables(regexCardNumberVar)
 
     "have its regex field correctly set" in {
-      input.spec.constraint.regex mustEqual RegexConstraint("""\d\d\d\d-\d\d\d\d-\d\d\d\d-\d\d\d\d""", "must resemble 1234-1234-1234-1234")
+      input.spec.constraint.typeName match {
+        case s:StringVType => s.regex mustEqual Some(RegexConstraint("""\d\d\d\d-\d\d\d\d-\d\d\d\d-\d\d\d\d""", "must resemble 1234-1234-1234-1234"))
+        case t => failure(s"Variable type '${t.name}' can not have a regex")
+      }
+
+
     }
   }
 
@@ -317,49 +322,52 @@ class VariableTest extends Specification {
   "password2" should {
     implicit val v = variables("password2")
     beAPassword
-    haveAlgo(PLAIN)
+    haveAlgo(PLAIN::Nil)
   }
 
   "password3" should {
     implicit val v = variables("password3")
     beAPassword
-    haveAlgo(MD5)
+    haveAlgo(MD5::Nil)
   }
 
   "password4" should {
     implicit val v = variables("password4")
     beAPassword
-    haveAlgo(MD5)
+    haveAlgo(MD5::Nil)
   }
 
   "password5" should {
     implicit val v = variables("password5")
     beAPassword
-    haveAlgo(SHA1)
+    haveAlgo(SHA1::Nil)
   }
 
   "password6" should {
     implicit val v = variables("password6")
     beAPassword
-    haveAlgo(SHA256)
+    haveAlgo(SHA256::Nil)
   }
 
   "password7" should {
     implicit val v = variables("password7")
     beAPassword
-    haveNoAlgo
+    haveAlgo(MD5 :: SHA256 :: PLAIN :: Nil)
   }
 
   "unvalide password algo" should {
     val p =
-      <PASSWORD>
-        <NAME>pwd</NAME>
-        <DESCRIPTION>Some password</DESCRIPTION>
-        <HASH>NotAnAlgo</HASH>
-      </PASSWORD>
+    <INPUT>
+      <NAME>password6</NAME>
+      <DESCRIPTION>Some password</DESCRIPTION>
+      <CONSTRAINT>
+        <TYPE>password</TYPE>
+        <PASSWORDHASH>Not a real algo</PASSWORDHASH>
+      </CONSTRAINT>
+    </INPUT>
 
     "throw a parsing error" in {
-       variableSpecParser.parseSectionVariableSpec(p) must throwA[TechnicalException]
+       variableSpecParser.parseSectionVariableSpec(p) must throwA[ConstraintException]
     }
   }
 
@@ -372,7 +380,7 @@ class VariableTest extends Specification {
     "An input with a type '%s'".format(typeName) should {
       val input = variables(varName)
       "have a constraint with a type '%s'".format(typeName) in {
-        input.spec.constraint.typeName mustEqual typeName
+        input.spec.constraint.typeName.name mustEqual typeName
       }
     }
   }
@@ -397,7 +405,8 @@ class VariableTest extends Specification {
 
   private[this] def beAPassword(implicit variable: Variable) = {
     "Be an input password input" in {
-      variable.spec.isInstanceOf[PasswordVariableSpec]
+      variable.spec.isInstanceOf[InputVariableSpec] &&
+      variable.spec.constraint.typeName.name == "password"
     }
   }
 
@@ -438,7 +447,7 @@ class VariableTest extends Specification {
 
   private[this] def haveType(typeName: String)(implicit variable: Variable) = {
     "have type " + typeName in {
-      variable.spec.constraint.typeName mustEqual typeName
+      variable.spec.constraint.typeName.name mustEqual typeName
     }
   }
 
@@ -462,17 +471,17 @@ class VariableTest extends Specification {
 
   private[this] def haveNoAlgo(implicit variable: Variable) = {
     s"Have an user defined hash algorithme (and so none constrained)" in {
-      variable match {
-        case p:PasswordVariable => p.spec.hashAlgo must beEqualTo(None)
+      variable.spec.constraint.typeName match {
+        case PasswordVType(algos) => algos must containTheSameElementsAs(HashAlgoConstraint.algorithmes)
         case _ => failure("Variable is not a password input")
       }
     }
   }
 
-  private[this] def haveAlgo(algo:HashAlgoConstraint)(implicit variable: Variable) = {
-    s"Have hash algorithme of type ${algo.prefix}" in {
-      variable match {
-        case p:PasswordVariable => p.spec.hashAlgo must beEqualTo(Some(algo))
+  private[this] def haveAlgo(algos:List[HashAlgoConstraint])(implicit variable: Variable) = {
+    s"Have hash algorithme of type ${algos.map( _.prefix).mkString(",")}" in {
+      variable.spec.constraint.typeName match {
+        case PasswordVType(a) => a ==== (algos)
         case _ => failure("Variable is not a password input")
       }
     }
