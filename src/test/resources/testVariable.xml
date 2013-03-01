@@ -106,40 +106,61 @@
 	</CONSTRAINT>
   </INPUT>
 
-  <PASSWORD>
+  <INPUT>
     <NAME>password1</NAME>
     <DESCRIPTION>Some password</DESCRIPTION>
-  </PASSWORD>
-  <PASSWORD>
+    <CONSTRAINT>
+      <TYPE>password</TYPE>
+    </CONSTRAINT>
+  </INPUT>
+  <INPUT>
     <NAME>password2</NAME>
     <DESCRIPTION>Some password</DESCRIPTION>
-    <HASH>PLAIN</HASH>
-  </PASSWORD>
-  <PASSWORD>
+    <CONSTRAINT>
+      <TYPE>password</TYPE>
+      <PASSWORDHASH>PLAIN</PASSWORDHASH>
+    </CONSTRAINT>
+  </INPUT>
+  <INPUT>
     <NAME>password3</NAME>
     <DESCRIPTION>Some password</DESCRIPTION>
-    <HASH>MD5</HASH>
-  </PASSWORD>
-  <PASSWORD>
+    <CONSTRAINT>
+      <TYPE>password</TYPE>
+      <PASSWORDHASH>MD5</PASSWORDHASH>
+    </CONSTRAINT>
+  </INPUT>
+  <INPUT>
     <NAME>password4</NAME>
     <DESCRIPTION>Some password, case irrelavant</DESCRIPTION>
-    <HASH>md5</HASH>
-  </PASSWORD>
-  <PASSWORD>
+    <CONSTRAINT>
+      <TYPE>password</TYPE>
+      <PASSWORDHASH>md5</PASSWORDHASH>
+    </CONSTRAINT>
+  </INPUT>
+  <INPUT>
     <NAME>password5</NAME>
     <DESCRIPTION>Some password</DESCRIPTION>
-    <HASH>SHA1</HASH>
-  </PASSWORD>
-  <PASSWORD>
+    <CONSTRAINT>
+      <TYPE>password</TYPE>
+      <PASSWORDHASH>SHA1</PASSWORDHASH>
+    </CONSTRAINT>
+  </INPUT>
+  <INPUT>
     <NAME>password6</NAME>
     <DESCRIPTION>Some password</DESCRIPTION>
-    <HASH>SHA256</HASH>
-  </PASSWORD>
-  <PASSWORD>
+    <CONSTRAINT>
+      <TYPE>password</TYPE>
+      <PASSWORDHASH>SHA256</PASSWORDHASH>
+    </CONSTRAINT>
+  </INPUT>
+  <INPUT>
     <NAME>password7</NAME>
     <DESCRIPTION>Some password</DESCRIPTION>
-    <HASH>USER</HASH>
-  </PASSWORD>
+    <CONSTRAINT>
+      <TYPE>password</TYPE>
+      <PASSWORDHASH>md5,sha256,plain</PASSWORDHASH>
+    </CONSTRAINT>
+  </INPUT>
 
 >>>>>>> 8a75768... Fixes #3283: add a PASSWORD field for Techniques
 </VARIABLES>

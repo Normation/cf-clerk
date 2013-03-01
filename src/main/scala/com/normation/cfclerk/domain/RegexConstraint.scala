@@ -34,16 +34,28 @@
 
 package com.normation.cfclerk.domain
 import com.normation.utils.HashcodeCaching
+import net.liftweb.common.Box
+import net.liftweb.common.Failure
+import net.liftweb.common.Full
 
-case class RegexConstraint(pattern: String = "", errorMsg: String = "") extends HashcodeCaching {
+/**
+ * We require a non empty regex pattern
+ */
+case class RegexConstraint(pattern: String, errorMsg: String) extends HashcodeCaching {
+
+  if(pattern == null || pattern.size < 1) {
+    throw new ConstraintException("A regex constraint was created with an empty pattern, which has no meaning")
+  }
 
   /* throw a ConstraintException if the value doesn't match the pattern */
-  def check(varValue: String, varName: String) =
-    if (pattern != "" && !varValue.matches(pattern))
-      throw new ConstraintException("%s%s".format(
+  def check(varValue: String, varName: String) : Box[String ]=
+    if(pattern != "" && !varValue.matches(pattern)) {
+      Failure("%s%s".format(
         "Please modify " + varName + " to match the requested format",
         if (errorMsg != "") " : " + errorMsg else ""))
-
+    } else {
+      Full(varValue)
+    }
 }
 
 object RegexConstraint {
