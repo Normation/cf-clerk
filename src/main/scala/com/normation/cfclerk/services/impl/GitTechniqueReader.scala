@@ -491,8 +491,9 @@ class GitTechniqueReader(
           }
       }
     } catch {
-      case e : TechniqueVersionFormatException => logger.error("Ignoring technique '%s' because the version format is incorrect".format(filePath),e)
-      case e : ParsingException => logger.error("Ignoring technique '%s' because the descriptor file is malformed".format(filePath),e)
+      case e : TechniqueVersionFormatException => logger.error("Ignoring technique '%s' because the version format is incorrect. Error message was: %s".format(filePath,e.getMessage))
+      case e : ParsingException => logger.error("Ignoring technique '%s' because the descriptor file is malformed. Error message was: %s".format(filePath,e.getMessage))
+      case e : ConstraintException => logger.error("Ignoring technique '%s' because the descriptor file is malformed. Error message was: %s".format(filePath,e.getMessage))
       case e : Exception =>
         logger.error("Error when processing technique '%s'".format(filePath),e)
         throw e
