@@ -96,7 +96,7 @@ class Cf3PolicyDraftContainerServiceTest {
   @Test
   def createContainer() {
     config()
-    val container = containerService.createContainer(identifier, Seq(policy1))
+    val container = containerService.createContainer(identifier, Set(), Seq(policy1))
     container match {
       case Full(x) =>
         assertEquals(x.outPath, identifier)
@@ -110,7 +110,7 @@ class Cf3PolicyDraftContainerServiceTest {
   @Test
   def createAndAddContainer() {
     config()
-    val container = containerService.createContainer(identifier, Seq(policy1))
+    val container = containerService.createContainer(identifier, Set(), Seq(policy1))
 
     container match {
       case Full(x) =>

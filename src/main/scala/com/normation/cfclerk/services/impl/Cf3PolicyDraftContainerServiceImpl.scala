@@ -34,7 +34,7 @@
 
 package com.normation.cfclerk.services.impl
 
-import scala.collection._
+
 import com.normation.cfclerk.domain._
 import com.normation.cfclerk.exceptions._
 
@@ -53,14 +53,17 @@ class Cf3PolicyDraftContainerServiceImpl(
    * @param policiesInstancesBeans
    * @return
    */
-  def createContainer(identifier: String, cf3PolicyDrafts: Seq[Cf3PolicyDraft]) : Box[Cf3PolicyDraftContainer] = {
+  def createContainer(identifier: String, parameters: Set[ParameterEntry], cf3PolicyDrafts: Seq[Cf3PolicyDraft]) : Box[Cf3PolicyDraftContainer] = {
 
       if (cf3PolicyDrafts.size==0) {
         logger.error("There should be at least one CF3 policy draft to configure the container")
         return ParamFailure[Seq[Cf3PolicyDraft]]("No CF3 policy draft", Full(new NotFoundException("No CF3 policy draft defined")), Empty, cf3PolicyDrafts)
       }
 
-      val container = new Cf3PolicyDraftContainer(identifier)
+      val container = new Cf3PolicyDraftContainer(
+          identifier
+        , parameters
+      )
 
       for {
        res <- sequence(cf3PolicyDrafts) { policytoAdd =>

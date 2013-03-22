@@ -124,7 +124,7 @@ class DirectiveAgregationTest {
   // Create a Directive, with value , and add it to a server, and aggregate values
   @Test
   def simpleDirectiveTest() {
-    val node = new Cf3PolicyDraftContainer("node")
+    val node = new Cf3PolicyDraftContainer("node", Set())
 
     node.add(createDirectiveWithBinding(activeTechniqueId1, 1))
     node.add(createDirectiveWithBinding(activeTechniqueId1, 2))
@@ -155,7 +155,7 @@ class DirectiveAgregationTest {
   // Create a Directive with arrayed value , and add it to a server, and agregate values
   @Test
   def arrayedDirectiveTest() {
-    val machineA = new Cf3PolicyDraftContainer("machineA")
+    val machineA = new Cf3PolicyDraftContainer("machineA", Set())
 
     val instance = new Cf3PolicyDraft("id", newTechnique(TechniqueId(TechniqueName("name"), TechniqueVersion("1.0"))),
         Map(), trackerVariable, priority = 0, serial = 0)
@@ -183,7 +183,7 @@ class DirectiveAgregationTest {
   // Create a Directive with arrayed & nulledvalue , and add it to a server, and agregate values
   @Test
   def arrayedAndNullDirectiveTest() {
-    val machineA = new Cf3PolicyDraftContainer("machineA")
+    val machineA = new Cf3PolicyDraftContainer("machineA", Set())
 
     val instance = createDirectiveWithArrayBindingAndNullValues(activeTechniqueId1,1)
     machineA.add(instance)

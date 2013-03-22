@@ -220,7 +220,6 @@ case class SystemVariableSpec(
   def toVariable(values: Seq[String] = Seq()): SystemVariable = SystemVariable(this, values)
 }
 
-
 case class TrackerVariableSpec(
   val boundingVariable: Option[String] = None
 ) extends VariableSpec with HashcodeCaching {

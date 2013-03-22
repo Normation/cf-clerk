@@ -36,6 +36,7 @@ package com.normation.cfclerk.services
 
 import com.normation.cfclerk.domain.{Cf3PolicyDraft, Cf3PolicyDraftContainer}
 import net.liftweb.common.Box
+import com.normation.cfclerk.domain.ParameterEntry
 
 /**
  * Service to handle Containers : create a container, add a policy instance to a container and write the policies corresponding to this container
@@ -52,7 +53,7 @@ trait Cf3PolicyDraftContainerService {
    * @param policiesInstancesBeans
    * @return
    */
-  def createContainer(identifier: String, cf3PolicyDrafts : Seq[Cf3PolicyDraft]) : Box[Cf3PolicyDraftContainer]
+  def createContainer(identifier: String, parameters: Set[ParameterEntry], cf3PolicyDrafts : Seq[Cf3PolicyDraft]) : Box[Cf3PolicyDraftContainer]
 
 
   /**
