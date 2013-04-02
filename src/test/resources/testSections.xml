@@ -14,7 +14,7 @@
 			<DESCRIPTION>...</DESCRIPTION>
 			<ITEM value="red" label="Red" />
 		</SELECT>
-		<SECTION name="sect2">
+		<SECTION name="sect2" displayPriority="high">
 			<SELECT1>
 				<NAME>C</NAME>
 				<DESCRIPTION>...</DESCRIPTION>
@@ -26,7 +26,7 @@
 				<DESCRIPTION>...</DESCRIPTION>
 			</INPUT>
 		</SECTION>
-		<SECTION name="sect3">
+		<SECTION name="sect3" displayPriority="low">
 			<INPUT>
 				<NAME>E</NAME>
 				<DESCRIPTION>...</DESCRIPTION>
