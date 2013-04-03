@@ -128,7 +128,10 @@ class SectionSpecParser(variableParser:VariableSpecParser) extends Loggable {
     }
 
     val isMultivalued = "true" == getAttributeText(root, SECTION_IS_MULTIVALUED, "false").toLowerCase
-    val foldable = "true" == getAttributeText(root, SECTION_IS_FOLDABLE, "false").toLowerCase
+
+    // The defaut priority is "high" 
+    val displayPriority = DisplayPriority(getAttributeText(root, SECTION_DISPLAYPRIORITY, "")).getOrElse(HighDisplayPriority)
+    
     val description = getUniqueNodeText(root, SECTION_DESCRIPTION, "")
 
     val isComponent = "true"  == getAttributeText(root, SECTION_IS_COMPONENT, "false").toLowerCase
@@ -145,7 +148,7 @@ class SectionSpecParser(variableParser:VariableSpecParser) extends Loggable {
     }
 
     val children = parseChildren(root, id, policyName)
-    val sectionSpec = SectionSpec(name, isMultivalued, isComponent, componentKey, foldable, description, children)
+    val sectionSpec = SectionSpec(name, isMultivalued, isComponent, componentKey, displayPriority, description, children)
     if (isMultivalued)
       Full(sectionSpec.cloneVariablesInMultivalued)
     else

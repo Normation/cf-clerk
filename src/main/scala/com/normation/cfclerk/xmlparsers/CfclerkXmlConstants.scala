@@ -88,7 +88,7 @@ object CfclerkXmlConstants {
   val SECTION = "SECTION"
   val SECTION_NAME = "name" //attribute of SECTION
   val SECTION_IS_MULTIVALUED = "multivalued" //attribute of SECTION
-  val SECTION_IS_FOLDABLE = "foldable"//attribute of SECTION
+  val SECTION_DISPLAYPRIORITY = "displayPriority"//attribute of SECTION
   val SECTION_DESCRIPTION = "DESCRIPTION"
   val SECTION_IS_COMPONENT = "component"
   val SECTION_COMPONENT_KEY = "componentKey"

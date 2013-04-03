@@ -92,13 +92,13 @@ sealed trait SectionChildSpec {
  * Metadata about a section object.
  */
 case class SectionSpec(
-    name         : String
-  , isMultivalued: Boolean = false
-  , isComponent  : Boolean = false
-  , componentKey : Option[String] = None
-  , foldable     : Boolean = false
-  , description  : String = ""
-  , children     : Seq[SectionChildSpec] = Seq()
+    name            : String
+  , isMultivalued   : Boolean = false
+  , isComponent     : Boolean = false
+  , componentKey    : Option[String] = None
+  , displayPriority : DisplayPriority = HighDisplayPriority
+  , description     : String = ""
+  , children        : Seq[SectionChildSpec] = Seq()
 ) extends SectionChildSpec with HashcodeCaching {
 
   lazy val getDirectVariables : Seq[VariableSpec] = {
@@ -364,3 +364,30 @@ object SectionVariableSpec {
   }
 }
 
+/**
+ * A trait to describe the display priority, which represents when the
+ * section will be shown (when we are high priority ? low ?), with a default
+ * to high
+ */
+sealed trait DisplayPriority {
+  def priority : String
+}
+
+final case object HighDisplayPriority extends DisplayPriority {
+  val priority = "high"
+}
+
+final case object LowDisplayPriority extends DisplayPriority {
+  val priority = "low"
+}
+
+
+object DisplayPriority {
+  def apply(s: String) : Option[DisplayPriority] = {
+    s.toLowerCase match {
+      case HighDisplayPriority.priority => Some(HighDisplayPriority)
+      case LowDisplayPriority.priority  => Some(LowDisplayPriority)
+      case _                            => None
+    }
+  }
+}
