@@ -322,7 +322,6 @@ case class InputVariableSpec(
   def toVariable(values: Seq[String] = Seq()): InputVariable = InputVariable(this, values)
 }
 
-
 /**
  * This object is the central parser for VariableSpec, so
  * it has to know all possible VariableSpec type.
@@ -350,7 +349,8 @@ object SectionVariableSpec {
     isUniqueVariable: Boolean = false,
     multivalued: Boolean = false,
     checked: Boolean = true,
-    constraint: Constraint = Constraint()): SectionVariableSpec = {
+    constraint: Constraint = Constraint()
+  ): SectionVariableSpec = {
 
     markerName match {
       case INPUT => InputVariableSpec(varName, description, longDescription,

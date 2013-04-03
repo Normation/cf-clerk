@@ -56,7 +56,8 @@ case class Section(val spec: SectionSpec) extends SectionChild with HashcodeCach
  * @author nicolas
  *
  */
-trait Variable extends Loggable {
+
+sealed trait Variable extends Loggable {
 
   //define in sub classes
   type T <: VariableSpec
@@ -138,33 +139,10 @@ trait Variable extends Loggable {
   }
 
   protected def castValue(x: String) : Box[Any] = {
-    val typeName = spec.constraint.typeName.toLowerCase
-
     //we don't want to check constraint on empty value
     // when the variable is optionnal
     if(this.spec.constraint.mayBeEmpty && x.length < 1) Full("")
-    else if(Constraint.stringTypes.contains(typeName)) Full(x)
-    else typeName match {
-      case "datetime" =>
-        try
-          Full(ISODateTimeFormat.dateTimeParser.parseDateTime(x))
-        catch {
-          case e:Exception => Failure("Wrong variable value " + x + " for variable name " + spec.name + " : expecting a datetime")
-        }
-      case "integer" => try
-        Full(x.toInt)
-      catch {
-        case e:Exception => Failure("Wrong variable value " + x + " for variable name " + spec.name + " : expecting an integer")
-      }
-      case "boolean" => try
-        Full(x.toBoolean)
-      catch {
-        case e:Exception => Failure("Wrong variable value " + x + " for variable name " + spec.name + " : expecting a boolean")
-      }
-      case _ =>
-        logger.error("Wrong variable type %s for variable name %s".format(typeName, spec.name))
-        Failure("Wrong variable type " + typeName + " for variable name " + spec.name)
-    }
+    else spec.constraint.typeName.getTypedValue(x,spec.name)
   }
 }
 
@@ -226,6 +204,7 @@ object Variable {
       case directive: TrackerVariable =>
         val newSpec = if (setMultivalued) directive.spec.cloneSetMultivalued else directive.spec
         directive.copy(defaultValues = bVals, spec = newSpec)
+      case x:SectionVariable => x
     }
   }
 

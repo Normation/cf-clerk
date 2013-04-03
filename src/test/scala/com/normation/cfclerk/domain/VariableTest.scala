@@ -55,12 +55,13 @@ import org.junit.runner._
 import org.specs2.mutable._
 import org.specs2.runner._
 import net.liftweb.common.Failure
+import com.normation.exceptions.TechnicalException
 
 @RunWith(classOf[JUnitRunner])
 class VariableTest extends Specification {
   def variableSpecParser = new VariableSpecParser()
 
-  val nbVariables = 10
+  val nbVariables = 18
   val refName = "name"
   val refDescription = "description"
   val refValue = "value"
@@ -72,15 +73,16 @@ class VariableTest extends Specification {
   val unvalidValue = "bobby"
 
   val simpleName = "$SIMPLEVARIABLE";
+  val select1 = "SELECT1_TEST"
   val itemName = "$VARIABLEITEM";
-  val varName = "$VARMACHINE"
-  val varDate = "$VARDATE"
-
   val regexCardNumberVar = "$CARDNUMBER"
   val sizeVar = "$SIZE"
   val mailVar = "$MAIL"
   val ipVar = "$IP"
+  val varName = "$VARMACHINE"
+  val varDate = "$VARDATE"
   val varList = "varlist"
+  val gui_only = "gui_only"
 
   val variables = {
     val doc =
@@ -100,11 +102,13 @@ class VariableTest extends Specification {
       specNode <- elt.nonEmptyChildren
       if(!specNode.isInstanceOf[Text])
     } {
-      val spec = variableSpecParser.parseSectionVariableSpec(specNode).open_!
+      val spec = variableSpecParser.parseSectionVariableSpec(specNode).openOrThrowException("I'm a failing test!")
       variables += spec.name -> spec.toVariable()
     }
     variables
   }
+
+
 
   "SYSTEM_VARIABLE tag" should {
     "lead to an exception" in {
@@ -122,16 +126,16 @@ class VariableTest extends Specification {
   "variables map" should {
     "be so that" in {
       variables.size mustEqual nbVariables
-      variables must haveKey(itemName)
-      variables must haveKey(simpleName)
-      variables must haveKey(varName)
-      variables must haveKey(varDate)
-      variables must haveKey(regexCardNumberVar)
-      variables must haveKey(sizeVar)
-      variables must haveKey(mailVar)
-      variables must haveKey(ipVar)
+      variables must haveKeys(
+          simpleName, select1, itemName,
+          regexCardNumberVar, sizeVar, mailVar,
+          ipVar, varName, varDate, varList, gui_only
+      )
+      variables must haveKeys( (1 to 6).map( "password" + _):_*)
     }
   }
+
+  ///////////////// generic tests about variable construction, do not use files /////////////////
 
   "Unsetted Variable" should {
     implicit val variable = new InputVariable(InputVariableSpec(refName, refDescription))
@@ -197,7 +201,7 @@ class VariableTest extends Specification {
 
   "Boolean variable" should {
     implicit val variable = new InputVariable(InputVariableSpec(refName, refDescription,
-      constraint = Constraint("boolean")))
+      constraint = Constraint(BooleanVType)))
 
     variable.saveValue("true")
     haveName()
@@ -207,7 +211,7 @@ class VariableTest extends Specification {
 
   "Boolean variable" should {
     implicit val variable = new InputVariable(InputVariableSpec(refName, refDescription,
-      constraint = Constraint("boolean")))
+      constraint = Constraint(BooleanVType)))
 
     variable.saveValue("false")
     haveValue(false)
@@ -225,16 +229,21 @@ class VariableTest extends Specification {
     haveDescription()
   }
 
+  ///////////////// test parsed variables /////////////////
+
   "Parsed variable" should {
     implicit val simpleVariable = variables(simpleName)
+    beAnInput
     saveHaveValue()
 
     val constrainedVariable = variables(itemName)
     saveHaveValue()(constrainedVariable)
+    beASelect(constrainedVariable)
   }
 
   "Date variable" should {
     implicit val dateVariable = variables(varDate)
+    beAnInput
     haveType("datetime")
 
     dateVariable.saveValue(dateValue)
@@ -253,28 +262,33 @@ class VariableTest extends Specification {
 
   "varlist" should {
     implicit val listVariable = variables(varList)
+    beAnInput
     haveType("string")
     notBeMultivalued
+  }
+
+
+  "select 1" should {
+    implicit val v = variables(select1)
+    beASelect1
+    haveName("SELECT1_TEST")
+
   }
 
   checkType("size-kb", sizeVar)
   checkType("mail", mailVar)
   checkType("ip", ipVar)
 
-  def checkType(typeName: String, varName: String) = {
-    "An input with a type '%s'".format(typeName) should {
-      val input = variables(varName)
-      "have a constraint with a type '%s'".format(typeName) in {
-        input.spec.constraint.typeName mustEqual typeName
-      }
-    }
-  }
-
   "An input with a 'regex'" should {
     val input = variables(regexCardNumberVar)
 
     "have its regex field correctly set" in {
-      input.spec.constraint.regex mustEqual RegexConstraint("""\d\d\d\d-\d\d\d\d-\d\d\d\d-\d\d\d\d""", "must resemble 1234-1234-1234-1234")
+      input.spec.constraint.typeName match {
+        case s:StringVType => s.regex mustEqual Some(RegexConstraint("""\d\d\d\d-\d\d\d\d-\d\d\d\d-\d\d\d\d""", "must resemble 1234-1234-1234-1234"))
+        case t => failure(s"Variable type '${t.name}' can not have a regex")
+      }
+
+
     }
   }
 
@@ -299,62 +313,177 @@ class VariableTest extends Specification {
     }
   }
 
-  def haveDescription(description: String = refDescription)(implicit variable: Variable) = {
+  "password1" should {
+    implicit val v = variables("password1")
+    beAPassword
+    haveNoAlgo
+  }
+
+  "password2" should {
+    implicit val v = variables("password2")
+    beAPassword
+    haveAlgo(PLAIN::Nil)
+  }
+
+  "password3" should {
+    implicit val v = variables("password3")
+    beAPassword
+    haveAlgo(MD5::Nil)
+  }
+
+  "password4" should {
+    implicit val v = variables("password4")
+    beAPassword
+    haveAlgo(MD5::Nil)
+  }
+
+  "password5" should {
+    implicit val v = variables("password5")
+    beAPassword
+    haveAlgo(SHA1::Nil)
+  }
+
+  "password6" should {
+    implicit val v = variables("password6")
+    beAPassword
+    haveAlgo(SHA256::Nil)
+  }
+
+  "password7" should {
+    implicit val v = variables("password7")
+    beAPassword
+    haveAlgo(MD5 :: SHA256 :: PLAIN :: Nil)
+  }
+
+  "unvalide password algo" should {
+    val p =
+    <INPUT>
+      <NAME>password6</NAME>
+      <DESCRIPTION>Some password</DESCRIPTION>
+      <CONSTRAINT>
+        <TYPE>password</TYPE>
+        <PASSWORDHASH>Not a real algo</PASSWORDHASH>
+      </CONSTRAINT>
+    </INPUT>
+
+    "throw a parsing error" in {
+       variableSpecParser.parseSectionVariableSpec(p) must throwA[ConstraintException]
+    }
+  }
+
+
+  ///
+  /// Utility methods
+  ///
+
+  private[this] def checkType(typeName: String, varName: String) = {
+    "An input with a type '%s'".format(typeName) should {
+      val input = variables(varName)
+      "have a constraint with a type '%s'".format(typeName) in {
+        input.spec.constraint.typeName.name mustEqual typeName
+      }
+    }
+  }
+
+  private[this] def beAnInput(implicit variable: Variable) = {
+    "Be an input variable" in {
+      variable.spec.isInstanceOf[InputVariableSpec]
+    }
+  }
+
+  private[this] def beASelect1(implicit variable: Variable) = {
+    "Be an input select 1" in {
+      variable.spec.isInstanceOf[SelectOneVariableSpec]
+    }
+  }
+
+  private[this] def beASelect(implicit variable: Variable) = {
+    "Be an input select" in {
+      variable.spec.isInstanceOf[SelectVariableSpec]
+    }
+  }
+
+  private[this] def beAPassword(implicit variable: Variable) = {
+    "Be an input password input" in {
+      variable.spec.isInstanceOf[InputVariableSpec] &&
+      variable.spec.constraint.typeName.name == "password"
+    }
+  }
+
+  private[this] def haveDescription(description: String = refDescription)(implicit variable: Variable) = {
     "have description '%s'".format(description) in {
       variable.spec.description mustEqual description
     }
   }
 
-  def haveName(name: String = refName)(implicit variable: Variable) = {
+  private[this] def haveName(name: String = refName)(implicit variable: Variable) = {
     "have name '%s'".format(name) in {
       variable.spec.name mustEqual name
     }
   }
 
-  def haveValue(value: Any = refValue)(implicit variable: Variable) = {
+  private[this] def haveValue(value: Any = refValue)(implicit variable: Variable) = {
     "have value '%s'".format(value) in {
       variable.getTypedValues.get.head mustEqual value
     }
   }
 
-  def haveNotValue(value: Any = refValue)(implicit variable: Variable) = {
+  private[this] def haveNotValue(value: Any = refValue)(implicit variable: Variable) = {
     "have not value '%s'".format(value) in {
       variable.getTypedValues.get.head mustNotEqual value
     }
   }
 
-  def saveHaveValue(value: String = refValue)(implicit variable: Variable) = {
+  private[this] def saveHaveValue(value: String = refValue)(implicit variable: Variable) = {
     variable.saveValue(value)
     haveValue(value)
   }
 
-  def haveNbValues(nbValues: Int)(implicit variable: Variable) = {
+  private[this] def haveNbValues(nbValues: Int)(implicit variable: Variable) = {
     "have %d values".format(nbValues) in {
       variable.values.length mustEqual nbValues
     }
   }
 
-  def haveType(typeName: String)(implicit variable: Variable) = {
+  private[this] def haveType(typeName: String)(implicit variable: Variable) = {
     "have type " + typeName in {
-      variable.spec.constraint.typeName mustEqual typeName
+      variable.spec.constraint.typeName.name mustEqual typeName
     }
   }
 
-  def notBeMultivalued(implicit variable: Variable) = {
+  private[this] def notBeMultivalued(implicit variable: Variable) = {
     "not be multivalued (because it is not a valid tag of variable spec)" in {
       !variable.spec.multivalued
     }
   }
 
-  def beSystemVar(implicit variable: Variable) = {
+  private[this] def beSystemVar(implicit variable: Variable) = {
     "be systemVar" in {
       variable.spec.isSystem
     }
   }
 
-  def beBounding(implicit policyVar: TrackerVariable) = {
+  private[this] def beBounding(implicit policyVar: TrackerVariable) = {
     "be a bounding variable" in {
       policyVar.spec.boundingVariable mustEqual "Bounding"
+    }
+  }
+
+  private[this] def haveNoAlgo(implicit variable: Variable) = {
+    s"Have an user defined hash algorithme (and so none constrained)" in {
+      variable.spec.constraint.typeName match {
+        case PasswordVType(algos) => algos must containTheSameElementsAs(HashAlgoConstraint.algorithmes)
+        case _ => failure("Variable is not a password input")
+      }
+    }
+  }
+
+  private[this] def haveAlgo(algos:List[HashAlgoConstraint])(implicit variable: Variable) = {
+    s"Have hash algorithme of type ${algos.map( _.prefix).mkString(",")}" in {
+      variable.spec.constraint.typeName match {
+        case PasswordVType(a) => a ==== (algos)
+        case _ => failure("Variable is not a password input")
+      }
     }
   }
 }
