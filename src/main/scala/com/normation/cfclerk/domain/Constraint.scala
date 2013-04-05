@@ -54,7 +54,7 @@ object Constraint {
   val regexTypes = "mail" :: "ip" :: Nil
   val stringTypes = "string" :: "perm" :: "textarea" :: Nil ::: regexTypes ::: sizeTypes
   val validTypes = "integer" :: "uploadedfile" :: "destinationfullpath" :: "date" :: "datetime" :: "time" ::
-    "boolean" :: Nil ::: stringTypes
+    "boolean" :: "raw" :: Nil ::: stringTypes
 
   def apply(typeName: String = "string", default: Option[String] = None, mayBeEmpty: Boolean = false, regex: RegexConstraint = RegexConstraint()): Constraint = {
 
