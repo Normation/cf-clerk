@@ -84,4 +84,11 @@
     </CONSTRAINT>
   </INPUT>
 
+		<INPUT>
+			<NAME>raw_type</NAME>
+			<DESCRIPTION>a variable that isn't automatically escaped</DESCRIPTION>
+			<CONSTRAINT>
+				<TYPE>raw</TYPE>
+			</CONSTRAINT>
+		</INPUT>
 </VARIABLES>
