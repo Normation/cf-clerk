@@ -38,6 +38,7 @@ import com.normation.cfclerk.domain.{SystemVariableSpec,Constraint}
 import com.normation.cfclerk.services.SystemVariableSpecService
 import scala.collection.mutable.ArrayBuffer
 import net.liftweb.common._
+import com.normation.cfclerk.domain.IntegerVType
 
 
 class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
@@ -61,7 +62,7 @@ class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
                                           , multivalued  = false
       )
     , SystemVariableSpec("LICENSESPAID"   , "Number of Nova licences paid"
-                                          , constraint = Constraint(typeName = "integer",mayBeEmpty=true)
+                                          , constraint = Constraint(typeName = IntegerVType(), mayBeEmpty=true)
       )
     , SystemVariableSpec("NODEROLE"       , "List of nodeConfiguration roles")
     , SystemVariableSpec("TOOLS_FOLDER"   , "Tools folder")
@@ -86,7 +87,7 @@ class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
     , SystemVariableSpec("SYSLOGPORT"     , "Port to use for rsyslog (used by reports)"
                                           , multivalued = false
                                           , isUniqueVariable = true
-                                          , constraint = Constraint(typeName = "integer")
+                                          , constraint = Constraint(typeName = IntegerVType())
       )
 
   )
