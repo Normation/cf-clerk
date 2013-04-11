@@ -88,7 +88,14 @@ class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
                                           , isUniqueVariable = true
                                           , constraint = Constraint(typeName = "integer")
       )
-    
+      // this variable may be empty, has it is not filled by rudder, but by cf-clerk
+    , SystemVariableSpec("GENERATIONTIMESTAMP" 
+                                          , "Timestamp of the promises generation"
+                                          , multivalued = false
+                                          , isUniqueVariable = true
+                                          , constraint = Constraint(mayBeEmpty=true)
+      )
+      
   )
   
   private[this] val varSpecsMap = varSpecs.map(x => (x.name -> x)).toMap
