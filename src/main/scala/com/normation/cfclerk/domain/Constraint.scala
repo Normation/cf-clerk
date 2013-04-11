@@ -42,6 +42,10 @@ import net.liftweb.common._
 
 class ConstraintException(val msg: String) extends Exception(msg)
 
+
+trait VTypeWithRegex {
+  def regex:Option[RegexConstraint]
+}
 /**
  * A constraint about the type of a variable
  */
@@ -58,7 +62,7 @@ sealed trait VTypeConstraint {
     else
       x.replaceAll("""\\""", """\\\\""").replaceAll(""""""","""\\"""")
   }
-  
+
   //check if the value is compatible with that type constrain.
   //return a Failure on error, the checked value on success.
   def getTypedValue(value:String, forField:String) : Box[Any] = Full(escapeString(value))
@@ -77,13 +81,24 @@ object VTypeConstraint {
     PermVType :: PasswordVType(algos) :: UploadedFileVType :: DestinationPathVType ::
     BooleanVType :: RawVType :: Nil ::: stringTypes(r)
 
+  def getRegexConstraint(vType : VTypeConstraint) : Option[RegexConstraint] =
+    vType match {
+    case withRegex:VTypeWithRegex => withRegex.regex
+    case _ => None
+    }
 
+  def getPasswordHash(vType : VTypeConstraint) : Seq[HashAlgoConstraint] = {
+    vType match {
+      case PasswordVType(hashes) => hashes
+      case _ => Seq()
+    }
+  }
   def fromString(s:String, r: Option[RegexConstraint], algos:Seq[HashAlgoConstraint]) : Option[VTypeConstraint] = validTypes(r,algos).find(t => t.name == s)
 
   val allTypeNames = validTypes(None,Seq()).map( _.name ).mkString(", ")
 }
 
-sealed trait StringVType extends VTypeConstraint {
+sealed trait StringVType extends VTypeConstraint with VTypeWithRegex {
   def regex: Option[RegexConstraint]
 
   override def getTypedValue(value:String, forField:String) : Box[Any] = regex match {
@@ -104,7 +119,7 @@ object MailVType extends FixedRegexVType {
   override val regex = Some(MailRegex)
 }
 
-case class IntegerVType(regex: Option[RegexConstraint] = None) extends VTypeConstraint {
+case class IntegerVType(regex: Option[RegexConstraint] = None) extends VTypeConstraint with VTypeWithRegex  {
   override val name = "integer"
   override def getTypedValue(value:String, forField:String) : Box[Any] = {
     super.getTypedValue(value, forField).flatMap( _ =>
@@ -124,7 +139,7 @@ case class SizembVType(regex: Option[RegexConstraint] = None) extends SizeVType 
 case class SizegbVType(regex: Option[RegexConstraint] = None) extends SizeVType { override val name = "size-gb" }
 case class SizetbVType(regex: Option[RegexConstraint] = None) extends SizeVType { override val name = "size-tb" }
 
-case class DateTimeVType(regex: Option[RegexConstraint] = None) extends VTypeConstraint {
+case class DateTimeVType(regex: Option[RegexConstraint] = None) extends VTypeConstraint with VTypeWithRegex {
   override val name = "datetime"
   override def getTypedValue(value:String, forField:String) : Box[Any] = {
     super.getTypedValue(value, forField).flatMap( _ =>
@@ -136,8 +151,8 @@ case class DateTimeVType(regex: Option[RegexConstraint] = None) extends VTypeCon
     )
   }
 }
-case class DateVType(regex: Option[RegexConstraint] = None) extends VTypeConstraint { override val name = "date" }
-case class TimeVType(regex: Option[RegexConstraint] = None) extends VTypeConstraint { override val name = "time" }
+case class DateVType(regex: Option[RegexConstraint] = None) extends VTypeConstraint with VTypeWithRegex { override val name = "date" }
+case class TimeVType(regex: Option[RegexConstraint] = None) extends VTypeConstraint with VTypeWithRegex { override val name = "time" }
 
 
 //other types
@@ -162,9 +177,9 @@ case object BooleanVType extends VTypeConstraint {
 case object UploadedFileVType extends VTypeConstraint { override val name = "uploadedfile" }
 case object DestinationPathVType extends VTypeConstraint { override val name = "destinationfullpath" }
 case object PermVType extends VTypeConstraint { override val name = "perm" }
-case object RawVType extends VTypeConstraint { 
-  override val name = "raw" 
-  // no escaping for raw types
+case object RawVType extends VTypeConstraint {
+  override val name = "raw"
+   // no escaping for raw types
   override def getTypedValue(value:String, forField:String) : Box[Any] = Full(value)
 }
 
