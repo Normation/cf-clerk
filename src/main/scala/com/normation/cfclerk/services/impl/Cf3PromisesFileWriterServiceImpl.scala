@@ -60,6 +60,8 @@ class Cf3PromisesFileWriterServiceImpl(
 
   logger.trace("Repository loaded")
 
+  private[this] val generationTimestampVariable = "GENERATIONTIMESTAMP"
+
   /**
    * Compute the TMLs list to be written
    * @param container : the container of the policies we want to write
@@ -145,6 +147,8 @@ class Cf3PromisesFileWriterServiceImpl(
     , outPath    : String
   ): Unit = {
     try {
+      val generationVariable = getGenerationVariable()
+
       for (fileEntry <- fileSet) {
         techniqueRepository.getTemplateContent(fileEntry.source) { optInputStream =>
           optInputStream match {
@@ -158,7 +162,7 @@ class Cf3PromisesFileWriterServiceImpl(
               template.registerRenderer(classOf[LocalDate], new LocalDateRenderer());
               template.registerRenderer(classOf[LocalTime], new LocalTimeRenderer());
 
-              for (variable <- variableSet) {
+              for (variable <- variableSet++generationVariable) {
                 if ( (variable.mayBeEmpty) && ((variable.values.size == 0) || (variable.values.size ==1 && variable.values.head == "") ) ) {
                   template.setAttribute(variable.name, null)
                 } else if(variable.values.size == 0) {
@@ -187,6 +191,16 @@ class Cf3PromisesFileWriterServiceImpl(
 
   }
 
+  /**
+   * Returns variable relative to a specific promise generation
+   * For the moment, only the timestamp
+   */
+  private[this] def getGenerationVariable() : Seq[STVariable]= {
+    // compute the generation timestamp
+    val promiseGenerationTimestamp = DateTime.now()
+    
+    Seq(STVariable(generationTimestampVariable, false, Seq(promiseGenerationTimestamp)))
+  }
 
   private[this] def prepareVariables(
       container: Cf3PolicyDraftContainer
