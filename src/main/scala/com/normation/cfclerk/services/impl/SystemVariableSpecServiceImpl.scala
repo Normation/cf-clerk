@@ -89,14 +89,6 @@ class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
                                           , isUniqueVariable = true
                                           , constraint = Constraint(typeName = IntegerVType())
       )
-      // this variable may be empty, has it is not filled by rudder, but by cf-clerk
-    , SystemVariableSpec("GENERATIONTIMESTAMP" 
-                                          , "Timestamp of the promises generation"
-                                          , multivalued = false
-                                          , isUniqueVariable = true
-                                          , constraint = Constraint(mayBeEmpty=true)
-      )
-      
 
   )
 
