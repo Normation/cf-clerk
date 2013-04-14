@@ -96,8 +96,6 @@ class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
                                           , isUniqueVariable = true
                                           , constraint = Constraint(mayBeEmpty=true)
       )
-      
-
   )
 
   private[this] val varSpecsMap = varSpecs.map(x => (x.name -> x)).toMap
