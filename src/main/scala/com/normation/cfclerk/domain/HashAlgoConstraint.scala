@@ -40,11 +40,24 @@ import java.security.MessageDigest
 import net.liftweb.common.EmptyBox
 import org.apache.commons.codec.binary.Base64
 import org.apache.commons.codec.binary.Hex
+import java.security.SecureRandom
+import scala.collection.mutable.StringBuilder
+import java.lang.StringBuilder
+import org.apache.commons.codec.binary.BaseNCodec
+import org.eclipse.jgit.errors.NotSupportedException
+import org.apache.commons.codec.digest.Md5Crypt
+import org.apache.commons.codec.digest.Sha2Crypt
 
 object HashAlgoConstraint {
 
-  def algorithmes = PLAIN :: MD5 :: SHA1 :: SHA256 :: Nil
-  def algoNames(algos:Seq[HashAlgoConstraint]) =  algos.map( _.prefix ).mkString(", ")
+  def algorithmes = (
+       PLAIN
+    :: MD5 :: SHA1 :: SHA256
+    :: LinuxShadowMD5 :: LinuxShadowSHA256 :: LinuxShadowSHA512
+    :: Nil
+  )
+
+  def algoNames(algos:Seq[HashAlgoConstraint]) =  algos.map( _.prefix.toUpperCase ).mkString(", ")
 
   def fromStringIn(algos:Seq[HashAlgoConstraint], algoName:String) = {
     algos.find( a => a.prefix == algoName.toLowerCase)
@@ -71,6 +84,7 @@ object HashAlgoConstraint {
   def unserialize(value:String): Box[(HashAlgoConstraint, String)] = {
     unserializeIn(algorithmes, value)
   }
+
 }
 
 sealed trait HashAlgoConstraint {
@@ -87,8 +101,8 @@ sealed trait HashAlgoConstraint {
     case Full((algo,_)) => Failure(s"Bad algorithm prefix: found ${algo.prefix}, was expecting ${this.prefix}")
     case eb: EmptyBox => eb
   }
-}
 
+}
 
 /**
  * Actually do not hash the result
@@ -98,6 +112,9 @@ object PLAIN  extends HashAlgoConstraint {
   override val prefix = "plain"
 }
 
+/**
+ * Simple standard hash: MD5, SHA-1,256,512
+ */
 object MD5  extends HashAlgoConstraint {
   private[this] val md = MessageDigest.getInstance("MD5")
   override def hash(input:Array[Byte]) : String = Hex.encodeHexString(md.digest(input))
@@ -114,5 +131,46 @@ object SHA256 extends HashAlgoConstraint {
   private[this] val md = MessageDigest.getInstance("SHA-256")
   override def hash(input:Array[Byte]) : String = Hex.encodeHexString(md.digest(input))
   override val prefix = "sha256"
+}
+
+object SHA512 extends HashAlgoConstraint {
+  private[this] val md = MessageDigest.getInstance("SHA-512")
+  override def hash(input:Array[Byte]) : String = Hex.encodeHexString(md.digest(input))
+  override val prefix = "sha512"
+}
+
+/**
+ * Linux shadow hash, as explained here:
+ * http://serverfault.com/questions/259722/how-to-generate-a-etc-shadow-compatible-password-for-ubuntu-10-04
+ *
+ * =>> $id$salt$encrypted
+ *
+ *    ID  | Method
+ *    ---------------------------------------------------------
+ *    1   | MD5
+ *    2a  | Blowfish (not in mainline glibc; added in some Linux distributions)
+ *    5   | SHA-256 (since glibc 2.7)
+ *    6   | SHA-512 (since glibc 2.7)
+ *
+ * "salt" stands for the up to 16 characters following "$id$" in the salt.
+ *
+ * shadow-md5 / shadow-sha-(level)
+ */
+object LinuxShadowMD5 extends HashAlgoConstraint {
+  private[this] val md = MessageDigest.getInstance("MD5")
+  override def hash(input:Array[Byte]) : String = Md5Crypt.md5Crypt(input)
+  override val prefix = "linux-shadow-md5"
+}
+
+object LinuxShadowSHA256 extends HashAlgoConstraint {
+  private[this] val md = MessageDigest.getInstance("SHA-256")
+  override def hash(input:Array[Byte]) : String = Sha2Crypt.sha256Crypt(input)
+  override val prefix = "linux-shadow-sha256"
+}
+
+object LinuxShadowSHA512 extends HashAlgoConstraint {
+  private[this] val md = MessageDigest.getInstance("SHA-512")
+  override def hash(input:Array[Byte]) : String = Sha2Crypt.sha512Crypt(input)
+  override val prefix = "linux-shadow-sha512"
 }
 
