@@ -63,7 +63,7 @@ class VariableTest extends Specification {
   def variableSpecParser = new VariableSpecParser()
 
 
-  val nbVariables = 19
+  val nbVariables = 23
 
   val refName = "name"
   val refDescription = "description"
@@ -374,6 +374,30 @@ class VariableTest extends Specification {
     implicit val v = variables("password7")
     beAPassword
     haveAlgo(MD5 :: SHA256 :: PLAIN :: Nil)
+  }
+
+  "password8" should {
+    implicit val v = variables("password8")
+    beAPassword
+    haveAlgo(SHA512 :: Nil)
+  }
+
+  "password9" should {
+    implicit val v = variables("password9")
+    beAPassword
+    haveAlgo(LinuxShadowMD5 :: Nil)
+  }
+
+  "password10" should {
+    implicit val v = variables("password10")
+    beAPassword
+    haveAlgo(LinuxShadowSHA256 :: Nil)
+  }
+
+  "password11" should {
+    implicit val v = variables("password11")
+    beAPassword
+    haveAlgo(LinuxShadowSHA512 :: Nil)
   }
 
   "unvalide password algo" should {

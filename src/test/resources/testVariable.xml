@@ -161,6 +161,37 @@
       <PASSWORDHASH>md5,sha256,plain</PASSWORDHASH>
     </CONSTRAINT>
   </INPUT>
+  <INPUT>
+    <NAME>password8</NAME>
+    <DESCRIPTION>Some password</DESCRIPTION>
+    <CONSTRAINT>
+      <TYPE>password</TYPE>
+      <PASSWORDHASH>sha512</PASSWORDHASH>
+    </CONSTRAINT>
+  </INPUT>
+  <INPUT>
+    <NAME>password9</NAME>
+    <DESCRIPTION>Some password</DESCRIPTION>
+    <CONSTRAINT>
+      <TYPE>password</TYPE>
+      <PASSWORDHASH>linux-shadow-md5</PASSWORDHASH>
+    </CONSTRAINT>
+  </INPUT>
+  <INPUT>
+    <NAME>password10</NAME>
+    <DESCRIPTION>Some password</DESCRIPTION>
+    <CONSTRAINT>
+      <TYPE>password</TYPE>
+      <PASSWORDHASH>linux-shadow-sha256</PASSWORDHASH>
+    </CONSTRAINT>
+  </INPUT>
+  <INPUT>
+    <NAME>password11</NAME>
+    <DESCRIPTION>Some password</DESCRIPTION>
+    <CONSTRAINT>
+      <TYPE>password</TYPE>
+      <PASSWORDHASH>linux-shadow-sha512</PASSWORDHASH>
+    </CONSTRAINT>
+  </INPUT>
 
->>>>>>> 8a75768... Fixes #3283: add a PASSWORD field for Techniques
 </VARIABLES>

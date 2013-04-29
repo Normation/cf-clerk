@@ -52,7 +52,7 @@ object HashAlgoConstraint {
 
   def algorithmes = (
        PLAIN
-    :: MD5 :: SHA1 :: SHA256
+    :: MD5 :: SHA1 :: SHA256 :: SHA512
     :: LinuxShadowMD5 :: LinuxShadowSHA256 :: LinuxShadowSHA512
     :: Nil
   )
@@ -72,13 +72,13 @@ object HashAlgoConstraint {
    * So there is the regex to read them back.
    */
 
-  private[this] val format = """([\w]+):(.*)""".r
+  private[this] val format = """([\w-]+):(.*)""".r
   def unserializeIn(algos: Seq[HashAlgoConstraint], value:String): Box[(HashAlgoConstraint, String)] = value match {
     case format(algo,h) => HashAlgoConstraint.fromStringIn(algos, algo) match {
       case None => Failure(s"Unknown algorithm ${algo}. List of know algorithme: ${algoNames(algos)}")
       case Some(a) => Full((a,h))
     }
-    case _ => Failure(s"Bad format of serialized hashed value, expexted format is: 'algorithme:hash', with algorithm among: ${algoNames(algos)}")
+    case _ => Failure(s"Bad format of serialized hashed value, expected format is: 'algorithme:hash', with algorithm among: ${algoNames(algos)}")
   }
 
   def unserialize(value:String): Box[(HashAlgoConstraint, String)] = {
