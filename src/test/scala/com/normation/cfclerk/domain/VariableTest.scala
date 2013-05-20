@@ -63,13 +63,14 @@ class VariableTest extends Specification {
   def variableSpecParser = new VariableSpecParser()
 
 
-  val nbVariables = 23
+  val nbVariables = 24
 
   val refName = "name"
   val refDescription = "description"
   val refValue = "value"
   val dateValue = "2010-01-16T12:00:00.000+01:00"
   val listValue = "value1;value2"
+  val defaultValue = "default_value"
 
   val rawValue = """This is a test \ " \\ """
   val escapedTo = """This is a test \\ \" \\\\ """
@@ -79,6 +80,7 @@ class VariableTest extends Specification {
   val unvalidValue = "bobby"
 
   val simpleName = "$SIMPLEVARIABLE";
+  val withDefault = "WITH_DEFAULT"
   val select1 = "SELECT1_TEST"
   val itemName = "$VARIABLEITEM";
   val regexCardNumberVar = "$CARDNUMBER"
@@ -147,14 +149,14 @@ class VariableTest extends Specification {
   ///////////////// generic tests about variable construction, do not use files /////////////////
 
   "Unsetted Variable" should {
-    implicit val variable = new InputVariable(InputVariableSpec(refName, refDescription))
+    implicit val variable = InputVariable(InputVariableSpec(refName, refDescription), Seq())
     haveName()
     haveDescription()
   }
 
   "Variable" should {
-    implicit val variable = new InputVariable(InputVariableSpec(refName, refDescription))
-    variable.saveValue(refValue)
+    val v = InputVariable(InputVariableSpec(refName, refDescription), Seq())
+    implicit val variable = v.copyWithSavedValue(refValue)
 
     haveName()
     haveDescription()
@@ -162,9 +164,8 @@ class VariableTest extends Specification {
   }
 
   "Multivalued variable" should {
-    implicit val variable = new InputVariable(InputVariableSpec(refName, refDescription,
-      multivalued = true))
-    variable.values = listValue.split(";")
+    val variable = InputVariable(InputVariableSpec(refName, refDescription, multivalued = true), Seq())
+    implicit val v = variable.copyWithSavedValues(listValue.split(";"))
 
     haveName()
     haveDescription()
@@ -172,9 +173,8 @@ class VariableTest extends Specification {
   }
 
   "Select variable" should {
-    implicit val variable = new SelectVariable(SelectVariableSpec(refName, refDescription,
-      valueslabels = refItem))
-    variable.saveValue(refValue)
+    val variable = SelectVariable(SelectVariableSpec(refName, refDescription, valueslabels = refItem), Seq())
+    implicit val v = variable.copyWithSavedValue(refValue)
 
     haveName()
     haveDescription()
@@ -182,8 +182,8 @@ class VariableTest extends Specification {
   }
 
   "Input variable" should {
-    implicit val variable = new InputVariable(InputVariableSpec(refName, refDescription))
-    variable.saveValue(refValue)
+    val variable = InputVariable(InputVariableSpec(refName, refDescription), Seq())
+    implicit val v = variable.copyWithSavedValue(refValue)
 
     haveName()
     haveDescription()
@@ -191,8 +191,8 @@ class VariableTest extends Specification {
   }
 
   "Nulled variable" should {
-    implicit val variable = new InputVariable(InputVariableSpec(refName, refDescription))
-    variable.saveValue(null)
+    val variable = InputVariable(InputVariableSpec(refName, refDescription), Seq())
+    implicit val v = variable.copyWithSavedValue(null)
 
     haveName()
     haveDescription()
@@ -200,8 +200,8 @@ class VariableTest extends Specification {
   }
 
   "Valid variable" should {
-    implicit val variable = new InputVariable(InputVariableSpec(refName, refDescription))
-    variable.saveValue(refValue)
+    val variable = InputVariable(InputVariableSpec(refName, refDescription), Seq())
+    implicit val v = variable.copyWithSavedValue(refValue)
 
     haveName()
     haveDescription()
@@ -209,29 +209,29 @@ class VariableTest extends Specification {
   }
 
   "Boolean variable" should {
-    implicit val variable = new InputVariable(InputVariableSpec(refName, refDescription,
-      constraint = Constraint(BooleanVType)))
+    val variable = InputVariable(InputVariableSpec(refName, refDescription,
+      constraint = Constraint(BooleanVType)), Seq())
 
-    variable.saveValue("true")
+    implicit val v = variable.copyWithSavedValue("true")
     haveName()
     haveDescription()
     haveValue(true)
   }
 
   "Boolean variable" should {
-    implicit val variable = new InputVariable(InputVariableSpec(refName, refDescription,
-      constraint = Constraint(BooleanVType)))
+    val variable = InputVariable(InputVariableSpec(refName, refDescription,
+      constraint = Constraint(BooleanVType)), Seq())
 
-    variable.saveValue("false")
+    implicit val v = variable.copyWithSavedValue("false")
     haveValue(false)
   }
 
   "Invalid variable" should {
     implicit val variable = new SelectVariable(SelectVariableSpec(refName, refDescription,
-      valueslabels = refItem))
+      valueslabels = refItem), Seq())
 
     "throw a VariableException" in {
-      variable.saveValue(unvalidValue) must throwA[VariableException]
+      variable.copyWithSavedValue(unvalidValue) must throwA[VariableException]
     }
 
     haveName()
@@ -250,23 +250,34 @@ class VariableTest extends Specification {
     beASelect(constrainedVariable)
   }
 
+  "Variable with default" should {
+    implicit val v = variables(withDefault)
+
+    haveName(withDefault)
+    haveDescription("Simple variable with default")
+    haveValue(defaultValue)
+  }
+
   "Date variable" should {
     implicit val dateVariable = variables(varDate)
     beAnInput
     haveType("datetime")
 
-    dateVariable.saveValue(dateValue)
-    haveValue(ISODateTimeFormat.dateTimeParser.parseDateTime(dateValue))
+    haveValue(ISODateTimeFormat.dateTimeParser.parseDateTime(dateValue))(dateVariable.copyWithSavedValue(dateValue))
   }
 
   "Parsed variable having unvalid value" should {
     implicit val constrainedVariable = variables(itemName)
 
     "throw a VariableException" in {
-      constrainedVariable.saveValue(unvalidValue) must throwA[VariableException]
+      constrainedVariable.copyWithSavedValue(unvalidValue) must throwA[VariableException]
     }
 
-    haveValue()
+    //I *DO* think that that value should not have any values.
+    //In the past, it used to have, because the variable was stateful and was
+    //set in "Parsed variable", but there is no reason to be the case.
+
+    //haveValue()
   }
 
   "varlist" should {
@@ -279,15 +290,13 @@ class VariableTest extends Specification {
   "Raw variable" should {
     implicit val rawVariable = variables(rawVar)
     haveType("raw")
-    rawVariable.saveValue(rawValue)
-    rawVariable.getTypedValues.openOrThrowException("Invalid content for the raw variable") must containTheSameElementsAs(Seq(rawValue))
+    rawVariable.copyWithSavedValue(rawValue).getTypedValues.openOrThrowException("Invalid content for the raw variable") must containTheSameElementsAs(Seq(rawValue))
   }
 
   "Simple variable " should {
     implicit val simpleVariable = variables(simpleName)
     haveType("string")
-    simpleVariable.saveValue(rawValue)
-    simpleVariable.getTypedValues.openOrThrowException("Invalid content for the escaped variable") must containTheSameElementsAs(Seq(escapedTo))
+    simpleVariable.copyWithSavedValue(rawValue).getTypedValues.openOrThrowException("Invalid content for the escaped variable") must containTheSameElementsAs(Seq(escapedTo))
   }
 
   "select 1" should {
@@ -480,8 +489,7 @@ class VariableTest extends Specification {
   }
 
   private[this] def saveHaveValue(value: String = refValue)(implicit variable: Variable) = {
-    variable.saveValue(value)
-    haveValue(value)
+    haveValue(value)(variable.copyWithSavedValue(value))
   }
 
   private[this] def haveNbValues(nbValues: Int)(implicit variable: Variable) = {
