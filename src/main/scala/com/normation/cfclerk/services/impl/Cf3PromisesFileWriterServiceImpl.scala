@@ -198,7 +198,7 @@ class Cf3PromisesFileWriterServiceImpl(
   private[this] def getGenerationVariable() : Seq[STVariable]= {
     // compute the generation timestamp
     val promiseGenerationTimestamp = DateTime.now()
-    
+
     Seq(STVariable(generationTimestampVariable, false, Seq(promiseGenerationTimestamp)))
   }
 
@@ -275,17 +275,15 @@ class Cf3PromisesFileWriterServiceImpl(
     Map[String, Variable](
         // Add the built in values for the files to be included and the bundle to be executed
         {
-          val variable = SystemVariable(systemVariableSpecService.get("INPUTLIST"))
-          variable.saveValue(inputs.distinct.mkString("\"", "\",\"", "\""))
+          val variable = SystemVariable(systemVariableSpecService.get("INPUTLIST"), Seq(inputs.distinct.mkString("\"", "\",\"", "\"")))
           (variable.spec.name, variable)
         }
       , {
           val bundleSet = policies.flatMap(x => x.bundlesequence.map(x =>x.name))
-          val variable = SystemVariable(systemVariableSpecService.get("BUNDLELIST"))
-          val value = bundleSet.mkString("\"", "\",\"", "\"")
+          val variable = SystemVariable(systemVariableSpecService.get("BUNDLELIST"), Seq(bundleSet.mkString(", \"", "\",\"", "\"")))
 
-          if(value.length == 0) variable.saveValue(value)
-          else variable.saveValue(", " + value)
+//          if(value.length == 0) variable.saveValue(value)
+//          else variable.saveValue(", " + value)
 
           (variable.spec.name, variable)
         }
@@ -383,45 +381,40 @@ class Cf3PromisesFileWriterServiceImpl(
 
         cf3PolicyDraftVariables.get(directiveVariable.spec.name) match {
           case None =>
-              directiveVariable.values = scala.collection.mutable.Buffer[String]()
-              cf3PolicyDraftVariables.put(directiveVariable.spec.name, directiveVariable)
+              //directiveVariable.values = scala.collection.mutable.Buffer[String]()
+              cf3PolicyDraftVariables.put(directiveVariable.spec.name, directiveVariable.copy(values = Seq()))
           case Some(x) => // value is already there
         }
 
-        if (technique.isMultiInstance) {
-         // Only multiinstance policy may have a policyinstancevariable with high cardinal
-          var i = 0;
-          while (i < boundingVariable.getValuesLength) {
-            cf3PolicyDraftVariables(directiveVariable.spec.name).appendValues(Seq(createValue(cf3PolicyDraft)))
-            i += 1
-          }
-        } else {
-          cf3PolicyDraftVariables(directiveVariable.spec.name).appendValues(Seq(createValue(cf3PolicyDraft)))
-        }
+        // Only multi-instance policy may have a policyinstancevariable with high cardinal
+        val size = if (technique.isMultiInstance) { boundingVariable.values.size } else { 1 }
+        val values = Seq.fill(size)(createValue(cf3PolicyDraft))
+        val variable = cf3PolicyDraftVariables(directiveVariable.spec.name).copyWithAppendedValues(values)
+        cf3PolicyDraftVariables(directiveVariable.spec.name) = variable
 
         // All other variables now
         for (variable <- cf3PolicyDraft.getVariables) {
           variable._2 match {
             case newVar: TrackerVariable => // nothing, it's been dealt with already
             case newVar: Variable =>
-            if ((!newVar.spec.checked) || (newVar.spec.isSystem)) {} else { // Only user defined variables should need to be agregated
-              cf3PolicyDraftVariables.get(newVar.spec.name) match {
-                    case None =>
-                      cf3PolicyDraftVariables.put(newVar.spec.name, Variable.matchCopy(newVar, setMultivalued = true)) //asIntance is ok here, I believe
-                    case Some(existingVariable) => // value is already there
-                      // hope it is multivalued, otherwise BAD THINGS will happen
-                      if (!existingVariable.spec.multivalued) {
-                        logger.warn("Attempt to append value into a non multivalued variable, bad things may happen")
-                      }
-                      existingVariable.appendValues(newVar.values)
-
-                  }
+              if ((!newVar.spec.checked) || (newVar.spec.isSystem)) {} else { // Only user defined variables should need to be agregated
+                val variable = cf3PolicyDraftVariables.get(newVar.spec.name) match {
+                  case None =>
+                    Variable.matchCopy(newVar, setMultivalued = true) //asIntance is ok here, I believe
+                  case Some(existingVariable) => // value is already there
+                    // hope it is multivalued, otherwise BAD THINGS will happen
+                    if (!existingVariable.spec.multivalued) {
+                      logger.warn("Attempt to append value into a non multivalued variable, bad things may happen")
+                    }
+                    existingVariable.copyWithAppendedValues(newVar.values)
                 }
-            }
+                cf3PolicyDraftVariables.put(newVar.spec.name, variable)
+              }
           }
         }
-        (activeTechniqueId, cf3PolicyDraftVariables.toMap)
-      }).toMap
+      }
+      (activeTechniqueId, cf3PolicyDraftVariables.toMap)
+    }).toMap
   }
 
 }

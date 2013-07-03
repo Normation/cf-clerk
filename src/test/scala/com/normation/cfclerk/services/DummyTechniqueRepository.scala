@@ -84,6 +84,8 @@ class DummyTechniqueRepository(policies: Seq[Technique] = Seq()) extends Techniq
     policyMap.get(TechniqueId(policyName, TechniqueVersion("1.0")))
   }
 
+  def getByName(policyName: TechniqueName) = ???
+
 //  def getVariables(policyName: TechniqueId, includeSystemVar: Boolean = false): Seq[VariableSpec] =
 //    policyName.name.value match {
 //      case "policy1" =>

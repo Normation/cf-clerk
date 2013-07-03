@@ -34,14 +34,12 @@
 
 package com.normation.cfclerk.domain
 
-import scala.collection._
 import com.normation.cfclerk.exceptions._
 import scala.xml._
 import org.joda.time._
 import org.joda.time.format._
 import com.normation.utils.XmlUtils._
 import net.liftweb.common._
-import mutable.Buffer
 import com.normation.utils.Control.bestEffort
 import com.normation.utils.HashcodeCaching
 
@@ -66,23 +64,18 @@ sealed trait Variable extends Loggable {
 
   override def clone = Variable.matchCopy(this)
 
-  // selected values
-  protected val defaultValues: Seq[String] // override in subclasses
-  protected val internalValues: Buffer[String] = defaultValues.toBuffer // this is the internal representation of the data
+  def values: Seq[String]  // this is the internal representation of the data
 
-  override def toString() = "%s %s : %s".format(spec.name, spec.description, internalValues)
+  override def toString() = Variable.format(spec.name, values)
 
   /**
    * *********************************
    * new variable part
    */
 
-  def values: Seq[String] = internalValues.toSeq
-  def values_=(x: Seq[String]) = saveValues(x)
-
 
   def getTypedValues(): Box[Seq[Any]] = {
-    bestEffort(internalValues) { x =>
+    bestEffort(values) { x =>
       castValue(x)
     }
   }
@@ -91,21 +84,40 @@ sealed trait Variable extends Loggable {
 
   /**
    * Only deals with the first entry
+   *
+   * That method return the new values for the variables
    */
-  def saveValue(s: String): Unit = {
+  protected def copyWithSavedValueResult(s: String): Seq[String] = {
     spec match {
       case vl: ValueLabelVariableSpec =>
           if (!(vl.valueslabels.map(x => x.value).contains(s)))
             throw new VariableException("Wrong value for variable " + vl.name + "  : " + s)
       case _ => //OK
     }
-    Variable.setUniqueValue(this, s)
+
+    if (s != null) {
+      if (!this.spec.checked) {
+        //set values(0) to s
+        Seq(s) ++ values.tail
+      } else if(Variable.checkValue(this, s)) {
+        if (this.values.size > 0)
+          Seq(s) ++ values.tail
+        else
+          Seq(s)
+      } else {
+        this.values
+      }
+    } else {
+      this.values
+    }
+
   }
+
 
   /**
    * Save the whole seq as value
    */
-  def saveValues(seq: Seq[String]): Unit = {
+  def copyWithSavedValuesResult(seq: Seq[String]): Seq[String] = {
     spec match {
       case vl: ValueLabelVariableSpec =>
         if ((null != vl.valueslabels) && (vl.valueslabels.size > 0)) {
@@ -115,13 +127,27 @@ sealed trait Variable extends Loggable {
         }
       case _ =>
     }
-    Variable.setValues(this, seq)
+
+    if(seq != null) {
+      if (!this.spec.checked) {
+        seq
+      } else if (!this.spec.multivalued && values.size > 1) {
+        throw new VariableException("Wrong variable length for " + this.spec.name)
+      } else if (values.map(x => Variable.checkValue(this, x)).contains(false)) {
+        throw new VariableException("Wrong variable value for " + this.spec.name) // this should really not be thrown
+      } else {
+        seq
+      }
+    } else {
+      //change nothing
+      this.values
+    }
   }
 
   /**
    * Append the seq to the values
    */
-  def appendValues(seq: Seq[String]): Unit = {
+  protected def copyWithAppendedValuesResult(seq: Seq[String]): Seq[String] = {
     spec match {
       case vl: ValueLabelVariableSpec =>
         if ((null != vl.valueslabels) && (vl.valueslabels.size > 0)) {
@@ -131,12 +157,26 @@ sealed trait Variable extends Loggable {
         }
       case _ =>
     }
-    Variable.appendValues(this, seq)
+
+    if (seq != null) {
+      if (!this.spec.checked) {
+        this.values ++ seq
+      } else if (!this.spec.multivalued && (seq.size + this.values.size) > 1) {
+        throw new VariableException("Wrong variable length for " + this.spec.name)
+      } else if (values.map(x => Variable.checkValue(this, x)).contains(false)) {
+        throw new VariableException("Wrong variable value for " + this.spec.name) // this should really not be thrown
+      } else {
+        this.values ++ seq
+      }
+    } else {
+      this.values
+    }
   }
 
-  def getValuesLength() = {
-    internalValues.size
-  }
+
+  def copyWithSavedValue(s: String) : Variable
+  def copyWithSavedValues(seq: Seq[String]): Variable
+  def copyWithAppendedValues(seq: Seq[String]): Variable
 
 
   protected def castValue(x: String) : Box[Any] = {
@@ -148,39 +188,74 @@ sealed trait Variable extends Loggable {
 }
 
 case class SystemVariable(
-  override val spec: SystemVariableSpec,
-  protected val defaultValues: Seq[String] = Seq()) extends Variable with HashcodeCaching {
+    override val spec: SystemVariableSpec
+  , override val values: Seq[String]
+) extends Variable with HashcodeCaching {
   type T = SystemVariableSpec
+  override def copyWithAppendedValues(seq: Seq[String]): SystemVariable = this.copy(values = this.copyWithAppendedValuesResult(seq))
+  override def copyWithSavedValue(s: String): SystemVariable = this.copy(values = this.copyWithSavedValueResult(s))
+  override def copyWithSavedValues(seq: Seq[String]): SystemVariable = this.copy(values = this.copyWithSavedValuesResult(seq))
 }
 
 case class TrackerVariable(
-  override val spec: TrackerVariableSpec,
-  protected val defaultValues: Seq[String] = Seq()) extends Variable with HashcodeCaching {
+    override val spec: TrackerVariableSpec
+  , override val values: Seq[String]
+) extends Variable with HashcodeCaching {
   type T = TrackerVariableSpec
+  override def copyWithAppendedValues(seq: Seq[String]): TrackerVariable = this.copy(values = this.copyWithAppendedValuesResult(seq))
+  override def copyWithSavedValue(s: String): TrackerVariable = this.copy(values = this.copyWithSavedValueResult(s))
+  override def copyWithSavedValues(seq: Seq[String]): TrackerVariable = this.copy(values = this.copyWithSavedValuesResult(seq))
 }
 
 trait SectionVariable extends Variable with SectionChild
 
 case class InputVariable(
-  override val spec: InputVariableSpec,
-  protected val defaultValues: Seq[String] = Seq()) extends SectionVariable with HashcodeCaching {
+    override val spec: InputVariableSpec
+  , override val values: Seq[String]
+) extends SectionVariable with HashcodeCaching {
   type T = InputVariableSpec
+  override def copyWithAppendedValues(seq: Seq[String]): InputVariable = this.copy(values = this.copyWithAppendedValuesResult(seq))
+  override def copyWithSavedValue(s: String): InputVariable = this.copy(values = this.copyWithSavedValueResult(s))
+  override def copyWithSavedValues(seq: Seq[String]): InputVariable = this.copy(values = this.copyWithSavedValuesResult(seq))
 }
 
 case class SelectVariable(
-  override val spec: SelectVariableSpec,
-  protected val defaultValues: Seq[String] = Seq()) extends SectionVariable with HashcodeCaching {
+    override val spec: SelectVariableSpec
+  , override val values: Seq[String]
+) extends SectionVariable with HashcodeCaching {
   type T = SelectVariableSpec
+  override def copyWithAppendedValues(seq: Seq[String]): SelectVariable = this.copy(values = this.copyWithAppendedValuesResult(seq))
+  override def copyWithSavedValue(s: String): SelectVariable = this.copy(values = this.copyWithSavedValueResult(s))
+  override def copyWithSavedValues(seq: Seq[String]): SelectVariable = this.copy(values = this.copyWithSavedValuesResult(seq))
 }
 
 case class SelectOneVariable(
-  override val spec: SelectOneVariableSpec,
-  protected val defaultValues: Seq[String] = Seq()) extends SectionVariable with HashcodeCaching {
+    override val spec: SelectOneVariableSpec
+  , override val values: Seq[String]
+) extends SectionVariable with HashcodeCaching {
   type T = SelectOneVariableSpec
+  override def copyWithAppendedValues(seq: Seq[String]): SelectOneVariable = this.copy(values = this.copyWithAppendedValuesResult(seq))
+  override def copyWithSavedValue(s: String): SelectOneVariable = this.copy(values = this.copyWithSavedValueResult(s))
+  override def copyWithSavedValues(seq: Seq[String]): SelectOneVariable = this.copy(values = this.copyWithSavedValuesResult(seq))
 }
 
 
 object Variable {
+
+  def format(name: String, values:Seq[String]) = {
+    //we only want to see the values if:
+    //- they start with a ${}, because it's a replacement
+    //- else, only 'limit' chars at most, with "..." if longer
+    val limit = 20
+    val vs = values.map( v =>
+      if(v.startsWith("${")) v
+      else if(v.size < limit) v
+      else v.take(limit) + "..."
+    ).mkString("[", ", ", "]")
+    s"${name}: ${vs}"
+  }
+
+
   // define our own alternatives of matchCopy because we want v.values to be the default
   // values
   def matchCopy(v: Variable): Variable = matchCopy(v, false)
@@ -188,33 +263,32 @@ object Variable {
 
   def matchCopy(v: Variable, values: Seq[String], setMultivalued: Boolean = false): Variable = {
 
-    val bVals = values.toBuffer
     v match {
       case iv: InputVariable =>
         val newSpec = if (setMultivalued) iv.spec.cloneSetMultivalued else iv.spec
-        iv.copy(defaultValues = bVals, spec = newSpec)
+        iv.copy(values = values, spec = newSpec)
       case sv: SelectVariable =>
         val newSpec = if (setMultivalued) sv.spec.cloneSetMultivalued else sv.spec
-        sv.copy(defaultValues = bVals, spec = newSpec)
+        sv.copy(values = values, spec = newSpec)
       case s1v: SelectOneVariable =>
         val newSpec = if (setMultivalued) s1v.spec.cloneSetMultivalued else s1v.spec
-        s1v.copy(defaultValues = bVals, spec = newSpec)
+        s1v.copy(values = values, spec = newSpec)
       case systemV: SystemVariable =>
         val newSpec = if (setMultivalued) systemV.spec.cloneSetMultivalued else systemV.spec
-        systemV.copy(defaultValues = bVals, spec = newSpec)
+        systemV.copy(values = values, spec = newSpec)
       case directive: TrackerVariable =>
         val newSpec = if (setMultivalued) directive.spec.cloneSetMultivalued else directive.spec
-        directive.copy(defaultValues = bVals, spec = newSpec)
+        directive.copy(values = values, spec = newSpec)
       case x:SectionVariable => x
     }
   }
 
-  def variableParsing(variable: Variable, elt: Node): Unit = {
-    variable.internalValues ++= valuesParsing((elt \ "internalValues"))
+  def variableParsing(variable: Variable, elt: Node): Seq[String] = {
+    variable.values ++ valuesParsing((elt \ "internalValues"))
   }
 
   private def valuesParsing(elt: NodeSeq): Seq[String] = {
-    val returnedValue = mutable.Buffer[String]()
+    val returnedValue = collection.mutable.Buffer[String]()
     for (value <- elt \ "value") {
       returnedValue += value.text
     }
@@ -224,55 +298,55 @@ object Variable {
   /**
    * Set the first value
    */
-  def setUniqueValue(variable: Variable, value: String): Unit = {
-    if (value != null) {
-
-      if (!variable.spec.checked) {
-        variable.internalValues(0) = value
-      } else if (checkValue(variable, value)) {
-        if (variable.internalValues.size > 0)
-          variable.internalValues(0) = value
-        else
-          variable.internalValues += value
-      }
-    }
-  }
+//  def setUniqueValue(variable: Variable, value: String): Unit = {
+//    if (value != null) {
+//
+//      if (!variable.spec.checked) {
+//        variable.internalValues(0) = value
+//      } else if (checkValue(variable, value)) {
+//        if (variable.internalValues.size > 0)
+//          variable.internalValues(0) = value
+//        else
+//          variable.internalValues += value
+//      }
+//    }
+//  }
 
   /**
    * Replace all values with the ones in argument
    */
-  def setValues(variable: Variable, values: Seq[String]): Unit = {
-    if (values != null) {
-      if (!variable.spec.checked) {
-        variable.internalValues.clear
-        variable.internalValues ++= values
-      } else if (!variable.spec.multivalued && values.size > 1) {
-        throw new VariableException("Wrong variable length for " + variable.spec.name)
-      } else if (values.map(x => checkValue(variable, x)).contains(false)) {
-        throw new VariableException("Wrong variable value for " + variable.spec.name) // this should really not be thrown
-      } else {
-        variable.internalValues.clear
-        variable.internalValues ++= values
-      }
-    }
-  }
+//  def setValues(variable: Variable, values: Seq[String]): Unit = {
+//    if (values != null) {
+//      if (!variable.spec.checked) {
+//        variable.internalValues.clear
+//        variable.internalValues ++= values
+//      } else if (!variable.spec.multivalued && values.size > 1) {
+//        throw new VariableException("Wrong variable length for " + variable.spec.name)
+//      } else if (values.map(x => checkValue(variable, x)).contains(false)) {
+//        throw new VariableException("Wrong variable value for " + variable.spec.name) // this should really not be thrown
+//      } else {
+//        variable.internalValues.clear
+//        variable.internalValues ++= values
+//      }
+//    }
+//  }
 
   /**
    * Append values in argument to the value list
    */
-  def appendValues(variable: Variable, values: Seq[String]): Unit = {
-    if (values != null) {
-      if (!variable.spec.checked) {
-        variable.internalValues ++= values
-      } else if (!variable.spec.multivalued && (values.size + variable.internalValues.size) > 1) {
-        throw new VariableException("Wrong variable length for " + variable.spec.name)
-      } else if (values.map(x => checkValue(variable, x)).contains(false)) {
-        throw new VariableException("Wrong variable value for " + variable.spec.name) // this should really not be thrown
-      } else {
-        variable.internalValues ++= values
-      }
-    }
-  }
+//  def copyWithAppendedValues(variable: Variable, values: Seq[String]): Unit = {
+//    if (values != null) {
+//      if (!variable.spec.checked) {
+//        variable.internalValues ++= values
+//      } else if (!variable.spec.multivalued && (values.size + variable.internalValues.size) > 1) {
+//        throw new VariableException("Wrong variable length for " + variable.spec.name)
+//      } else if (values.map(x => checkValue(variable, x)).contains(false)) {
+//        throw new VariableException("Wrong variable value for " + variable.spec.name) // this should really not be thrown
+//      } else {
+//        variable.internalValues ++= values
+//      }
+//    }
+//  }
 
   /**
    * Check the value we intend to put in the variable

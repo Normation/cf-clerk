@@ -94,10 +94,10 @@ class Cf3PolicyDraftContainerServiceImpl(
       return ParamFailure[Cf3PolicyDraft]("Duplicate CF3 Policy Draft", Full(new TechniqueException("Duplicate CF3 Policy Draft " +cf3PolicyDraft.id)), Empty, cf3PolicyDraft)
     }
 
-    val policy = techniqueRepository.get(cf3PolicyDraft.techniqueId).getOrElse(return Failure("Error, can not find CF3 Policy Draft with name '%s' with CF3 Policy Draft service".format(cf3PolicyDraft.techniqueId)))
-    if (container.findById(cf3PolicyDraft.techniqueId).filter(x => policy.isMultiInstance==false).size>0) {
-      logger.warn("Cannot add a CF3 Policy Draft from the same non duplicable policy than an already existing one " + cf3PolicyDraft.techniqueId)
-      return ParamFailure[Cf3PolicyDraft]("Duplicate unique policy", Full(new TechniqueException("Duplicate unique policy " +cf3PolicyDraft.techniqueId)), Empty, cf3PolicyDraft)
+    val policy = cf3PolicyDraft.technique
+    if (container.findById(cf3PolicyDraft.technique.id).filter(x => policy.isMultiInstance==false).size>0) {
+      logger.warn("Cannot add a CF3 Policy Draft from the same non duplicable policy than an already existing one " + cf3PolicyDraft.technique.id)
+      return ParamFailure[Cf3PolicyDraft]("Duplicate unique policy", Full(new TechniqueException("Duplicate unique policy " +cf3PolicyDraft.technique.id)), Empty, cf3PolicyDraft)
     }
 
     container.add(cf3PolicyDraft) flatMap { cf3pd =>

@@ -143,6 +143,10 @@ class TechniqueRepositoryImpl(
     SortedSet[TechniqueVersion]() ++ techniqueInfosCache.techniques.get(name).toSeq.flatMap(_.keySet)
   }
 
+  override def getByName(name:TechniqueName) : Map[TechniqueVersion, Technique] = {
+    techniqueInfosCache.techniques.get(name).toSeq.flatten.toMap
+  }
+
   /**
    * Retrieve the list of policies corresponding to the ids
    * @param techniqueIds : identifiers of the policies

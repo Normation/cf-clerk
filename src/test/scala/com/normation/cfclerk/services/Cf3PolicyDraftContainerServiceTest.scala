@@ -64,29 +64,28 @@ class Cf3PolicyDraftContainerServiceTest {
 
   var policy2 : Cf3PolicyDraft = null
 
+  def newTechnique(id: TechniqueId) = Technique(id, "tech" + id, "", Seq(), Seq(), TrackerVariableSpec(), SectionSpec("plop"), Set(), None)
+
   def config() {
 
-    val variable1 = new InputVariable(InputVariableSpec("$variable1", "description"))
-    variable1.values = Seq("var1")
-    val variable2 = new InputVariable(InputVariableSpec("$variable2", "description"))
-    variable2.values = Seq("var2")
-    val variable22 = new InputVariable(InputVariableSpec("$variable22", "description"))
-    variable22.values = Seq("var22")
+    val variable1 = new InputVariable(InputVariableSpec("$variable1", "description"), Seq("var1"))
+    val variable2 = new InputVariable(InputVariableSpec("$variable2", "description"), Seq("var2"))
+    val variable22 = new InputVariable(InputVariableSpec("$variable22", "description"), Seq("var22"))
 
-    policy1 = new Cf3PolicyDraft(
+    policy1 = Cf3PolicyDraft(
     		new Cf3PolicyDraftId("uuid1"),
-    		TechniqueId(TechniqueName("policy1"), TechniqueVersion("1.0")),
+    		newTechnique(TechniqueId(TechniqueName("policy1"), TechniqueVersion("1.0"))),
     		Map[String, Variable](variable1.spec.name -> variable1),
-    		TrackerVariable(TrackerVariableSpec()),
+    		TrackerVariable(TrackerVariableSpec(), Seq()),
     		priority =0,
     		serial = 0
     )
 
-    policy2 = new Cf3PolicyDraft(
+    policy2 = Cf3PolicyDraft(
     		new Cf3PolicyDraftId("uuid2"),
-    		TechniqueId(TechniqueName("policy2"), TechniqueVersion("1.0")),
+    		newTechnique(TechniqueId(TechniqueName("policy2"), TechniqueVersion("1.0"))),
     		Map[String, Variable](variable2.spec.name -> variable2, variable22.spec.name -> variable22),
-        TrackerVariable(TrackerVariableSpec()),
+        TrackerVariable(TrackerVariableSpec(), Seq()),
     		priority =0,
     		serial = 0
     )

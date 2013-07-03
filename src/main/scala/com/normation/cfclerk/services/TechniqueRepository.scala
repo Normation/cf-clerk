@@ -99,6 +99,11 @@ trait TechniqueRepository {
    */
   def getTechniqueVersions(name:TechniqueName) : SortedSet[TechniqueVersion]
 
+  /**
+   * Get the list of technique (with their version) for that name
+   */
+  def getByName(name:TechniqueName) : Map[TechniqueVersion, Technique]
+
   ////////////////// method for categories //////////////////
 
   def getTechniqueLibrary: RootTechniqueCategory
