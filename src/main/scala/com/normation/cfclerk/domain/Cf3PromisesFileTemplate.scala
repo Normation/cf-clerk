@@ -67,7 +67,7 @@ object Cf3PromisesFileTemplateId {
 
   def unapply(str:String) : Option[(TechniqueId,String)] = {
     val parts = str.split("/").map(_.replaceAll("""\s""", ""))
-    if(parts.size == 3 && parts(1).size > 0) Some(TechniqueId(TechniqueName(parts(0)), TechniqueVersion(parts(1))),parts(2))
+    if(parts.size == 3 && parts(1).size > 0) Some((TechniqueId(TechniqueName(parts(0)), TechniqueVersion(parts(1))),parts(2)))
     else None
   }
 }

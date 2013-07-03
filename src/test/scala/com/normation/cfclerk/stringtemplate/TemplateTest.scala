@@ -133,8 +133,7 @@ class TemplateTest {
     val vared = new StringTemplate("&date;format=\"cfengine_datetime\"&", classOf[NormationAmpersandTemplateLexer]);
     val date =ISODateTimeFormat.dateTimeParser.parseDateTime("2010-01-24T21:28:32.309+01:00")
 
-    val variable = new InputVariable(InputVariableSpec("date", "this is a native date object", constraint = Constraint(DateTimeVType())))
-    variable.saveValue(date.toString)
+    val variable = InputVariable(InputVariableSpec("date", "this is a native date object", constraint = Constraint(DateTimeVType())), Seq(date.toString))
 
     vared.setAttribute("date", variable.getTypedValues.get.head)
     val dateRenderer = new DateRenderer()

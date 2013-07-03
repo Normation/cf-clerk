@@ -35,7 +35,6 @@
 package com.normation.cfclerk.domain
 
 
-import scala.collection._
 import com.normation.cfclerk.exceptions.NotFoundException
 import org.joda.time.DateTime
 import org.joda.time.format._
@@ -63,124 +62,129 @@ case class Cf3PolicyDraftId(value: String) extends HashcodeCaching
  * that will hold the id of the directive to be written in the template
  *
  */
-class Cf3PolicyDraft(
-    val id: Cf3PolicyDraftId
-  , val techniqueId: TechniqueId
-  , val __variableMap: Map[String, Variable]
-  , val trackerVariable : TrackerVariable
-  , val priority: Int
-  , val serial: Int
+final case class Cf3PolicyDraft(
+    id              : Cf3PolicyDraftId
+  , technique       : Technique
+  , variableMap     : Map[String, Variable]
+  , trackerVariable : TrackerVariable
+  , priority        : Int
+  , serial          : Int
+  , modificationDate: DateTime = DateTime.now
 ) extends Loggable {
-
-  // TODO : do we want to keep this ?
-  private var _modificationDate: DateTime = DateTime.now()
-  private val variableMap: mutable.Map[String, Variable] = mutable.Map[String, Variable]() ++ __variableMap
-
-  private def updateConftime() {
-    _modificationDate = DateTime.now()
-  }
-
-  def modificationDate = _modificationDate
-
-  /**
-   * Add (or update) a Variable in the list of expected variable
-   * Return the new value if it is added/updated, usefull for loging modification
-   * If the variable value is null or "", then the variable will NOT be removed from the map
-   * @param variable
-   * @return None if the variable wasn't changed, Some(variable) otherwise.
-   */
-  def setVariable(variable: Variable): Option[Variable] = {
-    variableMap.get(variable.spec.name) match {
-      case None => variableMap += (variable.spec.name -> variable.clone); updateConftime; Some(variable.clone)
-      case Some(value) => if (variable.values != value.values) {
-        variableMap += (variable.spec.name -> variable.clone);
-        updateConftime
-        Some(variable.clone)
-      } else {
-        None
-      }
-    }
-  }
-
-  def getVariable(key: String): Option[Variable] = {
-    variableMap.get(key) match {
-      case None => None
-      case Some(x) => Some(x.clone)
-    }
-  }
-
-  /**
-   * Return a map of all the variable
-   * @return
-   */
-  def getVariables(): Map[String, Variable] = {
-    variableMap.map(x => (x._1, x._2.clone))
-  }
 
   /**
    * Return a map of all the non system variable
    * @return
    */
-  def getNonSystemVariables(): Map[String, Variable] = {
-    variableMap.filter(_._2.spec.isSystem).map(x => (x._1, x._2.clone))
-  }
+  val getNonSystemVariables: Map[String, Variable] = variableMap.filterNot(_._2.spec.isSystem)
+
+  val getUniqueVariables: Map[String, Variable] = variableMap.filter( _._2.spec.isUniqueVariable)
 
   /**
-   * Add a Variable in the list of expected variable
+   * Return a new Cf3PolicyDraft with a Variable in the list of expected variable
    * If the variable value is empty, then the variable will be removed from the map
    * @param variable : Two strings
    */
-  def addVariable(variable: Variable) = {
+  def copyWithAddedVariable(variable: Variable) : Cf3PolicyDraft = {
     // check the the value is not null or empty
     if (variable.values.size == 0) {
-      removeVariable(variable.spec.name)
+      copyWithRemovedVariable(variable.spec.name)
     } else {
-      setVariable(variable)
+      copyWithSetVariable(variable)
     }
   }
 
-  def removeVariable(key: String) = {
-    variableMap -= key
-    updateConftime
+  def copyWithRemovedVariable(key: String) : Cf3PolicyDraft = this.copy(variableMap = variableMap - key, modificationDate = DateTime.now)
+
+  /**
+   * Add (or update) a Variable in the list of expected variable
+   * Return the new Cf3PolicyDraft
+   * If the variable value is null or "", then the variable will NOT be removed from the map
+   * (nothing is done)
+   */
+  def copyWithSetVariable(variable: Variable) : Cf3PolicyDraft = {
+    copyWithSetVariables(Seq(variable))
   }
+
+  /**
+   * Add or update a list of variable. For each variable, if
+   * - the variable is not already in current variable, it is added
+   * - if the variable is already in the list, then its values are set the
+   *   the seq of given value, **even if variable values is null or ""**
+   * So with that method, we always have the size of the new variablesMap
+   * greater than before the method is called.
+   */
+  def copyWithSetVariables(variables:Seq[Variable]) : Cf3PolicyDraft = {
+    val newVariables = (for {
+      variable <- variables
+    } yield {
+      variableMap.get(variable.spec.name) match {
+        case None => Some(variable)
+        case Some(values) => if(values == variable.values) None else Some(variable)
+      }
+    }).flatten.map(x => (x.spec.name, x)).toMap
+
+    if(newVariables.isEmpty) {
+      this
+    } else {
+      this.copy(
+          modificationDate = DateTime.now
+          //update variable, overriding existing one with the some name and different values
+        , variableMap = variableMap ++ newVariables
+      )
+    }
+  }
+
+
+  def getVariable(key: String): Option[Variable] = variableMap.get(key)
+
+  /**
+   * Return a map of all the variable
+   * @return
+   */
+  def getVariables(): Map[String, Variable] = variableMap
+
+
+  /**
+   * Update all unique variable of the Cf3PolicyDraft in the map
+   * with the values of that one.
+   * We don't add new unique variable, just update values
+   * of existing ones.
+   *
+   * Return the map of Cf3PolicyDraft with updated variables.
+   */
+  def updateAllUniqueVariables(policies: Seq[Cf3PolicyDraft]) : Seq[Cf3PolicyDraft] = {
+    /*
+     * For each existing cf3PolicyDraft, we want to update only its existing
+     * unique variable with the new values, not add new ones.
+     */
+    policies.map { policy =>
+      policy.copyWithSetVariables(this.getUniqueVariables.collect {
+        case(vid, v) if(policy.variableMap.keySet.contains(vid)) => v
+      }.toSeq )
+    }
+  }
+
 
   /**
    * Update a policy based on another policy. It will check for var to remove and add, and update the time accordingly
    * Does not check for systemvar.
    *
-   * Returned the diff
+   * So it actually return a Cf3PolicyDraft with the non-system variable of "other"
+   * and an updated time if they are not the same
+   *
    */
-  def updateCf3PolicyDraft(other: Cf3PolicyDraft): ModifyCf3PolicyDraftDiff = {
-    if (this.id != other.id)
-      throw new Exception("the identifiers for the update don't match")
-
-    val varToRemove = mutable.Map[String, Seq[String]]() // the variable in the old, but not in the new
-    val varToAdd = mutable.Map[String, Seq[String]]() // the variable only in the new
-    val varToUpdate = mutable.Map[String, Seq[String]]() // the variable in both, but changed
-
-    for (variable <- getNonSystemVariables) {
-      if (other.getVariable(variable._1) == None) {
-        varToRemove += variable._1 -> variable._2.values
+  def updateCf3PolicyDraft(other: Cf3PolicyDraft): Box[Cf3PolicyDraft] = {
+    if (this.id != other.id) {
+      Failure(s"Can not update variable of policy with id ${this.id} with variable with an other policy, but policy with id ${other.id} was given as parameter")
+    } else {
+      if(this.getNonSystemVariables == other.getNonSystemVariables) {
+        Full(this)
+      } else {
+        val newVariables = this.variableMap.filter( _._2.spec.isSystem ) ++ other.getNonSystemVariables
+        Full(this.copy(variableMap = newVariables, modificationDate = DateTime.now))
       }
     }
-
-    for (variable <- varToRemove) {
-      this.removeVariable(variable._1)
-    }
-
-    for (variable <- other.getNonSystemVariables) {
-      variableMap.get(variable._1) match {
-        case None => variableMap += (variable._1 -> variable._2.clone); updateConftime; varToAdd += (variable._1 -> variable._2.values)
-        case Some(value) => if (variable._2.values != value.values) {
-          variableMap += (variable._1 -> variable._2.clone);
-          updateConftime
-          varToUpdate += (variable._1 -> variable._2.values)
-        }
-      }
-    }
-
-    ModifyCf3PolicyDraftDiff(this.id, varToRemove, varToAdd, varToUpdate)
-
   }
 
   /**
@@ -199,7 +203,7 @@ class Cf3PolicyDraft(
       }
   }
 
-  override lazy val toString = "%s %s".format(id, techniqueId)
+  override lazy val toString = "%s %s".format(id, technique.id)
 
   override lazy val hashCode = 37 * id.hashCode
 
@@ -216,36 +220,14 @@ class Cf3PolicyDraft(
    *
    * @param that
    */
-  def equalsWithSameValues(that: Cf3PolicyDraft): Boolean = {
-    this.id == that.id &&
-      this.techniqueId == that.techniqueId &&
-      this.serial == that.serial &&
-      this.variableMap.filter(x => x._2.values.size > 0).keySet == that.variableMap.filter(x => x._2.values.size > 0).keySet &&
-      variableMap.filter(x => x._2.values.size > 0).keySet.forall { k =>
-        this.variableMap.filter(x => x._2.values.size > 0)(k).values.map(_.trim) == that.variableMap(k).values.map(_.trim)
-      }
-  }
-
-  override def clone(): Cf3PolicyDraft = {
-    val returnedPolicy = new Cf3PolicyDraft(id, techniqueId, Map(), trackerVariable, priority, serial)
-    returnedPolicy.variableMap ++= this.variableMap.map(x => (x._1 -> x._2.clone))
-    returnedPolicy._modificationDate = this._modificationDate
-    returnedPolicy
-  }
-
-  def copy(serial : Int): Cf3PolicyDraft = {
-    val returnedPolicy = new Cf3PolicyDraft(id, techniqueId, Map(), trackerVariable, priority, serial)
-    returnedPolicy.variableMap ++= this.variableMap.map(x => (x._1 -> x._2.clone))
-    returnedPolicy._modificationDate = this._modificationDate
-    returnedPolicy
-  }
-
-
+  def equalsWithSameValues(that: Cf3PolicyDraft): Boolean = (
+         this.id == that.id
+      && this.technique.id == that.technique.id
+      && this.serial == that.serial
+      && this.variableMap.filter(x => x._2.values.size > 0).keySet == that.variableMap.filter(x => x._2.values.size > 0).keySet
+      && variableMap.filter(x => x._2.values.size > 0).keySet.forall { k =>
+           this.variableMap.filter(x => x._2.values.size > 0)(k).values.map(_.trim) == that.variableMap(k).values.map(_.trim)
+         }
+  )
 }
 
-case class ModifyCf3PolicyDraftDiff(
-    Cf3PolicyDraftId: Cf3PolicyDraftId
-  , removedVariables: Map[String, Seq[String]] = Map()
-  , addedVariables: Map[String, Seq[String]] = Map()
-  , changedVariables: Map[String, Seq[String]] = Map()
-) extends HashcodeCaching

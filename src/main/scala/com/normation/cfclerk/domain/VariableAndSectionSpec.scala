@@ -240,7 +240,7 @@ case class TrackerVariableSpec(
   override val multivalued = true
   override val longDescription = ""
   override def cloneSetMultivalued: TrackerVariableSpec = this.copy()
-  def toVariable(values: Seq[String] = Seq()): TrackerVariable = TrackerVariable(this, values)
+  def toVariable(values: Seq[String] = constraint.default.toSeq): TrackerVariable = TrackerVariable(this, values)
 }
 
 /**
@@ -279,7 +279,7 @@ case class SelectVariableSpec(
   override type T = SelectVariableSpec
   override type V = SelectVariable
   override def cloneSetMultivalued: SelectVariableSpec = this.copy(multivalued = true)
-  def toVariable(values: Seq[String] = Seq()): SelectVariable = SelectVariable(this, values)
+  def toVariable(values: Seq[String] = constraint.default.toSeq): SelectVariable = SelectVariable(this, values)
 }
 
 case class SelectOneVariableSpec(
@@ -301,7 +301,7 @@ case class SelectOneVariableSpec(
   override type T = SelectOneVariableSpec
   override type V = SelectOneVariable
   override def cloneSetMultivalued: SelectOneVariableSpec = this.copy(multivalued = true)
-  def toVariable(values: Seq[String] = Seq()): SelectOneVariable = SelectOneVariable(this, values)
+  def toVariable(values: Seq[String] = constraint.default.toSeq): SelectOneVariable = SelectOneVariable(this, values)
 }
 
 case class InputVariableSpec(
@@ -322,7 +322,7 @@ case class InputVariableSpec(
   override type T = InputVariableSpec
   override type V = InputVariable
   override def cloneSetMultivalued: InputVariableSpec = this.copy(multivalued = true)
-  def toVariable(values: Seq[String] = Seq()): InputVariable = InputVariable(this, values)
+  def toVariable(values: Seq[String] = constraint.default.toSeq): InputVariable = InputVariable(this, values)
 }
 
 /**

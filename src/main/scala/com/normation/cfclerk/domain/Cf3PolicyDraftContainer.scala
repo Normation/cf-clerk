@@ -57,8 +57,8 @@ class Cf3PolicyDraftContainer(val outPath: String) extends Loggable {
     cf3PolicyDrafts.get(cf3PolicyDraft.id) match {
       case None =>
         logger.trace("Adding cf3PolicyDraft " + cf3PolicyDraft.toString)
-        updateAllUniqueVariables(cf3PolicyDraft)
-        cf3PolicyDrafts += (cf3PolicyDraft.id -> cf3PolicyDraft.clone)
+        this.updateAllUniqueVariables(cf3PolicyDraft)
+        cf3PolicyDrafts += (cf3PolicyDraft.id -> cf3PolicyDraft)
         Full(cf3PolicyDraft)
       case Some(x) => Failure("An instance of the cf3PolicyDraft with the same identifier already exists")
     }
@@ -74,7 +74,7 @@ class Cf3PolicyDraftContainer(val outPath: String) extends Loggable {
       case None => Failure("No instance of the cf3PolicyDraft with the given identifier '%s' exists".format(cf3PolicyDraft.id))
       case Some(x) =>
         x.updateCf3PolicyDraft(cf3PolicyDraft)
-        updateAllUniqueVariables(cf3PolicyDraft)
+        this.updateAllUniqueVariables(cf3PolicyDraft)
         Full(x)
     }
   }
@@ -86,7 +86,7 @@ class Cf3PolicyDraftContainer(val outPath: String) extends Loggable {
    * @return
    */
   def findById(techniqueId: TechniqueId) = {
-    cf3PolicyDrafts.filter(x => x._2.techniqueId == techniqueId).map(x => (x._1, x._2.clone())).toSeq.sortBy(x => x._2.priority)
+    cf3PolicyDrafts.filter(x => x._2.technique.id == techniqueId).toSeq.sortBy(x => x._2.priority)
   }
 
   /**
@@ -95,7 +95,7 @@ class Cf3PolicyDraftContainer(val outPath: String) extends Loggable {
    */
   def getAllIds(): Seq[TechniqueId] = {
     // toSet to suppress duplicates
-    cf3PolicyDrafts.values.map(_.techniqueId).toSet.toSeq
+    cf3PolicyDrafts.values.map(_.technique.id).toSet.toSeq
   }
 
   /**
@@ -116,16 +116,14 @@ class Cf3PolicyDraftContainer(val outPath: String) extends Loggable {
    * @return
    */
   def get(cf3PolicyDraftId: Cf3PolicyDraftId): Option[Cf3PolicyDraft] = {
-    cf3PolicyDrafts.get(cf3PolicyDraftId).map(x => x.clone)
+    cf3PolicyDrafts.get(cf3PolicyDraftId)
   }
 
   /**
    * Returns all the policy instances
    * @return
    */
-  def getAll(): MutMap[Cf3PolicyDraftId, Cf3PolicyDraft] = {
-    cf3PolicyDrafts.map(x => (x._1, x._2.clone))
-  }
+  def getAll(): Map[Cf3PolicyDraftId, Cf3PolicyDraft] = cf3PolicyDrafts.toMap
 
   override def toString() = "Container : %s".format(outPath)
 
@@ -134,19 +132,16 @@ class Cf3PolicyDraftContainer(val outPath: String) extends Loggable {
    * Called when we add a cf3PolicyDraft
    * @param policy
    */
-  private def updateAllUniqueVariables(policy: Cf3PolicyDraft) : Cf3PolicyDraft = {
-    for {
-      uniqueVariable <- policy.getVariables.filter(x => (x._2.spec.isUniqueVariable))
-      instance <- cf3PolicyDrafts.filter(x => (x._2.getVariable(uniqueVariable._1) != None))
-    } {
-      instance._2.setVariable(uniqueVariable._2)
-    }
-    policy
+  private def updateAllUniqueVariables(policy: Cf3PolicyDraft) : Unit = {
+    val policies = cf3PolicyDrafts.values.toSeq
+    val updated = policy.updateAllUniqueVariables(policies).map(x => (x.id,x))
+    this.cf3PolicyDrafts ++= updated //don't need the returned value
+    ()
   }
 
   override def clone(): Cf3PolicyDraftContainer = {
     val copy = new Cf3PolicyDraftContainer(outPath)
-    copy.cf3PolicyDrafts ++= cf3PolicyDrafts.map(x => (x._1, x._2.clone))
+    copy.cf3PolicyDrafts ++= cf3PolicyDrafts
     copy
   }
 

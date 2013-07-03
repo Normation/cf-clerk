@@ -5,6 +5,14 @@
     <DESCRIPTION>Simple variable</DESCRIPTION>
   </INPUT>
 
+  <INPUT>
+    <NAME>WITH_DEFAULT</NAME>
+    <DESCRIPTION>Simple variable with default</DESCRIPTION>
+    <CONSTRAINT>
+      <DEFAULT>default_value</DEFAULT>
+    </CONSTRAINT>
+  </INPUT>
+
   <SELECT1>
     <NAME>SELECT1_TEST</NAME>
     <DESCRIPTION>Constrained variable</DESCRIPTION>
