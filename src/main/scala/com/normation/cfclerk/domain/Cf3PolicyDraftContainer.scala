@@ -38,13 +38,56 @@ import scala.collection.mutable.{ Map => MutMap }
 import net.liftweb.common._
 
 /**
+ * A Parameter Entry has a Name and a Value, and can be freely used within the promises
+ * We need the get methods for StringTemplate, since it needs
+ * get methods, and @Bean doesn't seem to do the trick
+ */
+case class ParameterEntry(
+    parameterName : String,
+    parameterValue: String
+) {
+  // returns the name of the parameter
+  def getParameterName() : String = {
+    parameterName
+  }
+
+  // returns the _escaped_ value of the parameter,
+  // compliant with the syntax of CFEngine
+  def getEscapedValue() : String = {
+    ParameterEntry.escapeString(parameterValue)
+  }
+
+  // Returns the unescaped (raw) value of the paramter
+  def getUnescapedValue() : String = {
+    parameterValue
+  }
+}
+
+/*
+ * Escape string to be CFEngine compliant
+ * a \ witll be escaped to \\
+ * a " will be escaped to \"
+ * The parameter may be null (for legacy reason), and it should be checked
+ */
+object ParameterEntry {
+  def escapeString(x: String) : String = {
+    if (x == null)
+      x
+    else
+      x.replaceAll("""\\""", """\\\\""").replaceAll(""""""", """\\"""")
+  }
+}
+
+/**
  * Container for policy instances and the path where we want to write them
  * We put directives in them, as well as an outPath (relative to the base path)
  *
  * @author Nicolas CHARLES
  *
  */
-class Cf3PolicyDraftContainer(val outPath: String) extends Loggable {
+class Cf3PolicyDraftContainer(
+    val outPath    : String
+  , val parameters : Set[ParameterEntry]) extends Loggable {
 
   protected val cf3PolicyDrafts = MutMap[Cf3PolicyDraftId, Cf3PolicyDraft]() /* the target policies (the one we wish to have) */
 
@@ -140,7 +183,7 @@ class Cf3PolicyDraftContainer(val outPath: String) extends Loggable {
   }
 
   override def clone(): Cf3PolicyDraftContainer = {
-    val copy = new Cf3PolicyDraftContainer(outPath)
+    val copy = new Cf3PolicyDraftContainer(outPath, parameters)
     copy.cf3PolicyDrafts ++= cf3PolicyDrafts
     copy
   }

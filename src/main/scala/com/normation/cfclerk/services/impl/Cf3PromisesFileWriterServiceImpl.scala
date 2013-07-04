@@ -70,6 +70,8 @@ class Cf3PromisesFileWriterServiceImpl(
    */
   def prepareCf3PromisesFileTemplate(container: Cf3PolicyDraftContainer, extraSystemVariables: Map[String, Variable]): Map[TechniqueId, PreparedTemplates] = {
     val systemVars = prepareBundleVars(container)
+    
+    val rudderParametersVariable = getParametersVariable(container)
 
     val techniques = techniqueRepository.getByIds(container.getAllIds)
 
@@ -85,7 +87,7 @@ class Cf3PromisesFileWriterServiceImpl(
     techniques.map {technique =>
       (
           technique.id
-        , PreparedTemplates(tmlsByTechnique(technique.id), variablesByTechnique(technique.id))
+        , PreparedTemplates(tmlsByTechnique(technique.id), variablesByTechnique(technique.id) :+ rudderParametersVariable )
       )
     }.toMap
   }
@@ -290,6 +292,18 @@ class Cf3PromisesFileWriterServiceImpl(
     )
   }
 
+  /**
+   * From the container, convert the parameter into StringTemplate variable, that contains a list of 
+   * parameterName, parameterValue (really, the ParameterEntry itself)
+   * This is quite naive for the moment
+   */
+  private[this] def getParametersVariable(container: Cf3PolicyDraftContainer) : STVariable = {
+    STVariable(
+        PARAMETER_VARIABLE
+      , true
+      , container.parameters.toSeq
+    )    
+  } 
   /**
    * Move the machine promises folder  to the backup folder
    * @param machineFolder
