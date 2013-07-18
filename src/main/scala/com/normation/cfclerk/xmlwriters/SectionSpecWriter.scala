@@ -99,9 +99,17 @@ class SectionSpecWriterImpl extends SectionSpecWriter {
   private[this] def serializeConstraint(constraint:Constraint): NodeSeq = {
     val constraintType = createXmlTextNode(CONSTRAINT_TYPE,       constraint.typeName.name)
     val empty          = createXmlTextNode(CONSTRAINT_MAYBEEMPTY, constraint.mayBeEmpty.toString)
-    val regexp         = VTypeConstraint.getRegexConstraint(constraint.typeName).map(regex =>
-                           createXmlTextNode(CONSTRAINT_REGEX,regex.pattern)
-                         ) getOrElse(NodeSeq.Empty)
+    val regexp         = constraint.typeName match {
+                           // Do not add regexp if this is a fixed regexp type
+                           // The parser will not accept a 'fixed regexp' with a regexp field
+                           case fixedRegexpType : FixedRegexVType =>
+                             NodeSeq.Empty
+
+                           case otherType =>
+                             VTypeConstraint.getRegexConstraint(otherType).map(regex =>
+                               createXmlTextNode(CONSTRAINT_REGEX,regex.pattern)
+                             ) getOrElse(NodeSeq.Empty)
+                         }
     val dflt           = constraint.default.map(createXmlTextNode(CONSTRAINT_DEFAULT,_)).getOrElse(NodeSeq.Empty)
     val hashAlgos      = createXmlTextNode(
                              CONSTRAINT_PASSWORD_HASH
