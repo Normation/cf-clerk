@@ -598,7 +598,7 @@ class GitTechniqueReader(
         XML.load(is)
       } catch {
         case e: SAXParseException =>
-          throw new ParsingException("Unexpected issue with the descriptor file %s: %s".format(filePath,e.getMessage))
+          throw new ParsingException("Unexpected issue with the descriptor file %s at line %d, column %d: %s".format(filePath, e.getLineNumber(), e.getColumnNumber(), e.getMessage))
         case e: java.net.MalformedURLException =>
           throw new ParsingException("Descriptor file not found: " + filePath)
       }
