@@ -49,6 +49,15 @@ import org.xml.sax.SAXParseException
 import scala.io.Source
 import scala.xml._
 
+class TechniqueFormatException(
+    techniqueFile : Cf3PromisesFileTemplateCopyInfo
+  , cause : String
+) extends RuntimeException(
+            "Bad format in Technique %s (file: %s) cause is: %s".format(
+                techniqueFile.source.techniqueId
+              , techniqueFile.destination
+              , cause
+          ) )
 /**
  * The class that handles all the writing of templates
  *
@@ -157,7 +166,6 @@ class Cf3PromisesFileWriterServiceImpl(
               template.registerRenderer(classOf[DateTime], new DateRenderer());
               template.registerRenderer(classOf[LocalDate], new LocalDateRenderer());
               template.registerRenderer(classOf[LocalTime], new LocalTimeRenderer());
-              
               for (variable <- variableSet) {
                 if ( (variable.mayBeEmpty) && ((variable.values.size == 0) || (variable.values.size ==1 && variable.values.head == "") ) ) {
                   template.setAttribute(variable.name, null)
@@ -173,7 +181,11 @@ class Cf3PromisesFileWriterServiceImpl(
 
               // write the files to the new promise folder
               logger.debug("Create promises file %s %s".format(outPath, fileEntry.destination))
+              try {
               FileUtils.writeStringToFile(new File(outPath, fileEntry.destination), template.toString)
+              } catch {
+                case e : Exception => throw new TechniqueFormatException(fileEntry,e.getMessage())
+              }
           }
         }
       }
