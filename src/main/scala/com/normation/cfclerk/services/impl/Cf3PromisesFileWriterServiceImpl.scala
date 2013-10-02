@@ -173,7 +173,13 @@ class Cf3PromisesFileWriterServiceImpl(
 
               // write the files to the new promise folder
               logger.debug("Create promises file %s %s".format(outPath, fileEntry.destination))
-              FileUtils.writeStringToFile(new File(outPath, fileEntry.destination), template.toString)
+              try {
+                FileUtils.writeStringToFile(new File(outPath, fileEntry.destination), template.toString)
+              } catch {
+                case e : Exception =>
+                  val message = "Bad format in Technique %s (file: %s) cause is: %s".format(fileEntry.source.techniqueId, fileEntry.destination, e.getMessage)
+                  throw new RuntimeException(message,e)
+              }
           }
         }
       }
