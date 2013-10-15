@@ -89,8 +89,14 @@ class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
                                           , isUniqueVariable = true
                                           , constraint = Constraint(typeName = IntegerVType())
       )
+    , SystemVariableSpec("MANAGED_NODES_NAME", "Hostname of nodes managed by the policy server"
+                                          , constraint = Constraint(mayBeEmpty=true)
+      )
+    , SystemVariableSpec("MANAGED_NODES_ID", "UUID of nodes managed by the policy server"
+                                          , constraint = Constraint(mayBeEmpty=true)
+      )
       // this variable may be empty, has it is not filled by rudder, but by cf-clerk
-    , SystemVariableSpec("GENERATIONTIMESTAMP" 
+    , SystemVariableSpec("GENERATIONTIMESTAMP"
                                           , "Timestamp of the promises generation"
                                           , multivalued = false
                                           , isUniqueVariable = true
