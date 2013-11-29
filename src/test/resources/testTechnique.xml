@@ -9,6 +9,8 @@
     <NAME>bundle1</NAME>
     <NAME>bundle2</NAME>
   </BUNDLES>
+  
+  <PROVIDES_EXPECTED_REPORTS>true</PROVIDES_EXPECTED_REPORTS>
 
   <TMLS>
     <TML name="tml1"/>

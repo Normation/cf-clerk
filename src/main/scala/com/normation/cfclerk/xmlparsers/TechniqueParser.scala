@@ -76,6 +76,7 @@ class TechniqueParser(
             , isMultiInstance = ((node \ TECHNIQUE_IS_MULTIINSTANCE).text.equalsIgnoreCase("true") )
             , longDescription = ??!((node \ TECHNIQUE_LONG_DESCRIPTION).text).getOrElse("")
             , isSystem = ((node \ TECHNIQUE_IS_SYSTEM).text.equalsIgnoreCase("true"))
+            , providesExpectedReports = ((node \ TECHNIQUE_PROVIDES_EXPECTED_REPORTS).text.equalsIgnoreCase("true"))
           )
 
           /*

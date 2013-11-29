@@ -80,6 +80,39 @@
     <DESCRIPTION>Variable Machine</DESCRIPTION>
     <FIELD>name</FIELD>
   </SELECT>
+  
+  <!-- No value is forbiden -->  
+
+  <PREDEFVAL>
+    <NAME>predef_1</NAME>
+    <DESCRIPTION>Variable Machine</DESCRIPTION>
+    <VALUES>
+      <VALUE>val1</VALUE>
+    </VALUES>
+  </PREDEFVAL>
+  
+  <PREDEFVAL>
+    <NAME>predef_2_0</NAME>
+    <DESCRIPTION>Variable Machine</DESCRIPTION>
+    <VALUES>
+      <VALUE>val1 </VALUE>
+      <VALUE> val2</VALUE>
+    </VALUES>
+  </PREDEFVAL>
+
+  <PREDEFVAL>
+    <NAME>predef_2_1</NAME>
+    <DESCRIPTION>Variable Machine</DESCRIPTION>
+    <VALUES val="val1 , val2" />
+  </PREDEFVAL>
+
+  <PREDEFVAL>
+    <NAME>predef_mixed</NAME>
+    <DESCRIPTION>Variable Machine</DESCRIPTION>
+    <VALUES val=" val1 , val2 ">
+      <VALUE>val,3</VALUE>
+    </VALUES>
+  </PREDEFVAL>
 
   <INPUT>
     <NAME>$VARDATE</NAME>

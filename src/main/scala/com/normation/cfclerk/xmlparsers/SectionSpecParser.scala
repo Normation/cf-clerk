@@ -64,7 +64,7 @@ class SectionSpecParser(variableParser:VariableSpecParser) extends Loggable {
       val variableNames = root.getAllVariables.map( _.name )
 
       /*
-       * check that all variable and seciont names are unique
+       * check that all variable and section names are unique
        */
       checkUniqueness(variableNames) {
         "At least two variables have the same name (case unsensitive), what is forbiden: "
@@ -129,9 +129,9 @@ class SectionSpecParser(variableParser:VariableSpecParser) extends Loggable {
 
     val isMultivalued = "true" == getAttributeText(root, SECTION_IS_MULTIVALUED, "false").toLowerCase
 
-    // The defaut priority is "high" 
+    // The defaut priority is "high"
     val displayPriority = DisplayPriority(getAttributeText(root, SECTION_DISPLAYPRIORITY, "")).getOrElse(HighDisplayPriority)
-    
+
     val description = getUniqueNodeText(root, SECTION_DESCRIPTION, "")
 
     val isComponent = "true"  == getAttributeText(root, SECTION_IS_COMPONENT, "false").toLowerCase

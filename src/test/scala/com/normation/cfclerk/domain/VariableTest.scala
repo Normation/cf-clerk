@@ -63,7 +63,7 @@ class VariableTest extends Specification {
   def variableSpecParser = new VariableSpecParser()
 
 
-  val nbVariables = 24
+  val nbVariables = 28
 
   val refName = "name"
   val refDescription = "description"
@@ -425,6 +425,56 @@ class VariableTest extends Specification {
     }
   }
 
+  // predef variables
+
+  "unvalid predef value (no VALUES tag)" should {
+    val p =
+    <PREDEFVAL>
+      <NAME>predef_0_1</NAME>
+      <DESCRIPTION>Variable Machine</DESCRIPTION>
+    </PREDEFVAL>
+
+    "throw a parsing error" in {
+       variableSpecParser.parseSectionVariableSpec(p) must throwA[EmptyProvidedValue]
+    }
+  }
+
+  "unvalid predef value (empty VALUES tag)" should {
+    val p =
+    <PREDEFVAL>
+      <NAME>predef_0_1</NAME>
+      <DESCRIPTION>Variable Machine</DESCRIPTION>
+      <VALUES/>
+    </PREDEFVAL>
+
+    "throw a parsing error" in {
+      variableSpecParser.parseSectionVariableSpec(p) must throwA[EmptyProvidedValue]
+    }
+  }
+
+  "predef_1" should {
+    implicit val v = variables("predef_1")
+    beAPredefVal
+    provideAndHaveValues("val1")
+  }
+
+  "predef_2_0" should {
+    implicit val v = variables("predef_2_0")
+    beAPredefVal
+    provideAndHaveValues("val1", "val2")
+  }
+
+  "predef_2_1" should {
+    implicit val v = variables("predef_2_1")
+    beAPredefVal
+    provideAndHaveValues("val1", "val2")
+  }
+
+  "predef_mixed" should {
+    implicit val v = variables("predef_mixed")
+    beAPredefVal
+    provideAndHaveValues("val1", "val2" , "val,3")
+  }
 
   ///
   /// Utility methods
@@ -461,6 +511,12 @@ class VariableTest extends Specification {
     "Be an input password input" in {
       variable.spec.isInstanceOf[InputVariableSpec] &&
       variable.spec.constraint.typeName.name == "password"
+    }
+  }
+
+  private[this] def beAPredefVal(implicit variable: Variable) = {
+    "Be an PREDEF val" in {
+      variable.spec.isInstanceOf[PredefinedValuesVariableSpec]
     }
   }
 
@@ -501,6 +557,17 @@ class VariableTest extends Specification {
   private[this] def haveType(typeName: String)(implicit variable: Variable) = {
     "have type " + typeName in {
       variable.spec.constraint.typeName.name mustEqual typeName
+    }
+  }
+
+  private[this] def provideAndHaveValues(values: String*)(implicit variable: Variable) = {
+    s"have both provided values and set values '${values.mkString(",")}'" in {
+      variable match {
+        case v:PredefinedValuesVariable =>
+          v.spec.nelOfProvidedValues === values.toList &&
+          v.values.toList === values.toList
+        case _ => failure(s"Variable ${variable} is not a predefined variable type and so can not provides values")
+      }
     }
   }
 

@@ -39,6 +39,7 @@ import scala.xml._
 import net.liftweb.common._
 import com.normation.cfclerk.xmlparsers.CfclerkXmlConstants._
 import com.normation.utils.HashcodeCaching
+import com.normation.cfclerk.xmlparsers.EmptyProvidedValue
 
 /**
  * This file define the model for metadata of object
@@ -220,6 +221,12 @@ case class SystemVariableSpec(
   def toVariable(values: Seq[String] = Seq()): SystemVariable = SystemVariable(this, values)
 }
 
+/**
+ * A special variable used to embed information
+ * about identification of other variable.
+ * Typically, in a Rudder context, that variable will
+ * keep track of directive and rule ids.
+ */
 case class TrackerVariableSpec(
   val boundingVariable: Option[String] = None
 ) extends VariableSpec with HashcodeCaching {
@@ -259,6 +266,9 @@ trait ValueLabelVariableSpec extends SectionVariableSpec {
   val valueslabels: Seq[ValueLabel]
 }
 
+/**
+ * A "list of checkbox" kind of select
+ */
 case class SelectVariableSpec(
   override val name: String,
   val description: String,
@@ -281,6 +291,9 @@ case class SelectVariableSpec(
   def toVariable(values: Seq[String] = constraint.default.toSeq): SelectVariable = SelectVariable(this, values)
 }
 
+/**
+ * A button-like or dropdown kind of select
+ */
 case class SelectOneVariableSpec(
   override val name: String,
   val description: String,
@@ -303,6 +316,44 @@ case class SelectOneVariableSpec(
   def toVariable(values: Seq[String] = constraint.default.toSeq): SelectOneVariable = SelectOneVariable(this, values)
 }
 
+/**
+ * A variable specification that allows
+ * to give a set of values to use, and the user
+ * won't be able to change them.
+ */
+case class PredefinedValuesVariableSpec(
+    override val name: String
+  , val description: String
+    //The list of predefined values, provided
+    //directly in the variable spec
+    //that list can not be empty (but Scala does not have a NonEmptyList type)
+    //Values are ordered.
+  , val providedValues: (String, Seq[String])
+  , val longDescription: String = ""
+    // a uniqueVariable has the same values over each policies
+  , val isUniqueVariable: Boolean = true
+  , val multivalued: Boolean = true
+
+    // we expect that by default the variable will be checked
+  , val checked: Boolean = true
+
+  , val constraint: Constraint = Constraint()
+) extends SectionVariableSpec with HashcodeCaching {
+
+  def nelOfProvidedValues = providedValues._1 :: providedValues._2.toList
+
+  override type T = PredefinedValuesVariableSpec
+  override type V = PredefinedValuesVariable
+  override def cloneSetMultivalued: PredefinedValuesVariableSpec = this.copy(multivalued = true)
+
+  //to create the variable from that spec, just use the provided values.
+  def toVariable(values: Seq[String] = nelOfProvidedValues): PredefinedValuesVariable = PredefinedValuesVariable(this, values)
+}
+
+
+/**
+ * Standard, unique input (text field)
+ */
 case class InputVariableSpec(
   override val name: String,
   val description: String,
@@ -332,14 +383,13 @@ case class InputVariableSpec(
  * will have to be set-up to achieve such a goal.
  */
 object SectionVariableSpec {
-  def markerNames = List(INPUT, SELECT1, SELECT)
+  def markerNames = List(INPUT, SELECT1, SELECT, PREDEFVAL)
 
   def isVariable(variableName: String) = markerNames contains variableName
 
   /**
    * Default variable implementation
    * Some of the arguments are not used by all implementations of Variable.
-   * For instance, boundingVariable is only used for policyinstance variable.
    */
   def apply(
     varName: String,
@@ -351,7 +401,8 @@ object SectionVariableSpec {
     isUniqueVariable: Boolean = false,
     multivalued: Boolean = false,
     checked: Boolean = true,
-    constraint: Constraint = Constraint()
+    constraint: Constraint = Constraint(),
+    providedValues: Seq[String]
   ): SectionVariableSpec = {
 
     markerName match {
@@ -361,6 +412,11 @@ object SectionVariableSpec {
         valueslabels, isUniqueVariable, multivalued, checked, constraint)
       case SELECT1 => SelectOneVariableSpec(varName, description, longDescription,
         valueslabels, isUniqueVariable, multivalued, checked, constraint)
+      case PREDEFVAL =>
+        if(providedValues.isEmpty) throw EmptyProvidedValue(varName)
+        else PredefinedValuesVariableSpec(varName, description, (providedValues.head, providedValues.tail),
+            longDescription, isUniqueVariable, multivalued, checked, constraint)
+
       case x => throw new IllegalArgumentException("Unknown variable kind: " + x)
     }
   }

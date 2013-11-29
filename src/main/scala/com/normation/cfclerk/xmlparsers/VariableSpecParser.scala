@@ -43,6 +43,9 @@ import com.normation.cfclerk.exceptions._
 import com.normation.exceptions.TechnicalException
 import com.normation.utils.Control
 
+
+case class EmptyProvidedValue(varName: String) extends Exception(s"Variable ${varName} with type ${PREDEFVAL} must have a non empty list of provided values: <${PROVIDED_VALUES}><${PROVIDED_VALUE}>...")
+
 class VariableSpecParser {
 
 
@@ -102,6 +105,8 @@ class VariableSpecParser {
 
             val checked = "true" == getUniqueNodeText(elt, VAR_IS_CHECKED, "true").toLowerCase
 
+            val providedValues: Seq[String] = parseProvidedValues(elt)
+
             Full(SectionVariableSpec(
               varName = name,
               description = desc,
@@ -111,7 +116,8 @@ class VariableSpecParser {
               isUniqueVariable = isUniqueVariable,
               multivalued = multiValued,
               checked = checked,
-              constraint = constraint
+              constraint = constraint,
+              providedValues = providedValues
             ))
         }
   }
@@ -135,6 +141,20 @@ class VariableSpecParser {
       val label = if (!l.isEmpty) l else entry \ "@label"
       ValueLabel(value.text, label.text)
     }
+  }
+
+
+  /**
+   * Parse provided values, they are of the form:
+   * <VALUES val="val1,val2"><VALUE>val3</VALUE>...</VALUES>
+   */
+  def parseProvidedValues(elt: Node): Seq[String] = {
+    (for (entry <- elt \ PROVIDED_VALUES) yield {
+      val attributeValues = (entry \ "@val").text.split(",")
+      val eltValues = for(value <- entry \ PROVIDED_VALUE) yield value.text
+
+      (attributeValues++eltValues)
+    }).flatten.map( _.trim ).filter( _.nonEmpty )
   }
 
   def parseConstraint(elt: Node): Constraint = {
