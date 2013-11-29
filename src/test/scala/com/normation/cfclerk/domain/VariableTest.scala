@@ -63,7 +63,7 @@ class VariableTest extends Specification {
   def variableSpecParser = new VariableSpecParser()
 
 
-  val nbVariables = 28
+  val nbVariables = 26
 
   val refName = "name"
   val refDescription = "description"
@@ -112,8 +112,18 @@ class VariableTest extends Specification {
       specNode <- elt.nonEmptyChildren
       if(!specNode.isInstanceOf[Text])
     } {
-      val spec = variableSpecParser.parseSectionVariableSpec(specNode).openOrThrowException("I'm a failing test!")
-      variables += spec.name -> spec.toVariable()
+      val spec = variableSpecParser.parseSectionVariableSpec("default section", specNode).openOrThrowException("I'm a failing test!")
+      variables += {
+        //special case for reportkeys because name depends of section name, and here, we
+        //don't have several sections
+        spec match {
+          case _:PredefinedValuesVariableSpec =>
+            val v = spec.toVariable()
+            if(v.values.size == 1) "predef_1" -> v
+            else "predef_2" -> v
+          case _ => spec.name -> spec.toVariable()
+        }
+      }
     }
     variables
   }
@@ -127,7 +137,7 @@ class VariableTest extends Specification {
         specNode <- elt.nonEmptyChildren
         if(!specNode.isInstanceOf[Text])
       } yield {
-        variableSpecParser.parseSectionVariableSpec(specNode)
+        variableSpecParser.parseSectionVariableSpec("default section", specNode)
       })
       (sysvar.size === 1) and (sysvar.head.isEmpty === true)
     }
@@ -421,34 +431,20 @@ class VariableTest extends Specification {
     </INPUT>
 
     "throw a parsing error" in {
-       variableSpecParser.parseSectionVariableSpec(p) must throwA[ConstraintException]
+       variableSpecParser.parseSectionVariableSpec("some section", p) must throwA[ConstraintException]
     }
   }
 
   // predef variables
 
-  "unvalid predef value (no VALUES tag)" should {
-    val p =
-    <PREDEFVAL>
-      <NAME>predef_0_1</NAME>
-      <DESCRIPTION>Variable Machine</DESCRIPTION>
-    </PREDEFVAL>
-
-    "throw a parsing error" in {
-       variableSpecParser.parseSectionVariableSpec(p) must throwA[EmptyProvidedValue]
-    }
-  }
-
   "unvalid predef value (empty VALUES tag)" should {
     val p =
-    <PREDEFVAL>
-      <NAME>predef_0_1</NAME>
-      <DESCRIPTION>Variable Machine</DESCRIPTION>
+    <REPORTKEYS>
       <VALUES/>
-    </PREDEFVAL>
+    </REPORTKEYS>
 
     "throw a parsing error" in {
-      variableSpecParser.parseSectionVariableSpec(p) must throwA[EmptyProvidedValue]
+      variableSpecParser.parseSectionVariableSpec("some section", p) must throwA[EmptyReportKeysValue]
     }
   }
 
@@ -458,22 +454,10 @@ class VariableTest extends Specification {
     provideAndHaveValues("val1")
   }
 
-  "predef_2_0" should {
-    implicit val v = variables("predef_2_0")
+  "predef_2" should {
+    implicit val v = variables("predef_2")
     beAPredefVal
     provideAndHaveValues("val1", "val2")
-  }
-
-  "predef_2_1" should {
-    implicit val v = variables("predef_2_1")
-    beAPredefVal
-    provideAndHaveValues("val1", "val2")
-  }
-
-  "predef_mixed" should {
-    implicit val v = variables("predef_mixed")
-    beAPredefVal
-    provideAndHaveValues("val1", "val2" , "val,3")
   }
 
   ///

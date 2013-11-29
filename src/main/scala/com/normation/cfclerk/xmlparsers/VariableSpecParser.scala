@@ -44,7 +44,7 @@ import com.normation.exceptions.TechnicalException
 import com.normation.utils.Control
 
 
-case class EmptyProvidedValue(varName: String) extends Exception(s"Variable ${varName} with type ${PREDEFVAL} must have a non empty list of provided values: <${PROVIDED_VALUES}><${PROVIDED_VALUE}>...")
+case class EmptyReportKeysValue(sectionName: String) extends Exception(s"In '${sectionName}', the element ${REPORT_KEYS} must have a non empty list of provided values: <${REPORT_KEYS}><${REPORT_KEYS_VALUE}>val foo</${REPORT_KEYS_VALUE}><${REPORT_KEYS_VALUE}>...")
 
 class VariableSpecParser {
 
@@ -67,13 +67,43 @@ class VariableSpecParser {
   }
 
 
-  def parseSectionVariableSpec(elt: Node): Box[SectionVariableSpec] = {
+  def parseSectionVariableSpec(parentSectionName: String, elt: Node): Box[SectionVariableSpec] = {
 
     val markerName = elt.label
     if (!SectionVariableSpec.isVariable(markerName)) {
       Failure("The node '%s' is not a variable specification node: it should be one of %s"
         .format(markerName, SectionVariableSpec.markerNames.mkString("<", ">, <", ">")))
-    } else
+
+    /*
+     * here we have two cases:
+     * - we have a REPORTKEYS. It's not a variable from the user point of view,
+     *   it's the list of report keys for a given component.
+     *   But internally, we use a variable, because it's the way Rudder handle reporting
+     * - or we really have a variable, and in that case, well, it's a variable.
+     *
+     * So, we need to special case the REPORTKEYS to give them a name and a description,
+     * and not allow the user to change other information about them.
+     *
+     */
+    } else if(markerName == REPORT_KEYS) {
+      //we only want the values, other tag are ignored
+
+      val p = parseProvidedValues(elt)
+
+      Full(SectionVariableSpec(
+          varName = "expectedReportKey " + parentSectionName
+        , description = s"Expected Report key names for component ${parentSectionName}"
+        , markerName = markerName
+        , longDescription = ""
+        , valueslabels = Nil
+        , isUniqueVariable = false
+        , multivalued = true
+        , checked = true
+        , constraint = Constraint()
+        , p
+      ))
+    } else { //normal variable
+
       //name and description are mandatory
       (getUniqueNodeText(elt, VAR_NAME, ""),
         getUniqueNodeText(elt, VAR_DESCRIPTION, "")) match {
@@ -105,7 +135,6 @@ class VariableSpecParser {
 
             val checked = "true" == getUniqueNodeText(elt, VAR_IS_CHECKED, "true").toLowerCase
 
-            val providedValues: Seq[String] = parseProvidedValues(elt)
 
             Full(SectionVariableSpec(
               varName = name,
@@ -117,9 +146,10 @@ class VariableSpecParser {
               multivalued = multiValued,
               checked = checked,
               constraint = constraint,
-              providedValues = providedValues
+              Nil
             ))
         }
+    }
   }
 
   /**
@@ -146,15 +176,14 @@ class VariableSpecParser {
 
   /**
    * Parse provided values, they are of the form:
-   * <VALUES val="val1,val2"><VALUE>val3</VALUE>...</VALUES>
+   * <REPORTKEYS><VALUE>val1</VALUE>...</REPORTKEYS>
    */
   def parseProvidedValues(elt: Node): Seq[String] = {
-    (for (entry <- elt \ PROVIDED_VALUES) yield {
-      val attributeValues = (entry \ "@val").text.split(",")
-      val eltValues = for(value <- entry \ PROVIDED_VALUE) yield value.text
-
-      (attributeValues++eltValues)
-    }).flatten.map( _.trim ).filter( _.nonEmpty )
+    (for {
+        value <- elt \ REPORT_KEYS_VALUE
+     } yield {
+      value.text
+     }).map( _.trim ).filter( _.nonEmpty )
   }
 
   def parseConstraint(elt: Node): Constraint = {

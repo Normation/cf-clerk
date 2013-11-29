@@ -39,7 +39,7 @@ import scala.xml._
 import net.liftweb.common._
 import com.normation.cfclerk.xmlparsers.CfclerkXmlConstants._
 import com.normation.utils.HashcodeCaching
-import com.normation.cfclerk.xmlparsers.EmptyProvidedValue
+import com.normation.cfclerk.xmlparsers.EmptyReportKeysValue
 
 /**
  * This file define the model for metadata of object
@@ -383,7 +383,7 @@ case class InputVariableSpec(
  * will have to be set-up to achieve such a goal.
  */
 object SectionVariableSpec {
-  def markerNames = List(INPUT, SELECT1, SELECT, PREDEFVAL)
+  def markerNames = List(INPUT, SELECT1, SELECT, REPORT_KEYS)
 
   def isVariable(variableName: String) = markerNames contains variableName
 
@@ -412,8 +412,8 @@ object SectionVariableSpec {
         valueslabels, isUniqueVariable, multivalued, checked, constraint)
       case SELECT1 => SelectOneVariableSpec(varName, description, longDescription,
         valueslabels, isUniqueVariable, multivalued, checked, constraint)
-      case PREDEFVAL =>
-        if(providedValues.isEmpty) throw EmptyProvidedValue(varName)
+      case REPORT_KEYS =>
+        if(providedValues.isEmpty) throw EmptyReportKeysValue(varName)
         else PredefinedValuesVariableSpec(varName, description, (providedValues.head, providedValues.tail),
             longDescription, isUniqueVariable, multivalued, checked, constraint)
 

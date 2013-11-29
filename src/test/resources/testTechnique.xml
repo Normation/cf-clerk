@@ -9,8 +9,6 @@
     <NAME>bundle1</NAME>
     <NAME>bundle2</NAME>
   </BUNDLES>
-  
-  <PROVIDES_EXPECTED_REPORTS>true</PROVIDES_EXPECTED_REPORTS>
 
   <TMLS>
     <TML name="tml1"/>
@@ -43,6 +41,12 @@
         <NAME>B</NAME>
         <DESCRIPTION>...</DESCRIPTION>
       </INPUT>
+    </SECTION>
+    <SECTION name="with provided expected reports" component="true">
+      <REPORTKEYS>
+        <VALUE>val1</VALUE>
+        <VALUE>val2</VALUE>
+      </REPORTKEYS>
     </SECTION>
   </SECTIONS>
 </TECHNIQUE>
