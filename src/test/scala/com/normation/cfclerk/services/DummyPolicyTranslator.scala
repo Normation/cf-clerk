@@ -46,7 +46,7 @@ class DummyPolicyTranslator extends Cf3PromisesFileWriterService {
     null
   }
 
-  def writePromisesFiles(fileSet: Set[Cf3PromisesFileTemplateCopyInfo], variableSet: Seq[STVariable], outPath: String): Unit = {
+  def writePromisesFiles(fileSet: Set[Cf3PromisesFileTemplateCopyInfo], variableSet: Seq[STVariable], outPath: String, csvLines: Seq[String]): Unit = {
   }
 
   /**

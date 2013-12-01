@@ -61,6 +61,8 @@ class Cf3PromisesFileWriterServiceImpl(
   logger.trace("Repository loaded")
 
   private[this] val generationTimestampVariable = "GENERATIONTIMESTAMP"
+  private[this] val GENEREATED_CSV_FILENAME = "rudder_expected_reports.csv"
+  private[this] val TAG_OF_RUDDER_ID = "@@RUDDER_ID@@"
 
   /**
    * Compute the TMLs list to be written
@@ -144,9 +146,10 @@ class Cf3PromisesFileWriterServiceImpl(
    * @param path : where to write the files
    */
   override def writePromisesFiles(
-      fileSet    : Set[Cf3PromisesFileTemplateCopyInfo]
-    , variableSet: Seq[STVariable]
-    , outPath    : String
+      fileSet             : Set[Cf3PromisesFileTemplateCopyInfo]
+    , variableSet         : Seq[STVariable]
+    , outPath             : String
+    , expectedReportsLines: Seq[String]
   ): Unit = {
     try {
       val generationVariable = getGenerationVariable()
@@ -184,6 +187,16 @@ class Cf3PromisesFileWriterServiceImpl(
               } catch {
                 case e : Exception =>
                   val message = "Bad format in Technique %s (file: %s) cause is: %s".format(fileEntry.source.techniqueId, fileEntry.destination, e.getMessage)
+                  throw new RuntimeException(message,e)
+              }
+
+              // Writing csv file
+              val csvContent = expectedReportsLines.mkString("\n")
+              try {
+                  FileUtils.writeStringToFile(new File(outPath, GENEREATED_CSV_FILENAME), csvContent)
+              } catch {
+                case e : Exception =>
+                  val message = "Impossible to write CSV file (file: %s) cause is: %s".format(GENEREATED_CSV_FILENAME, e.getMessage)
                   throw new RuntimeException(message,e)
               }
           }
@@ -374,15 +387,6 @@ class Cf3PromisesFileWriterServiceImpl(
    * The serialization is done
    */
   override def prepareAllCf3PolicyDraftVariables(cf3PolicyDraftContainer: Cf3PolicyDraftContainer): Map[TechniqueId, Map[String, Variable]] = {
-      /**
-       * Create the value of the policyinstancevariable from the Id of the Cf3PolicyDraft and
-       * the serial
-       */
-      def createValue(cf3PolicyDraft: Cf3PolicyDraft): String = {
-        cf3PolicyDraft.id.value + "@@" + cf3PolicyDraft.serial
-      }
-
-
     (for {
       // iterate over each policyName
       activeTechniqueId <- cf3PolicyDraftContainer.getAllIds
@@ -408,7 +412,7 @@ class Cf3PromisesFileWriterServiceImpl(
 
         // Only multi-instance policy may have a policyinstancevariable with high cardinal
         val size = if (technique.isMultiInstance) { boundingVariable.values.size } else { 1 }
-        val values = Seq.fill(size)(createValue(cf3PolicyDraft))
+        val values = Seq.fill(size)(createRudderId(cf3PolicyDraft))
         val variable = cf3PolicyDraftVariables(directiveVariable.spec.name).copyWithAppendedValues(values)
         cf3PolicyDraftVariables(directiveVariable.spec.name) = variable
 
@@ -437,4 +441,54 @@ class Cf3PromisesFileWriterServiceImpl(
     }).toMap
   }
 
+  /**
+   * From a container, containing meta technique, fetch the csv included, and add the Rudder UUID within, and return the new lines
+   */
+  def prepareReportingDataForMetaTechnique(cf3PolicyDraftContainer: Cf3PolicyDraftContainer): Seq[String] = {
+    (for {
+      // iterate over each policyName
+      activeTechniqueId <- cf3PolicyDraftContainer.getAllIds
+    } yield {
+      val technique = techniqueRepository.get(activeTechniqueId).getOrElse(
+          throw new RuntimeException("Error, can not find technique with id '%s' and version ".format(activeTechniqueId.name.value) +
+              "'%s' in the policy service".format(activeTechniqueId.name.value)))
+
+      technique.providesExpectedReports match {
+        case true =>
+            // meta Technique are UNIQUE, hence we can get at most ONE cf3PolicyDraft per activeTechniqueId
+            cf3PolicyDraftContainer.findById(activeTechniqueId) match {
+              case seq if seq.size == 0 =>
+                Seq[String]()
+              case seq if seq.size == 1 =>
+                val cf3PolicyDraft = seq.head._2
+                val rudderId = createRudderId(cf3PolicyDraft)
+                val csv = techniqueRepository.getReportingDetailsContent[Seq[String]](technique.id) { optInputStream =>
+                    optInputStream match {
+                      case None => throw new RuntimeException(s"Error when trying to open reports descriptor `expected_reports.csv` for technique ${technique}. Check that the report descriptor exist and is correctly commited in Git, or that the metadata for the technique are corrects.")
+                      case Some(inputStream) =>
+                        scala.io.Source.fromInputStream(inputStream).getLines().map{ case line =>
+                          line.trim.startsWith("#") match {
+                            case true => line
+                            case false => line.replaceAll(TAG_OF_RUDDER_ID, rudderId)
+                          }
+                        }.toSeq
+                    }
+                }
+                csv
+              case _ =>
+                throw new RuntimeException("There cannot be two identical meta Technique on a same node"); 
+            }
+        case false =>
+          Seq[String]()
+      }
+    }).flatten
+  }
+
+  /**
+   * Create the value of the Rudder Id from the Id of the Cf3PolicyDraft and
+   * the serial
+   */
+   private def createRudderId(cf3PolicyDraft: Cf3PolicyDraft): String = {
+     cf3PolicyDraft.id.value + "@@" + cf3PolicyDraft.serial
+   }
 }

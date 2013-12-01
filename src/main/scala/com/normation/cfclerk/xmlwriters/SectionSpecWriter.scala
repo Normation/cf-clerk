@@ -57,6 +57,8 @@ class SectionSpecWriterImpl extends SectionSpecWriter {
     val (label,valueLabels) = variable match {
       case input:InputVariableSpec => (INPUT,Seq())
         // Need to pattern match ValueLabel or compiler complains about missing patterns
+      case predefined: PredefinedValuesVariableSpec => (REPORT_KEYS, Seq())
+        // Need to pattern match PredefinedValuesVariableSpec or compiler complains about missing patterns
       case valueLabel:ValueLabelVariableSpec =>
         val label = valueLabel match {
           case select:SelectVariableSpec => SELECT
@@ -66,6 +68,12 @@ class SectionSpecWriterImpl extends SectionSpecWriter {
         (label, valueLabel.valueslabels)
     }
 
+    // if we have a predefined values variables, we need to serialize it
+    val predefinedValues = variable match {
+      case predefined: PredefinedValuesVariableSpec =>
+        predefined.nelOfProvidedValues.map(x => <VALUE>{x}</VALUE>)
+      case _ => NodeSeq.Empty
+    }
     val name            = createXmlTextNode(VAR_NAME,               variable.name)
     val description     = createXmlTextNode(VAR_DESCRIPTION,        variable.description)
     val longDescription = createXmlTextNode(VAR_LONG_DESCRIPTION,   variable.longDescription)
@@ -83,8 +91,8 @@ class SectionSpecWriterImpl extends SectionSpecWriter {
                    ++ checked
                    ++ items
                    ++ constraint
+                   ++ predefinedValues
                    ).flatten
-
     createXmlNode(label,children)
   }
 

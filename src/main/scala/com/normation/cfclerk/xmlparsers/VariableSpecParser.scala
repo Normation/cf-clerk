@@ -91,7 +91,7 @@ class VariableSpecParser {
       val p = parseProvidedValues(elt)
 
       Full(SectionVariableSpec(
-          varName = "expectedReportKey " + parentSectionName
+          varName = reportKeysVariableName(parentSectionName)
         , description = s"Expected Report key names for component ${parentSectionName}"
         , markerName = markerName
         , longDescription = ""

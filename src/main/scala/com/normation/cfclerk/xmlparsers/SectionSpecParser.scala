@@ -127,28 +127,54 @@ class SectionSpecParser(variableParser:VariableSpecParser) extends Loggable {
       }
     }
 
-    val isMultivalued = "true" == getAttributeText(root, SECTION_IS_MULTIVALUED, "false").toLowerCase
-
     // The defaut priority is "high"
     val displayPriority = DisplayPriority(getAttributeText(root, SECTION_DISPLAYPRIORITY, "")).getOrElse(HighDisplayPriority)
 
     val description = getUniqueNodeText(root, SECTION_DESCRIPTION, "")
 
-    val isComponent = "true"  == getAttributeText(root, SECTION_IS_COMPONENT, "false").toLowerCase
     val componentKey = (root \ ("@" + SECTION_COMPONENT_KEY)).headOption.map( _.text) match {
       case null | Some("") => None
       case x => x
     }
 
+    // Checking if we have predefined values
+    val children = parseChildren(name, root, id, policyName)
+
+    val expectedReportComponentKey = (children.collect { case x : PredefinedValuesVariableSpec => x }) match {
+      case seq if seq.size == 0 => None
+      case seq if seq.size == 1 => Some(seq.head.name)
+      case seq  =>
+        logger.error(s"There are too many predefined reports keys for given section ${name} : keys are : ${seq.map(_.name).mkString(",")}")
+        None
+    }
+
+    val effectiveComponentKey = (componentKey, expectedReportComponentKey) match {
+      case (Some(cp), Some(excp)) if cp == excp =>
+        Some(cp)
+      case (Some(cp), Some(excp)) if cp != excp =>
+        throw new ParsingException(s"Section '${name}' has a defined component key and defined reports key elements.")
+      case (Some(cp), _) => Some(cp)
+      case (_ , Some(excp)) => Some(excp)
+      case _ => None
+    }
+
+    // sanity check or derived values from what is before, or the descriptor itself
+    val isMultivalued = ("true" == getAttributeText(root, SECTION_IS_MULTIVALUED, "false").toLowerCase || expectedReportComponentKey.isDefined)
+
+    val isComponent = ("true"  == getAttributeText(root, SECTION_IS_COMPONENT, "false").toLowerCase || expectedReportComponentKey.isDefined)
+
+
     /**
      * A key must be define if and only if we are in a multivalued, component section.
      */
-    if(isMultivalued && isComponent && componentKey.isEmpty) {
+    if(isMultivalued && isComponent && effectiveComponentKey.isEmpty) {
       throw new ParsingException("Section '%s' is multivalued and is component. A componentKey attribute must be specified".format(name))
     }
 
-    val children = parseChildren(name, root, id, policyName)
-    val sectionSpec = SectionSpec(name, isMultivalued, isComponent, componentKey, displayPriority, description, children)
+
+
+    val sectionSpec = SectionSpec(name, isMultivalued, isComponent, effectiveComponentKey, displayPriority, description, children)
+
     if (isMultivalued)
       Full(sectionSpec.cloneVariablesInMultivalued)
     else
