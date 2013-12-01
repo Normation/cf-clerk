@@ -104,6 +104,7 @@ trait JGitPackageReaderSpec extends Specification with Loggable {
               , repo
               , "metadata.xml"
               , "category.xml"
+              , "reports.csv"
               , relativePathArg
             )
 

@@ -50,8 +50,13 @@ trait Cf3PromisesFileWriterService {
    * @param fileSet : the set of template to be written
    * @param variableSet : the set of variable
    * @param path : where to write the files
+   * @param csvLines: the lines corresponding to the csv file to write
    */
-  def writePromisesFiles(fileSet: Set[Cf3PromisesFileTemplateCopyInfo], variableSet: Seq[STVariable], outPath: String): Unit
+  def writePromisesFiles(
+        fileSet    : Set[Cf3PromisesFileTemplateCopyInfo]
+      , variableSet: Seq[STVariable]
+      , outPath    : String
+      , csvLines   : Seq[String]): Unit
 
   /**
    * Move the promises from the new folder to their final folder, backuping previous promises in the way
