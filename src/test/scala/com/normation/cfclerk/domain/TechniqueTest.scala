@@ -84,6 +84,10 @@ class TechniqueTest extends Specification {
       technique.isMultiInstance === false
     }
 
+    "provides a template file for its expected reports" in {
+      technique.providesExpectedReports == true
+    }
+
     "have bundle list: 'bundle1,bundle2'" in {
       technique.bundlesequence.map( _.name ) === Seq("bundle1","bundle2")
     }

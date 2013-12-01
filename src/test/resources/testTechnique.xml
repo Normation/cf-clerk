@@ -42,5 +42,11 @@
         <DESCRIPTION>...</DESCRIPTION>
       </INPUT>
     </SECTION>
+    <SECTION name="with provided expected reports" component="true">
+      <REPORTKEYS>
+        <VALUE>val1</VALUE>
+        <VALUE>val2</VALUE>
+      </REPORTKEYS>
+    </SECTION>
   </SECTIONS>
 </TECHNIQUE>

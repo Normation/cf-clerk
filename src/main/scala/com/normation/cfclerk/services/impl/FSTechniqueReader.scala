@@ -85,7 +85,8 @@ class FSTechniqueReader(
   policyParser               : TechniqueParser,
   val techniqueDirectoryPath : String,
   val techniqueDescriptorName: String, //full (with extension) conventional name for policy descriptor
-  val categoryDescriptorName : String //full (with extension) name of the descriptor for categories
+  val categoryDescriptorName : String, //full (with extension) name of the descriptor for categories
+  val reportingDescriptorName: String
   ) extends TechniqueReader with Loggable {
 
   reader =>
@@ -150,6 +151,25 @@ class FSTechniqueReader(
     }
   }
 
+  override def getReportingDetailsContent[T](techniqueId: TechniqueId)(useIt : Option[InputStream] => T) : T = {
+    var is: InputStream = null
+    try {
+      useIt {
+        readTechniques.techniquesCategory.get(techniqueId).map { catPath =>
+          is = new FileInputStream(techniqueDirectory.getAbsolutePath + "/" + catPath + "/" + reportingDescriptorName)
+          is
+        }
+      }
+    } catch {
+      case ex: FileNotFoundException =>
+        logger.debug(() => "Can not find %s for Technique with ID %s".format(reportingDescriptorName, techniqueId), ex)
+        useIt(None)
+    } finally {
+      if (null != is) {
+        is.close
+      }
+    }
+  }
   override def getTemplateContent[T](templateId: Cf3PromisesFileTemplateId)(useIt: Option[InputStream] => T): T = {
     var is: InputStream = null
     try {

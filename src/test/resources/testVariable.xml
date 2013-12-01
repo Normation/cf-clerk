@@ -80,6 +80,19 @@
     <DESCRIPTION>Variable Machine</DESCRIPTION>
     <FIELD>name</FIELD>
   </SELECT>
+  
+  <!-- No value is forbiden -->  
+
+  <!-- name => predef_1  -->
+  <REPORTKEYS>
+    <VALUE>val1</VALUE>
+  </REPORTKEYS>
+  
+  <!-- name => predef_2  -->
+  <REPORTKEYS>
+    <VALUE>val1 </VALUE>
+    <VALUE> val2</VALUE>
+  </REPORTKEYS>
 
   <INPUT>
     <NAME>$VARDATE</NAME>

@@ -63,7 +63,7 @@ class VariableTest extends Specification {
   def variableSpecParser = new VariableSpecParser()
 
 
-  val nbVariables = 24
+  val nbVariables = 26
 
   val refName = "name"
   val refDescription = "description"
@@ -112,8 +112,18 @@ class VariableTest extends Specification {
       specNode <- elt.nonEmptyChildren
       if(!specNode.isInstanceOf[Text])
     } {
-      val spec = variableSpecParser.parseSectionVariableSpec(specNode).openOrThrowException("I'm a failing test!")
-      variables += spec.name -> spec.toVariable()
+      val spec = variableSpecParser.parseSectionVariableSpec("default section", specNode).openOrThrowException("I'm a failing test!")
+      variables += {
+        //special case for reportkeys because name depends of section name, and here, we
+        //don't have several sections
+        spec match {
+          case _:PredefinedValuesVariableSpec =>
+            val v = spec.toVariable()
+            if(v.values.size == 1) "predef_1" -> v
+            else "predef_2" -> v
+          case _ => spec.name -> spec.toVariable()
+        }
+      }
     }
     variables
   }
@@ -127,7 +137,7 @@ class VariableTest extends Specification {
         specNode <- elt.nonEmptyChildren
         if(!specNode.isInstanceOf[Text])
       } yield {
-        variableSpecParser.parseSectionVariableSpec(specNode)
+        variableSpecParser.parseSectionVariableSpec("default section", specNode)
       })
       (sysvar.size === 1) and (sysvar.head.isEmpty === true)
     }
@@ -421,10 +431,34 @@ class VariableTest extends Specification {
     </INPUT>
 
     "throw a parsing error" in {
-       variableSpecParser.parseSectionVariableSpec(p) must throwA[ConstraintException]
+       variableSpecParser.parseSectionVariableSpec("some section", p) must throwA[ConstraintException]
     }
   }
 
+  // predef variables
+
+  "unvalid predef value (empty VALUES tag)" should {
+    val p =
+    <REPORTKEYS>
+      <VALUES/>
+    </REPORTKEYS>
+
+    "throw a parsing error" in {
+      variableSpecParser.parseSectionVariableSpec("some section", p) must throwA[EmptyReportKeysValue]
+    }
+  }
+
+  "predef_1" should {
+    implicit val v = variables("predef_1")
+    beAPredefVal
+    provideAndHaveValues("val1")
+  }
+
+  "predef_2" should {
+    implicit val v = variables("predef_2")
+    beAPredefVal
+    provideAndHaveValues("val1", "val2")
+  }
 
   ///
   /// Utility methods
@@ -461,6 +495,12 @@ class VariableTest extends Specification {
     "Be an input password input" in {
       variable.spec.isInstanceOf[InputVariableSpec] &&
       variable.spec.constraint.typeName.name == "password"
+    }
+  }
+
+  private[this] def beAPredefVal(implicit variable: Variable) = {
+    "Be an PREDEF val" in {
+      variable.spec.isInstanceOf[PredefinedValuesVariableSpec]
     }
   }
 
@@ -501,6 +541,17 @@ class VariableTest extends Specification {
   private[this] def haveType(typeName: String)(implicit variable: Variable) = {
     "have type " + typeName in {
       variable.spec.constraint.typeName.name mustEqual typeName
+    }
+  }
+
+  private[this] def provideAndHaveValues(values: String*)(implicit variable: Variable) = {
+    s"have both provided values and set values '${values.mkString(",")}'" in {
+      variable match {
+        case v:PredefinedValuesVariable =>
+          v.spec.nelOfProvidedValues === values.toList &&
+          v.values.toList === values.toList
+        case _ => failure(s"Variable ${variable} is not a predefined variable type and so can not provides values")
+      }
     }
   }
 
