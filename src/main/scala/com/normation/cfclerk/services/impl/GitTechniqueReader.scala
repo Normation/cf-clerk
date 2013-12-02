@@ -131,6 +131,7 @@ class GitTechniqueReader(
   repo                       : GitRepositoryProvider,
   val techniqueDescriptorName: String, //full (with extension) conventional name for policy descriptor
   val categoryDescriptorName : String, //full (with extension) name of the descriptor for categories
+  val reportingDescriptorName: String,
   val relativePathToGitRepos : Option[String]
   ) extends TechniqueReader with Loggable {
 
@@ -250,6 +251,45 @@ class GitTechniqueReader(
         ids match {
           case Nil =>
             logger.error("Metadata file %s was not found for technique with id %s.".format(techniqueDescriptorName, techniqueId))
+            None
+          case h :: Nil =>
+            is = repo.db.open(h).openStream
+            Some(is)
+          case _ =>
+            logger.error("More than exactly one ids were found in the git tree for metadata of technique %s, I can not know which one to choose. IDs: %s".format(techniqueId,ids.mkString(", ")))
+            None
+      } }
+    } catch {
+      case ex:FileNotFoundException =>
+        logger.debug( () => "Template %s does not exists".format(path),ex)
+        useIt(None)
+    } finally {
+      if(null != is) {
+        is.close
+      }
+    }
+  }
+  override def getReportingDetailsContent[T](techniqueId: TechniqueId)(useIt : Option[InputStream] => T) : T = {
+    //build a treewalk with the path, given by metadata.xml
+    val path = techniqueId.toString + "/" + reportingDescriptorName
+    //has package id are unique among the whole tree, we are able to find a
+    //template only base on the packageId + name.
+
+    var is : InputStream = null
+    try {
+      useIt {
+        //now, the treeWalk
+        val tw = new TreeWalk(repo.db)
+        tw.setFilter(new FileTreeFilter(canonizedRelativePath, path))
+        tw.setRecursive(true)
+        tw.reset(revisionProvider.currentRevTreeId)
+        var ids = List.empty[ObjectId]
+        while(tw.next) {
+          ids = tw.getObjectId(0) :: ids
+        }
+        ids match {
+          case Nil =>
+            logger.error("Reporting descriptor file %s was not found for technique with id %s.".format(reportingDescriptorName, techniqueId))
             None
           case h :: Nil =>
             is = repo.db.open(h).openStream

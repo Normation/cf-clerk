@@ -54,6 +54,15 @@ class TechniqueParser(
   , systemVariableSpecService    : SystemVariableSpecService
 ) extends Loggable {
 
+  //the technique provides its expected reports if at least one section has a variable of type REPORT_KEYS
+  private[this] def checkIfProvidesExpectedReports(section: SectionChildSpec) : Boolean = {
+    section match {
+      case _: PredefinedValuesVariableSpec => true
+      case s: SectionSpec => s.children.exists(checkIfProvidesExpectedReports)
+      case _ => false
+    }
+  }
+
   def parseXml(node: Node, id: TechniqueId): Technique = {
     //check that node is <TECHNIQUE> and has a name attribute
     if (node.label.toUpperCase == TECHNIQUE_ROOT) {
@@ -63,10 +72,13 @@ class TechniqueParser(
           val name = nameAttr.text
           val compatible = try Some(CompatibleParser.parseXml((node \ COMPAT_TAG).head)) catch { case _:Exception => None }
 
+          val rootSection = sectionSpecParser.parseSectionsInPolicy(node, id, name)
+
+
           val technique = Technique(
               id
             , name
-            , rootSection = sectionSpecParser.parseSectionsInPolicy(node, id, name)
+            , rootSection = rootSection
             , description = ??!((node \ TECHNIQUE_DESCRIPTION).text).getOrElse(name)
             , compatible = compatible
             , templates = (node \ PROMISE_TEMPLATES_ROOT \\ PROMISE_TEMPLATE).map(xml => cf3PromisesFileTemplateParser.parseXml(id, xml) )
@@ -76,6 +88,8 @@ class TechniqueParser(
             , isMultiInstance = ((node \ TECHNIQUE_IS_MULTIINSTANCE).text.equalsIgnoreCase("true") )
             , longDescription = ??!((node \ TECHNIQUE_LONG_DESCRIPTION).text).getOrElse("")
             , isSystem = ((node \ TECHNIQUE_IS_SYSTEM).text.equalsIgnoreCase("true"))
+              //the technique provides its expected reports if at least one section has a variable of type REPORT_KEYS
+            , providesExpectedReports = checkIfProvidesExpectedReports(rootSection)
           )
 
           /*

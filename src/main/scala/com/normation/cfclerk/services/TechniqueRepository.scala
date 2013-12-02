@@ -63,6 +63,11 @@ trait TechniqueRepository {
    */
   def getTemplateContent[T](templateName: Cf3PromisesFileTemplateId)(useIt: Option[InputStream] => T): T
 
+  /**
+   * Retrieve the reporting descriptor file content
+   */
+  def getReportingDetailsContent[T](techniqueId: TechniqueId)(useIt: Option[InputStream] => T): T
+
   //  def packageDirectory : File
 
   /**

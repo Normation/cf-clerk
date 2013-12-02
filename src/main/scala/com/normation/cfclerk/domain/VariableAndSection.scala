@@ -239,6 +239,15 @@ case class SelectOneVariable(
   override def copyWithSavedValues(seq: Seq[String]): SelectOneVariable = this.copy(values = this.copyWithSavedValuesResult(seq))
 }
 
+case class PredefinedValuesVariable(
+    override val spec: PredefinedValuesVariableSpec
+  , override val values: Seq[String]
+) extends SectionVariable with HashcodeCaching {
+  type T = PredefinedValuesVariableSpec
+  override def copyWithAppendedValues(seq: Seq[String]): PredefinedValuesVariable = this.copy(values = this.copyWithAppendedValuesResult(seq))
+  override def copyWithSavedValue(s: String): PredefinedValuesVariable = this.copy(values = this.copyWithSavedValueResult(s))
+  override def copyWithSavedValues(seq: Seq[String]): PredefinedValuesVariable = this.copy(values = this.copyWithSavedValuesResult(seq))
+}
 
 object Variable {
 

@@ -56,7 +56,7 @@ class SectionSpecParser(variableParser:VariableSpecParser) extends Loggable {
     if (sections.isEmpty)
       SectionSpec(SECTION_ROOT_NAME)
     else {
-      val root = SectionSpec(SECTION_ROOT_NAME, children = parseChildren(sections.head, id, policyName))
+      val root = SectionSpec(SECTION_ROOT_NAME, children = parseChildren(SECTION_ROOT_NAME, sections.head, id, policyName))
 
       /*
        * check that all section names and all variable names are unique
@@ -64,7 +64,7 @@ class SectionSpecParser(variableParser:VariableSpecParser) extends Loggable {
       val variableNames = root.getAllVariables.map( _.name )
 
       /*
-       * check that all variable and seciont names are unique
+       * check that all variable and section names are unique
        */
       checkUniqueness(variableNames) {
         "At least two variables have the same name (case unsensitive), what is forbiden: "
@@ -127,39 +127,65 @@ class SectionSpecParser(variableParser:VariableSpecParser) extends Loggable {
       }
     }
 
-    val isMultivalued = "true" == getAttributeText(root, SECTION_IS_MULTIVALUED, "false").toLowerCase
-
-    // The defaut priority is "high" 
+    // The defaut priority is "high"
     val displayPriority = DisplayPriority(getAttributeText(root, SECTION_DISPLAYPRIORITY, "")).getOrElse(HighDisplayPriority)
-    
+
     val description = getUniqueNodeText(root, SECTION_DESCRIPTION, "")
 
-    val isComponent = "true"  == getAttributeText(root, SECTION_IS_COMPONENT, "false").toLowerCase
     val componentKey = (root \ ("@" + SECTION_COMPONENT_KEY)).headOption.map( _.text) match {
       case null | Some("") => None
       case x => x
     }
 
+    // Checking if we have predefined values
+    val children = parseChildren(name, root, id, policyName)
+
+    val expectedReportComponentKey = (children.collect { case x : PredefinedValuesVariableSpec => x }) match {
+      case seq if seq.size == 0 => None
+      case seq if seq.size == 1 => Some(seq.head.name)
+      case seq  =>
+        logger.error(s"There are too many predefined reports keys for given section ${name} : keys are : ${seq.map(_.name).mkString(",")}")
+        None
+    }
+
+    val effectiveComponentKey = (componentKey, expectedReportComponentKey) match {
+      case (Some(cp), Some(excp)) if cp == excp =>
+        Some(cp)
+      case (Some(cp), Some(excp)) if cp != excp =>
+        throw new ParsingException(s"Section '${name}' has a defined component key and defined reports key elements.")
+      case (Some(cp), _) => Some(cp)
+      case (_ , Some(excp)) => Some(excp)
+      case _ => None
+    }
+
+    // sanity check or derived values from what is before, or the descriptor itself
+    val isMultivalued = ("true" == getAttributeText(root, SECTION_IS_MULTIVALUED, "false").toLowerCase || expectedReportComponentKey.isDefined)
+
+    val isComponent = ("true"  == getAttributeText(root, SECTION_IS_COMPONENT, "false").toLowerCase || expectedReportComponentKey.isDefined)
+
+
     /**
      * A key must be define if and only if we are in a multivalued, component section.
      */
-    if(isMultivalued && isComponent && componentKey.isEmpty) {
+    if(isMultivalued && isComponent && effectiveComponentKey.isEmpty) {
       throw new ParsingException("Section '%s' is multivalued and is component. A componentKey attribute must be specified".format(name))
     }
 
-    val children = parseChildren(root, id, policyName)
-    val sectionSpec = SectionSpec(name, isMultivalued, isComponent, componentKey, displayPriority, description, children)
+
+
+    val sectionSpec = SectionSpec(name, isMultivalued, isComponent, effectiveComponentKey, displayPriority, description, children)
+
     if (isMultivalued)
       Full(sectionSpec.cloneVariablesInMultivalued)
     else
       Full(sectionSpec)
   }
 
-  private[this] def parseChildren(node: Node, id: TechniqueId, policyName: String): Seq[SectionChildSpec] = {
+  private[this] def parseChildren(sectionName: String, node: Node, id: TechniqueId, policyName: String): Seq[SectionChildSpec] = {
     assert(node.label == SECTIONS_ROOT || node.label == SECTION)
 
-    def parseOneVariable(node: Node) = {
-      variableParser.parseSectionVariableSpec(node) match {
+    def parseOneVariable(sectionName: String, node: Node) = {
+      variableParser.parseSectionVariableSpec(sectionName, node) match {
         case Full(x) => x
         case Empty =>
           val err = "In %s -> %s, couldn't parse variable %s, no error message".format(id, policyName, node)
@@ -189,7 +215,7 @@ class SectionSpecParser(variableParser:VariableSpecParser) extends Loggable {
       child <- node.child
       if !child.isEmpty && child.label != "#PCDATA"
     } yield child.label match {
-      case v if SectionVariableSpec.isVariable(v) => parseOneVariable(child)
+      case v if SectionVariableSpec.isVariable(v) => parseOneVariable(sectionName, child)
       case s if SectionSpec.isSection(s) => parseOneSection(child,id,policyName)
       case x => throw new ParsingException("Unexpected <%s> child element in policy package %s: %s".format(SECTIONS_ROOT,id, x))
     }
