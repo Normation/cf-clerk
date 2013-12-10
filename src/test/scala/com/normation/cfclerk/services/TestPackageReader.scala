@@ -62,7 +62,8 @@ class TestPackageReader {
     policyParser,
     "src/test/resources/techniquesRoot",
     "metadata.xml",
-    "category.xml")
+    "category.xml",
+    "expected_reports.csv")
 
   @Test
   def testReadPackage() {

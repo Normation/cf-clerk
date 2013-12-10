@@ -43,4 +43,6 @@ package object domain {
   // parameters
   val PARAMETER_VARIABLE = "RUDDER_PARAMETERS"
 
+  def reportKeysVariableName(sectionName: String) = "expectedReportKey " + sectionName
+
 }

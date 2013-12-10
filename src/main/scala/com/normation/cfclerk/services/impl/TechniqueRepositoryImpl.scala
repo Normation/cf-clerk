@@ -126,6 +126,9 @@ class TechniqueRepositoryImpl(
   override def getTemplateContent[T](templateName: Cf3PromisesFileTemplateId)(useIt: Option[InputStream] => T): T =
     techniqueReader.getTemplateContent(templateName)(useIt)
 
+  override def getReportingDetailsContent[T](techniqueId: TechniqueId)(useIt: Option[InputStream] => T): T =
+    techniqueReader.getReportingDetailsContent(techniqueId)(useIt)
+
   /**
    * Return all the policies available
    * @return
