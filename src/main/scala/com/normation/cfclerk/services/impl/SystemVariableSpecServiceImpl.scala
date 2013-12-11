@@ -39,6 +39,7 @@ import com.normation.cfclerk.services.SystemVariableSpecService
 import scala.collection.mutable.ArrayBuffer
 import net.liftweb.common._
 import com.normation.cfclerk.domain.IntegerVType
+import com.normation.cfclerk.domain.BooleanVType
 
 
 class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
@@ -102,6 +103,19 @@ class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
                                           , isUniqueVariable = true
                                           , constraint = Constraint(mayBeEmpty=true)
       )
+    , SystemVariableSpec("DENYBADCLOCKS"  , "Should CFEngine server accept connection from agent with a desynchronized clock?"
+                                          , multivalued = false
+                                          , isUniqueVariable = true
+                                          , constraint = Constraint(typeName = BooleanVType, default=Some("true"))
+
+      )
+    , SystemVariableSpec("SKIPIDENTIFY"  , "Should CFEngine server skip the forward DNS lookup for node identification?"
+                                          , multivalued = false
+                                          , isUniqueVariable = true
+                                          , constraint = Constraint(typeName = BooleanVType, default=Some("false"))
+
+      )
+
   )
 
   private[this] val varSpecsMap = varSpecs.map(x => (x.name -> x)).toMap
