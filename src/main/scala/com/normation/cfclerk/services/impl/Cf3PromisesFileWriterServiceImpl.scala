@@ -72,7 +72,7 @@ class Cf3PromisesFileWriterServiceImpl(
    */
   def prepareCf3PromisesFileTemplate(container: Cf3PolicyDraftContainer, extraSystemVariables: Map[String, Variable]): Map[TechniqueId, PreparedTemplates] = {
     val systemVars = prepareBundleVars(container)
-    
+
     val rudderParametersVariable = getParametersVariable(container)
 
     val techniques = techniqueRepository.getByIds(container.getAllIds)
@@ -105,12 +105,12 @@ class Cf3PromisesFileWriterServiceImpl(
       // Folders is a map of machine.uuid -> (base_machine_folder, backup_machine_folder, machine)
       for (folder @ PromisesFinalMoveInfo(containerId, baseFolder, newFolder, backupFolder) <- folders) {
         // backup old promises
-        logger.debug("Backuping old promises from %s to %s ".format(baseFolder, backupFolder))
+        logger.trace("Backuping old promises from %s to %s ".format(baseFolder, backupFolder))
         backupNodeFolder(baseFolder, backupFolder)
         try {
           newFolders += folder
 
-          logger.debug("Copying new promises into %s ".format(baseFolder))
+          logger.trace("Copying new promises into %s ".format(baseFolder))
           // move new promises
           moveNewNodeFolder(newFolder, baseFolder)
 
@@ -154,6 +154,10 @@ class Cf3PromisesFileWriterServiceImpl(
     try {
       val generationVariable = getGenerationVariable()
 
+      // write the files to the new promise folder
+      logger.trace(s"| Write file(s) ${outPath}/{${fileSet.map( _.destination).mkString("; ")}}")
+
+
       for (fileEntry <- fileSet) {
         techniqueRepository.getTemplateContent(fileEntry.source) { optInputStream =>
           optInputStream match {
@@ -180,8 +184,6 @@ class Cf3PromisesFileWriterServiceImpl(
                 }
               }
 
-              // write the files to the new promise folder
-              logger.debug("Create promises file %s %s".format(outPath, fileEntry.destination))
               try {
                 FileUtils.writeStringToFile(new File(outPath, fileEntry.destination), template.toString)
               } catch {
@@ -229,7 +231,7 @@ class Cf3PromisesFileWriterServiceImpl(
     , techniques: Seq[Technique]
   ) : Map[TechniqueId,Seq[STVariable]] = {
 
-    logger.debug("Preparing the PI variables for container %s".format(container.outPath))
+    logger.trace(s"| Preparing variables for container ${container.outPath}")
     val variablesValues = prepareAllCf3PolicyDraftVariables(container)
 
     // fill the variable
@@ -246,7 +248,7 @@ class Cf3PromisesFileWriterServiceImpl(
           case x : SystemVariableSpec => systemVars.get(x.name) match {
               case None =>
                 if(x.constraint.mayBeEmpty) { //ok, that's expected
-                  logger.debug("Variable system named %s not found in the extended variables environnement ".format(x.name))
+                  logger.trace("Variable system named %s not found in the extended variables environnement ".format(x.name))
                 } else {
                   logger.warn("Mandatory variable system named %s not found in the extended variables environnement ".format(x.name))
                 }
@@ -312,7 +314,7 @@ class Cf3PromisesFileWriterServiceImpl(
   }
 
   /**
-   * From the container, convert the parameter into StringTemplate variable, that contains a list of 
+   * From the container, convert the parameter into StringTemplate variable, that contains a list of
    * parameterName, parameterValue (really, the ParameterEntry itself)
    * This is quite naive for the moment
    */
@@ -321,8 +323,8 @@ class Cf3PromisesFileWriterServiceImpl(
         PARAMETER_VARIABLE
       , true
       , container.parameters.toSeq
-    )    
-  } 
+    )
+  }
   /**
    * Move the machine promises folder  to the backup folder
    * @param machineFolder
@@ -476,7 +478,7 @@ class Cf3PromisesFileWriterServiceImpl(
                 }
                 csv
               case _ =>
-                throw new RuntimeException("There cannot be two identical meta Technique on a same node"); 
+                throw new RuntimeException("There cannot be two identical meta Technique on a same node");
             }
         case false =>
           Seq[String]()

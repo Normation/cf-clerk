@@ -203,31 +203,5 @@ final case class Cf3PolicyDraft(
       }
   }
 
-  override lazy val toString = "%s %s".format(id, technique.id)
-
-  override lazy val hashCode = 37 * id.hashCode
-
-  override def equals(other: Any) = other match {
-    case that: Cf3PolicyDraft => this.id == that.id
-    case _ => false
-  }
-
-  /**
-   * Compare this policy instance with another and check if they are the
-   * same, what means:
-   * - same uuid / policy name ;
-   * - same variables (an empty and a non existent variable are the same, and the variables are trimmed)
-   *
-   * @param that
-   */
-  def equalsWithSameValues(that: Cf3PolicyDraft): Boolean = (
-         this.id == that.id
-      && this.technique.id == that.technique.id
-      && this.serial == that.serial
-      && this.variableMap.filter(x => x._2.values.size > 0).keySet == that.variableMap.filter(x => x._2.values.size > 0).keySet
-      && variableMap.filter(x => x._2.values.size > 0).keySet.forall { k =>
-           this.variableMap.filter(x => x._2.values.size > 0)(k).values.map(_.trim) == that.variableMap(k).values.map(_.trim)
-         }
-  )
 }
 
