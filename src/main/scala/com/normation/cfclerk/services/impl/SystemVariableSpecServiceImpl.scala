@@ -96,6 +96,9 @@ class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
     , SystemVariableSpec("MANAGED_NODES_ID", "UUID of nodes managed by the policy server"
                                           , constraint = Constraint(mayBeEmpty=true)
       )
+    , SystemVariableSpec("AUTHORIZED_NETWORKS", "Networks authorized to connect to the policy server"
+                                          , constraint = Constraint(mayBeEmpty=true)
+      )
       // this variable may be empty, has it is not filled by rudder, but by cf-clerk
     , SystemVariableSpec("GENERATIONTIMESTAMP"
                                           , "Timestamp of the promises generation"
