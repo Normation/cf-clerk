@@ -49,6 +49,8 @@ import org.xml.sax.SAXParseException
 import scala.io.Source
 import scala.xml._
 
+import com.normation.utils.Control.sequence
+
 /**
  * The class that handles all the writing of templates
  *
@@ -64,32 +66,66 @@ class Cf3PromisesFileWriterServiceImpl(
   private[this] val GENEREATED_CSV_FILENAME = "rudder_expected_reports.csv"
   private[this] val TAG_OF_RUDDER_ID = "@@RUDDER_ID@@"
 
+
+  override def readTemplateFromFileSystem(techniqueIds: Set[TechniqueId]) : Box[Map[Cf3PromisesFileTemplateId, Cf3PromisesFileTemplateCopyInfo]] = {
+
+    //list of (template id, template out path)
+    val templatesToRead = for {
+      technique <- techniqueRepository.getByIds(techniqueIds.toSeq)
+      template  <- technique.templates
+    } yield {
+      (template.id, template.outPath)
+    }
+
+    val now = System.currentTimeMillis()
+
+    val res = (sequence(templatesToRead) { case (templateId, templateOutPath) =>
+      for {
+        copyInfo <- techniqueRepository.getTemplateContent(templateId) { optInputStream =>
+          optInputStream match {
+            case None =>
+              Failure(s"Error when trying to open template '${templateId.toString}${Cf3PromisesFileTemplate.templateExtension}'. Check that the file exists and is correctly commited in Git, or that the metadata for the technique are corrects.")
+            case Some(inputStream) =>
+              logger.trace(s"Loading template ${templateId} (from an input stream relative to ${techniqueRepository}")
+              //string template does not allows "." in path name, so we are force to use a templateGroup by polity template (versions have . in them)
+              val content = IOUtils.toString(inputStream, "UTF-8")
+              Full(Cf3PromisesFileTemplateCopyInfo(content, templateId, templateOutPath))
+          }
+        }
+      } yield {
+        (copyInfo.id, copyInfo)
+      }
+    }).map( _.toMap)
+
+    logger.debug(s"${templatesToRead.size} promises templates read in ${System.currentTimeMillis-now}ms")
+
+    res
+  }
+
   /**
    * Compute the TMLs list to be written
    * @param container : the container of the policies we want to write
    * @param extraVariables : optional : extra system variables that we could want to add
    * @return
    */
-  def prepareCf3PromisesFileTemplate(container: Cf3PolicyDraftContainer, extraSystemVariables: Map[String, Variable]): Map[TechniqueId, PreparedTemplates] = {
-    val systemVars = prepareBundleVars(container)
-    
+  def prepareCf3PromisesFileTemplate(
+      container: Cf3PolicyDraftContainer
+    , extraSystemVariables: Map[String, Variable]
+    , templates: Map[Cf3PromisesFileTemplateId, Cf3PromisesFileTemplateCopyInfo]
+  ) : Map[TechniqueId, PreparedTemplates] = {
+
     val rudderParametersVariable = getParametersVariable(container)
-
     val techniques = techniqueRepository.getByIds(container.getAllIds)
+    val variablesByTechnique = prepareVariables(container, prepareBundleVars(container) ++ extraSystemVariables, techniques)
 
-    val tmlsByTechnique : Map[TechniqueId,Set[Cf3PromisesFileTemplateCopyInfo]] = techniques.map{ technique =>
-      (
-          technique.id
-        , technique.templates.map(tml => Cf3PromisesFileTemplateCopyInfo(tml.id, tml.outPath)).toSet
-      )
-    }.toMap
 
-    val variablesByTechnique = prepareVariables(container, systemVars ++ extraSystemVariables, techniques)
 
     techniques.map {technique =>
+      val copyInfos = templates.filterKeys(_.techniqueId == technique.id).values.toSet
+
       (
           technique.id
-        , PreparedTemplates(tmlsByTechnique(technique.id), variablesByTechnique(technique.id) :+ rudderParametersVariable )
+        , PreparedTemplates(copyInfos, variablesByTechnique(technique.id) :+ rudderParametersVariable )
       )
     }.toMap
   }
@@ -99,7 +135,7 @@ class Cf3PromisesFileWriterServiceImpl(
    * Move the generated promises from the new folder to their final folder, backuping previous promises in the way
    * @param folder : (Container identifier, (base folder, new folder of the policies, backup folder of the policies) )
    */
-  def movePromisesToFinalPosition(folders: Seq[PromisesFinalMoveInfo]): Seq[PromisesFinalMoveInfo] = {
+  override def movePromisesToFinalPosition(folders: Seq[PromisesFinalMoveInfo]): Seq[PromisesFinalMoveInfo] = {
     val newFolders = scala.collection.mutable.Buffer[PromisesFinalMoveInfo]()
     try {
       // Folders is a map of machine.uuid -> (base_machine_folder, backup_machine_folder, machine)
@@ -155,51 +191,43 @@ class Cf3PromisesFileWriterServiceImpl(
       val generationVariable = getGenerationVariable()
 
       for (fileEntry <- fileSet) {
-        techniqueRepository.getTemplateContent(fileEntry.source) { optInputStream =>
-          optInputStream match {
-            case None => throw new RuntimeException("Error when trying to open template '%s%s'. Check that the file exists and is correctly commited in Git, or that the metadata for the technique are corrects.".
-                format(fileEntry.source.toString, Cf3PromisesFileTemplate.templateExtension))
-            case Some(inputStream) =>
-              logger.trace("Loading template %s (from an input stream relative to %s".format(fileEntry.source, techniqueRepository))
-              //string template does not allows "." in path name, so we are force to use a templateGroup by polity template (versions have . in them)
-              val template = new StringTemplate(IOUtils.toString(inputStream, "UTF-8"), classOf[NormationAmpersandTemplateLexer]);
-              template.registerRenderer(classOf[DateTime], new DateRenderer());
-              template.registerRenderer(classOf[LocalDate], new LocalDateRenderer());
-              template.registerRenderer(classOf[LocalTime], new LocalTimeRenderer());
 
-              for (variable <- variableSet++generationVariable) {
-                if ( (variable.mayBeEmpty) && ((variable.values.size == 0) || (variable.values.size ==1 && variable.values.head == "") ) ) {
-                  template.setAttribute(variable.name, null)
-                } else if(variable.values.size == 0) {
-                  throw new VariableException("Mandatory variable %s is empty, can not write %s".format(variable.name, fileEntry.destination))
-                } else {
-                  logger.trace("Adding variable %s : %s values %s".format(
-                      outPath + "/" + fileEntry.destination, variable.name, variable.values.mkString("[",",","]")))
-                  variable.values.foreach { value => template.setAttribute(variable.name, value)
-                  }
-                }
-              }
+        //string template does not allows "." in path name, so we are force to use a templateGroup by polity template (versions have . in them)
+        val template = new StringTemplate(fileEntry.source, classOf[NormationAmpersandTemplateLexer]);
+        template.registerRenderer(classOf[DateTime], new DateRenderer());
+        template.registerRenderer(classOf[LocalDate], new LocalDateRenderer());
+        template.registerRenderer(classOf[LocalTime], new LocalTimeRenderer());
 
-              // write the files to the new promise folder
-              logger.debug("Create promises file %s %s".format(outPath, fileEntry.destination))
-              try {
-                FileUtils.writeStringToFile(new File(outPath, fileEntry.destination), template.toString)
-              } catch {
-                case e : Exception =>
-                  val message = "Bad format in Technique %s (file: %s) cause is: %s".format(fileEntry.source.techniqueId, fileEntry.destination, e.getMessage)
-                  throw new RuntimeException(message,e)
-              }
-
-              // Writing csv file
-              val csvContent = expectedReportsLines.mkString("\n")
-              try {
-                  FileUtils.writeStringToFile(new File(outPath, GENEREATED_CSV_FILENAME), csvContent)
-              } catch {
-                case e : Exception =>
-                  val message = "Impossible to write CSV file (file: %s) cause is: %s".format(GENEREATED_CSV_FILENAME, e.getMessage)
-                  throw new RuntimeException(message,e)
-              }
+        for (variable <- variableSet++generationVariable) {
+          if ( (variable.mayBeEmpty) && ((variable.values.size == 0) || (variable.values.size ==1 && variable.values.head == "") ) ) {
+            template.setAttribute(variable.name, null)
+          } else if(variable.values.size == 0) {
+            throw new VariableException("Mandatory variable %s is empty, can not write %s".format(variable.name, fileEntry.destination))
+          } else {
+            logger.trace(s"Adding variable ${outPath + "/" + fileEntry.destination} : ${variable.name} values ${variable.values.mkString("[",",","]")}")
+            variable.values.foreach { value => template.setAttribute(variable.name, value)
+            }
           }
+        }
+
+        // write the files to the new promise folder
+        logger.trace("Create promises file %s %s".format(outPath, fileEntry.destination))
+        try {
+          FileUtils.writeStringToFile(new File(outPath, fileEntry.destination), template.toString)
+        } catch {
+          case e : Exception =>
+            val message = s"Bad format in Technique ${fileEntry.id.techniqueId} (file: ${fileEntry.destination}) cause is: ${e.getMessage}"
+            throw new RuntimeException(message,e)
+        }
+
+        // Writing csv file
+        val csvContent = expectedReportsLines.mkString("\n")
+        try {
+            FileUtils.writeStringToFile(new File(outPath, GENEREATED_CSV_FILENAME), csvContent)
+        } catch {
+          case e : Exception =>
+            val message = s"Impossible to write CSV file (file: ${GENEREATED_CSV_FILENAME}) cause is: ${e.getMessage}"
+            throw new RuntimeException(message,e)
         }
       }
 
@@ -312,7 +340,7 @@ class Cf3PromisesFileWriterServiceImpl(
   }
 
   /**
-   * From the container, convert the parameter into StringTemplate variable, that contains a list of 
+   * From the container, convert the parameter into StringTemplate variable, that contains a list of
    * parameterName, parameterValue (really, the ParameterEntry itself)
    * This is quite naive for the moment
    */
@@ -321,8 +349,8 @@ class Cf3PromisesFileWriterServiceImpl(
         PARAMETER_VARIABLE
       , true
       , container.parameters.toSeq
-    )    
-  } 
+    )
+  }
   /**
    * Move the machine promises folder  to the backup folder
    * @param machineFolder
@@ -476,7 +504,7 @@ class Cf3PromisesFileWriterServiceImpl(
                 }
                 csv
               case _ =>
-                throw new RuntimeException("There cannot be two identical meta Technique on a same node"); 
+                throw new RuntimeException("There cannot be two identical meta Technique on a same node");
             }
         case false =>
           Seq[String]()
