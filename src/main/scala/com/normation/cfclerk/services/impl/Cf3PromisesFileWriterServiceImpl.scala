@@ -230,6 +230,16 @@ class Cf3PromisesFileWriterServiceImpl(
             throw new RuntimeException(message,e)
         }
       }
+      // Writing csv file
+      val csvContent = expectedReportsLines.mkString("\n")
+      try {
+        FileUtils.writeStringToFile(new File(outPath, GENEREATED_CSV_FILENAME), csvContent)
+      } catch {
+        case e : Exception =>
+           val message = "Impossible to write CSV file (file: %s) cause is: %s".format(GENEREATED_CSV_FILENAME, e.getMessage)
+           throw new RuntimeException(message,e)
+      }
+
 
     } catch {
       case ex: IOException => logger.error("Writing promises error : ", ex); throw new IOException("Could not create new promises", ex)
