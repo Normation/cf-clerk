@@ -82,10 +82,11 @@ case class PreparedTemplates(
  * It gives what template to copy where.
  */
 case class Cf3PromisesFileTemplateCopyInfo(
-    source     : Cf3PromisesFileTemplateId  // the full name where the template is found
- ,  destination: String
+    source     : String  // content of the template as a string
+  , id         : Cf3PromisesFileTemplateId
+  , destination: String
 ) extends HashcodeCaching {
-  override def toString() = "Tml package id %s, Tml name %s, Tml destination %s".format(source.techniqueId, source.name, destination)
+  override def toString() = s"Promise template ${id.techniqueId}/${id.name}; destination ${destination}"
 }
 
 /**

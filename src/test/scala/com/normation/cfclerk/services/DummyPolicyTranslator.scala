@@ -35,8 +35,11 @@
 package com.normation.cfclerk.services
 
 import com.normation.cfclerk.domain._
+import net.liftweb.common.Box
 
 class DummyPolicyTranslator extends Cf3PromisesFileWriterService {
+
+  def readTemplateFromFileSystem(techniques:Set[TechniqueId]) : Box[Map[Cf3PromisesFileTemplateId, Cf3PromisesFileTemplateCopyInfo]] = null
 
   def prepareCf3PromisesFileTemplate(policyContainer : Cf3PolicyDraftContainer, extraVariables : Map[String, Variable]) : PreparedTemplates = {
     null

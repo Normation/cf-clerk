@@ -35,6 +35,7 @@
 package com.normation.cfclerk.services
 
 import com.normation.cfclerk.domain._
+import net.liftweb.common.Box
 
 /**
  * Deals with templates : prepare the templates, fetch variables needed by a policy,
@@ -44,6 +45,12 @@ import com.normation.cfclerk.domain._
  */
 trait Cf3PromisesFileWriterService {
 
+
+  /**
+   * For a set of technique, read all the template from the file system in
+   * an efficient way
+   */
+  def readTemplateFromFileSystem(techniques:Set[TechniqueId]) : Box[Map[Cf3PromisesFileTemplateId, Cf3PromisesFileTemplateCopyInfo]]
 
   /**
    * Write the current seq of template file a the path location, replacing the variables found in variableSet
