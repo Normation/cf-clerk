@@ -72,7 +72,7 @@ class Cf3PromisesFileWriterServiceImpl(
    */
   def prepareCf3PromisesFileTemplate(container: Cf3PolicyDraftContainer, extraSystemVariables: Map[String, Variable]): Map[TechniqueId, PreparedTemplates] = {
     val systemVars = prepareBundleVars(container)
-    
+
     val rudderParametersVariable = getParametersVariable(container)
 
     val techniques = techniqueRepository.getByIds(container.getAllIds)
@@ -189,19 +189,19 @@ class Cf3PromisesFileWriterServiceImpl(
                   val message = "Bad format in Technique %s (file: %s) cause is: %s".format(fileEntry.source.techniqueId, fileEntry.destination, e.getMessage)
                   throw new RuntimeException(message,e)
               }
-
-              // Writing csv file
-              val csvContent = expectedReportsLines.mkString("\n")
-              try {
-                  FileUtils.writeStringToFile(new File(outPath, GENEREATED_CSV_FILENAME), csvContent)
-              } catch {
-                case e : Exception =>
-                  val message = "Impossible to write CSV file (file: %s) cause is: %s".format(GENEREATED_CSV_FILENAME, e.getMessage)
-                  throw new RuntimeException(message,e)
-              }
           }
         }
       }
+      // Writing csv file
+      val csvContent = expectedReportsLines.mkString("\n")
+      try {
+        FileUtils.writeStringToFile(new File(outPath, GENEREATED_CSV_FILENAME), csvContent)
+      } catch {
+        case e : Exception =>
+           val message = "Impossible to write CSV file (file: %s) cause is: %s".format(GENEREATED_CSV_FILENAME, e.getMessage)
+           throw new RuntimeException(message,e)
+      }
+
 
     } catch {
       case ex: IOException => logger.error("Writing promises error : ", ex); throw new IOException("Could not create new promises", ex)
@@ -312,7 +312,7 @@ class Cf3PromisesFileWriterServiceImpl(
   }
 
   /**
-   * From the container, convert the parameter into StringTemplate variable, that contains a list of 
+   * From the container, convert the parameter into StringTemplate variable, that contains a list of
    * parameterName, parameterValue (really, the ParameterEntry itself)
    * This is quite naive for the moment
    */
@@ -321,8 +321,8 @@ class Cf3PromisesFileWriterServiceImpl(
         PARAMETER_VARIABLE
       , true
       , container.parameters.toSeq
-    )    
-  } 
+    )
+  }
   /**
    * Move the machine promises folder  to the backup folder
    * @param machineFolder
@@ -476,7 +476,7 @@ class Cf3PromisesFileWriterServiceImpl(
                 }
                 csv
               case _ =>
-                throw new RuntimeException("There cannot be two identical meta Technique on a same node"); 
+                throw new RuntimeException("There cannot be two identical meta Technique on a same node");
             }
         case false =>
           Seq[String]()
