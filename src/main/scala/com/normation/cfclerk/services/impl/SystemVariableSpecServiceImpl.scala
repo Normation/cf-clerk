@@ -121,6 +121,21 @@ class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
                                           , constraint = Constraint(typeName = BooleanVType, default=Some("false"))
 
       )
+    , SystemVariableSpec("AGENT_RUN_INTERVAL", "Run interval (in minutes) at which the agent runs"
+                                          , multivalued = false
+                                          , isUniqueVariable = true
+                                          , constraint = Constraint(typeName = IntegerVType())
+      )
+    , SystemVariableSpec("AGENT_RUN_SPLAYTIME", "Splaytime (in minutes) for the agent execution"
+                                          , multivalued = false
+                                          , isUniqueVariable = true
+                                          , constraint = Constraint(typeName = IntegerVType())
+      )
+
+    , SystemVariableSpec("AGENT_RUN_SCHEDULE", "Schedule for the executor daemon"
+                                          , multivalued = false
+                                          , isUniqueVariable = true
+      )
 
   )
 
