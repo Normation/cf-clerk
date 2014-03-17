@@ -136,6 +136,16 @@ class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
                                           , multivalued = false
                                           , isUniqueVariable = true
       )
+    , SystemVariableSpec("MODIFIED_FILES_TTL", "Number of days to retain modified files"
+                                          , multivalued = false
+                                          , isUniqueVariable = true
+                                          , constraint = Constraint(typeName = IntegerVType())
+      )
+    , SystemVariableSpec("CFENGINE_OUTPUTS_TTL", "Number of days to retain CFEngine outputs files"
+                                          , multivalued = false
+                                          , isUniqueVariable = true
+                                          , constraint = Constraint(typeName = IntegerVType())
+      )
 
   )
 
