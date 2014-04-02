@@ -100,10 +100,13 @@ class Cf3PromisesFileWriterServiceImpl(
    * @param folder : (Container identifier, (base folder, new folder of the policies, backup folder of the policies) )
    */
   def movePromisesToFinalPosition(folders: Seq[PromisesFinalMoveInfo]): Seq[PromisesFinalMoveInfo] = {
+    // We need to sort the folders by "depth", so that we backup and move the deepest one first
+    val sortedFolder = folders.sortBy(x => x.baseFolder.count(_ =='/')).reverse
+
     val newFolders = scala.collection.mutable.Buffer[PromisesFinalMoveInfo]()
     try {
       // Folders is a map of machine.uuid -> (base_machine_folder, backup_machine_folder, machine)
-      for (folder @ PromisesFinalMoveInfo(containerId, baseFolder, newFolder, backupFolder) <- folders) {
+      for (folder @ PromisesFinalMoveInfo(containerId, baseFolder, newFolder, backupFolder) <- sortedFolder) {
         // backup old promises
         logger.debug("Backuping old promises from %s to %s ".format(baseFolder, backupFolder))
         backupNodeFolder(baseFolder, backupFolder)
