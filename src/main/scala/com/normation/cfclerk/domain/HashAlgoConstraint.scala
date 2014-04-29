@@ -47,6 +47,7 @@ import org.apache.commons.codec.binary.BaseNCodec
 import org.eclipse.jgit.errors.NotSupportedException
 import org.apache.commons.codec.digest.Md5Crypt
 import org.apache.commons.codec.digest.Sha2Crypt
+import org.apache.commons.codec.digest.UnixCrypt
 
 object HashAlgoConstraint {
 
@@ -54,6 +55,7 @@ object HashAlgoConstraint {
        PLAIN
     :: MD5 :: SHA1 :: SHA256 :: SHA512
     :: LinuxShadowMD5 :: LinuxShadowSHA256 :: LinuxShadowSHA512
+    :: UnixCryptDES
     :: Nil
   )
 
@@ -157,20 +159,25 @@ object SHA512 extends HashAlgoConstraint {
  * shadow-md5 / shadow-sha-(level)
  */
 object LinuxShadowMD5 extends HashAlgoConstraint {
-  private[this] val md = MessageDigest.getInstance("MD5")
   override def hash(input:Array[Byte]) : String = Md5Crypt.md5Crypt(input)
   override val prefix = "linux-shadow-md5"
 }
 
 object LinuxShadowSHA256 extends HashAlgoConstraint {
-  private[this] val md = MessageDigest.getInstance("SHA-256")
   override def hash(input:Array[Byte]) : String = Sha2Crypt.sha256Crypt(input)
   override val prefix = "linux-shadow-sha256"
 }
 
 object LinuxShadowSHA512 extends HashAlgoConstraint {
-  private[this] val md = MessageDigest.getInstance("SHA-512")
   override def hash(input:Array[Byte]) : String = Sha2Crypt.sha512Crypt(input)
   override val prefix = "linux-shadow-sha512"
 }
 
+/**
+ * Unix historical crypt algo (based on 56 bits DES)
+ * Used in historical Unix systems.
+ */
+object UnixCryptDES extends HashAlgoConstraint {
+  override def hash(input:Array[Byte]) : String = UnixCrypt.crypt(input)
+  override val prefix = "unix-crypt-des"
+}
