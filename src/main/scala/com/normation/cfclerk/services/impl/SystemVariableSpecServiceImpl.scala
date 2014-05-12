@@ -48,10 +48,6 @@ class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
       SystemVariableSpec("ALLOWCONNECT"   , "List of ip allowed to connect to the node (policyserver + children if any)"
                                           , multivalued = true
       )
-    , SystemVariableSpec("CLIENTSLIST"    , "List of agent to contact via runagent"
-                                          , multivalued = true
-                                          , constraint = Constraint(mayBeEmpty=true)
-      )
     , SystemVariableSpec("CLIENTSFOLDERS" , "List of agent to contact via runagent"
                                           , multivalued = true
                                           , constraint = Constraint(mayBeEmpty=true)

@@ -142,7 +142,14 @@ class TechniqueParser(
    *
    */
   private[this] def parseSysvarSpecs(node: Node, id:TechniqueId) : Set[SystemVariableSpec] = {
-    (node \ SYSTEMVARS_ROOT \ SYSTEMVAR_NAME).map(x => systemVariableSpecService.get(x.text)).toSet
+    (node \ SYSTEMVARS_ROOT \ SYSTEMVAR_NAME).map{ x =>
+      try {
+        systemVariableSpecService.get(x.text)
+      } catch {
+        case ex:NoSuchElementException =>
+          throw new ParsingException(s"The system variable ${x.text} is not defined: perhaps the metadata.xml for technique '${id.toString}' is not up to date")
+      }
+    }.toSet
   }
 
 }
