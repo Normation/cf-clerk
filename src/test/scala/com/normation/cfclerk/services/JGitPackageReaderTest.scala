@@ -138,7 +138,7 @@ trait JGitPackageReaderSpec extends Specification with Loggable {
     "...and version 2.0" in packages(1).version === TechniqueVersion("2.0")
     "...with a template from which we can read 'The template content\\non two lines.'" in {
       reader.getTemplateContent(tmlId){
-        case None => failure("Can not open an InputStream for " + tmlId.toString)
+        case None => ko("Can not open an InputStream for " + tmlId.toString)
         case Some(is) => IOUtils.toString(is) === "The template content\non two lines."
       }
     }

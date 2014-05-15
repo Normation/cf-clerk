@@ -300,13 +300,18 @@ class VariableTest extends Specification {
   "Raw variable" should {
     implicit val rawVariable = variables(rawVar)
     haveType("raw")
-    rawVariable.copyWithSavedValue(rawValue).getTypedValues.openOrThrowException("Invalid content for the raw variable") must containTheSameElementsAs(Seq(rawValue))
+
+    "have correct content" in {
+      (rawVariable.copyWithSavedValue(rawValue).getTypedValues.openOrThrowException("Invalid content for the raw variable") must containTheSameElementsAs(Seq(rawValue)))
+    }
   }
 
   "Simple variable " should {
     implicit val simpleVariable = variables(simpleName)
     haveType("string")
-    simpleVariable.copyWithSavedValue(rawValue).getTypedValues.openOrThrowException("Invalid content for the escaped variable") must containTheSameElementsAs(Seq(escapedTo))
+    "correctly escape variable" in {
+      simpleVariable.copyWithSavedValue(rawValue).getTypedValues.openOrThrowException("Invalid content for the escaped variable") must containTheSameElementsAs(Seq(escapedTo))
+    }
   }
 
   "select 1" should {
@@ -325,7 +330,7 @@ class VariableTest extends Specification {
     "have its regex field correctly set" in {
       input.spec.constraint.typeName match {
         case s:StringVType => s.regex mustEqual Some(RegexConstraint("""\d\d\d\d-\d\d\d\d-\d\d\d\d-\d\d\d\d""", "must resemble 1234-1234-1234-1234"))
-        case t => failure(s"Variable type '${t.name}' can not have a regex")
+        case t => ko(s"Variable type '${t.name}' can not have a regex")
       }
 
 
@@ -334,7 +339,7 @@ class VariableTest extends Specification {
 
   def testSpecVarFields(spec: VariableSpec, longDescription: String = "",
     defaultValue: Option[String] = None) = {
-    spec.longDescription === longDescription &&
+    spec.longDescription === longDescription and
       spec.constraint.default === defaultValue
   }
 
@@ -493,7 +498,7 @@ class VariableTest extends Specification {
 
   private[this] def beAPassword(implicit variable: Variable) = {
     "Be an input password input" in {
-      variable.spec.isInstanceOf[InputVariableSpec] &&
+      variable.spec.isInstanceOf[InputVariableSpec] and
       variable.spec.constraint.typeName.name == "password"
     }
   }
@@ -548,9 +553,9 @@ class VariableTest extends Specification {
     s"have both provided values and set values '${values.mkString(",")}'" in {
       variable match {
         case v:PredefinedValuesVariable =>
-          v.spec.nelOfProvidedValues === values.toList &&
+          v.spec.nelOfProvidedValues === values.toList and
           v.values.toList === values.toList
-        case _ => failure(s"Variable ${variable} is not a predefined variable type and so can not provides values")
+        case _ => ko(s"Variable ${variable} is not a predefined variable type and so can not provides values")
       }
     }
   }
@@ -577,7 +582,7 @@ class VariableTest extends Specification {
     s"Have an user defined hash algorithme (and so none constrained)" in {
       variable.spec.constraint.typeName match {
         case PasswordVType(algos) => algos must containTheSameElementsAs(HashAlgoConstraint.algorithmes)
-        case _ => failure("Variable is not a password input")
+        case _ => ko("Variable is not a password input")
       }
     }
   }
@@ -586,7 +591,7 @@ class VariableTest extends Specification {
     s"Have hash algorithme of type ${algos.map( _.prefix).mkString(",")}" in {
       variable.spec.constraint.typeName match {
         case PasswordVType(a) => a ==== (algos)
-        case _ => failure("Variable is not a password input")
+        case _ => ko("Variable is not a password input")
       }
     }
   }
