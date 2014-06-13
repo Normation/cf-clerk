@@ -147,6 +147,11 @@ class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
                                           , isUniqueVariable = true
                                           , constraint = Constraint(typeName = BooleanVType, default=Some("true"))
       )
+    , SystemVariableSpec("RUDDER_SERVER_ROLES", "Mapping of all role <-> hostnames"
+                                          , multivalued = false
+                                          , isUniqueVariable = true
+                                          , constraint = Constraint(mayBeEmpty=true)
+      )
   )
 
   private[this] val varSpecsMap = varSpecs.map(x => (x.name -> x)).toMap
