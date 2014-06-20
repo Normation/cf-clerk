@@ -58,9 +58,6 @@ class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
     , SystemVariableSpec("COMMUNITYPORT"  , "The port used by the community edition"
                                           , multivalued  = false
       )
-    , SystemVariableSpec("LICENSESPAID"   , "Number of Nova licences paid"
-                                          , constraint = Constraint(typeName = IntegerVType(), mayBeEmpty=true)
-      )
     , SystemVariableSpec("NODEROLE"       , "List of nodeConfiguration roles")
     , SystemVariableSpec("TOOLS_FOLDER"   , "Tools folder")
     , SystemVariableSpec("DAVUSER"   	  , "Username for webdav user"
