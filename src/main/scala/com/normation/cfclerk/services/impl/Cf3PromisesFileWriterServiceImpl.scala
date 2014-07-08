@@ -222,25 +222,16 @@ class Cf3PromisesFileWriterServiceImpl(
             val message = s"Bad format in Technique ${fileEntry.id.techniqueId} (file: ${fileEntry.destination}) cause is: ${e.getMessage}"
             throw new RuntimeException(message,e)
         }
-
-        // Writing csv file
-        val csvContent = expectedReportsLines.mkString("\n")
-        try {
-            FileUtils.writeStringToFile(new File(outPath, GENEREATED_CSV_FILENAME), csvContent)
-        } catch {
-          case e : Exception =>
-            val message = s"Impossible to write CSV file (file: ${GENEREATED_CSV_FILENAME}) cause is: ${e.getMessage}"
-            throw new RuntimeException(message,e)
-        }
       }
+
       // Writing csv file
       val csvContent = expectedReportsLines.mkString("\n")
       try {
         FileUtils.writeStringToFile(new File(outPath, GENEREATED_CSV_FILENAME), csvContent)
       } catch {
         case e : Exception =>
-           val message = "Impossible to write CSV file (file: %s) cause is: %s".format(GENEREATED_CSV_FILENAME, e.getMessage)
-           throw new RuntimeException(message,e)
+          val message = s"Impossible to write CSV file (file: ${GENEREATED_CSV_FILENAME}) cause is: ${e.getMessage}"
+          throw new RuntimeException(message,e)
       }
 
 
