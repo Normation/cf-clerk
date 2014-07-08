@@ -190,6 +190,17 @@ class Cf3PromisesFileWriterServiceImpl(
     , outPath             : String
     , expectedReportsLines: Seq[String]
   ): Unit = {
+
+    /**
+     * Write a File with content passed as parameter and set permission to be writable by user only
+     * CFEngine will not run automatically if someone else than user can write the promise
+     */
+    def writeFileWithCFEnginePermission(file:File, content:String)= {
+      // Set permissions to be only user writable
+      file.setWritable(true, true)
+      FileUtils.writeStringToFile(file, content)
+    }
+
     try {
       val generationVariable = getGenerationVariable()
 
@@ -216,18 +227,21 @@ class Cf3PromisesFileWriterServiceImpl(
         // write the files to the new promise folder
         logger.trace("Create promises file %s %s".format(outPath, fileEntry.destination))
         try {
-          FileUtils.writeStringToFile(new File(outPath, fileEntry.destination), template.toString)
+          val promiseFile = new File(outPath, fileEntry.destination)
+          writeFileWithCFEnginePermission(promiseFile, template.toString)
         } catch {
           case e : Exception =>
             val message = s"Bad format in Technique ${fileEntry.id.techniqueId} (file: ${fileEntry.destination}) cause is: ${e.getMessage}"
             throw new RuntimeException(message,e)
         }
+
       }
 
       // Writing csv file
       val csvContent = expectedReportsLines.mkString("\n")
       try {
-        FileUtils.writeStringToFile(new File(outPath, GENEREATED_CSV_FILENAME), csvContent)
+        val csvFile = new File(outPath, GENEREATED_CSV_FILENAME)
+        writeFileWithCFEnginePermission(csvFile, csvContent)
       } catch {
         case e : Exception =>
           val message = s"Impossible to write CSV file (file: ${GENEREATED_CSV_FILENAME}) cause is: ${e.getMessage}"
