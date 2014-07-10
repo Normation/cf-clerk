@@ -68,6 +68,7 @@ import scala.collection.mutable.Buffer
 import com.normation.cfclerk.xmlparsers.TechniqueParser
 import com.normation.cfclerk.services._
 import com.normation.exceptions.TechnicalException
+import org.eclipse.jgit.internal.storage.file.FileRepository
 
 
 /**
@@ -94,7 +95,7 @@ class GitRepositoryProviderImpl(techniqueDirectoryPath: String) extends GitRepos
    * If no git repos is found, create one.
    */
   private def checkGitRepos(root:File) : Repository = {
-    val db = new FileRepositoryBuilder().setWorkTree(root).build
+    val db = (new FileRepositoryBuilder().setWorkTree(root).build).asInstanceOf[FileRepository]
     if(!db.getConfig.getFile.exists) {
       logger.info("Git directory was not initialised: create a new git repository into folder %s and add all its content as initial release".format(root.getAbsolutePath))
       db.create()
@@ -166,6 +167,7 @@ class SimpleGitRevisionProvider(refPath:String,repo:GitRepositoryProvider) exten
  */
 class FileTreeFilter(rootDirectory:Option[String], fileName: String) extends TreeFilter {
   private[this] val fileRawPath = JConstants.encode("/" + fileName)
+  private[this] val rootFileRawPath = JConstants.encode(fileName)
 
   private[this] val rawRootPath = {
     rootDirectory match {
@@ -175,6 +177,8 @@ class FileTreeFilter(rootDirectory:Option[String], fileName: String) extends Tre
   }
 
   override def include(walker:TreeWalk) : Boolean = {
+    //root files does not start with "/"
+    (walker.getPathLength == rootFileRawPath.size && walker.isPathSuffix(rootFileRawPath, rootFileRawPath.size)) ||
     (rawRootPath.size == 0 || (walker.isPathPrefix(rawRootPath,rawRootPath.size) == 0)) && //same root
     ( walker.isSubtree || walker.isPathSuffix(fileRawPath, fileRawPath.size) )
   }
