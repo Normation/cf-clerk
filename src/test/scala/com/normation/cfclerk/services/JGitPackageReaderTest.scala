@@ -122,7 +122,7 @@ trait JGitPackageReaderSpec extends Specification with Loggable {
     "has one policy package..." in 1 === rootCat.packageIds.size
     "...with name p_root_1" in "p_root_1" === rootCat.packageIds.head.name.value
     "...with version 1.0" in "1.0" === rootCat.packageIds.head.version.toString
-    "has 1 valid subcategory (because cat has no category.xml descriptor)" in 1 === rootCat.subCategoryIds.size
+    "has 1 valid subcategory (because cat2 has no category.xml descriptor)" in 1 === rootCat.subCategoryIds.size
     "...with name cat1" in rootCat.subCategoryIds.head === rootCat.id / "cat1"
   }
 
