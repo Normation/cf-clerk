@@ -58,12 +58,13 @@ import com.normation.utils.HashcodeCaching
  *   accordingly to its formatters
  * - a "mayBeEmpty" flag that allows string template to know how to
  *   handle empty list of values
- *
+ * - a "isSystem" flag that describe if the variable is system or not
  */
 case class STVariable(
-    name:String
+    name      :String
   , mayBeEmpty:Boolean
-  , values:Seq[Any]
+  , values    :Seq[Any]
+  , isSystem  :Boolean
 ) extends HashcodeCaching
 
 

@@ -202,9 +202,11 @@ class Cf3PromisesFileWriterServiceImpl(
         template.registerRenderer(classOf[LocalTime], new LocalTimeRenderer());
 
         for (variable <- variableSet++generationVariable) {
-          if ( (variable.mayBeEmpty) && ((variable.values.size == 0) || (variable.values.size ==1 && variable.values.head == "") ) ) {
+          // Only System Variables have nullable entries
+          if ( variable.isSystem && variable.mayBeEmpty &&
+              ( (variable.values.size == 0) || (variable.values.size ==1 && variable.values.head == "") ) ) {
             template.setAttribute(variable.name, null)
-          } else if(variable.values.size == 0) {
+          } else if (!variable.mayBeEmpty && variable.values.size == 0) {
             throw new VariableException("Mandatory variable %s is empty, can not write %s".format(variable.name, fileEntry.destination))
           } else {
             logger.trace(s"Adding variable ${outPath + "/" + fileEntry.destination} : ${variable.name} values ${variable.values.mkString("[",",","]")}")
@@ -261,7 +263,7 @@ class Cf3PromisesFileWriterServiceImpl(
     // compute the generation timestamp
     val promiseGenerationTimestamp = DateTime.now()
 
-    Seq(STVariable(generationTimestampVariable, false, Seq(promiseGenerationTimestamp)))
+    Seq(STVariable(generationTimestampVariable, false, Seq(promiseGenerationTimestamp), true))
   }
 
   private[this] def prepareVariables(
@@ -306,6 +308,7 @@ class Cf3PromisesFileWriterServiceImpl(
             case Full(seq) => seq
             case e:EmptyBox => throw new VariableException("Wrong type of variable " + v)
           }
+        , v.spec.isSystem
       ) }
       (technique.id,stVariables)
     }).toMap
@@ -362,6 +365,7 @@ class Cf3PromisesFileWriterServiceImpl(
         PARAMETER_VARIABLE
       , true
       , container.parameters.toSeq
+      , true
     )
   }
   /**
