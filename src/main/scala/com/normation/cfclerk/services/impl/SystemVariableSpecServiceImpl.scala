@@ -40,6 +40,8 @@ import scala.collection.mutable.ArrayBuffer
 import net.liftweb.common._
 import com.normation.cfclerk.domain.IntegerVType
 import com.normation.cfclerk.domain.BooleanVType
+import com.normation.cfclerk.domain.BasicStringVType
+import com.normation.cfclerk.domain.RegexConstraint
 
 
 class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
@@ -148,6 +150,19 @@ class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
                                           , multivalued = false
                                           , isUniqueVariable = true
                                           , constraint = Constraint(mayBeEmpty=true)
+      )
+    , SystemVariableSpec("RUDDER_REPORT_MODE", "Defines if Rudder should send compliance reports or only change (error, repair) one. (default full-compliance)"
+                                          , multivalued = false
+                                          , isUniqueVariable = true
+                                          , constraint = Constraint(
+                                              typeName = BasicStringVType(
+                                                  regex = Some(RegexConstraint(
+                                                      pattern = "(full-compliance|changes-only)"
+                                                    , errorMsg = s"Forbiden value, only 'full-compliane' and 'changes-only' are authorized"
+                                                  ))
+                                              )
+                                            , default=Some("full-compliance")
+                                          )
       )
   )
 
