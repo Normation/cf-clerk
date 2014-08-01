@@ -149,6 +149,11 @@ class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
                                           , isUniqueVariable = true
                                           , constraint = Constraint(mayBeEmpty=true)
       )
+    , SystemVariableSpec("RUDDER_MINIMAL_REPORTS", "Defines if Rudder should only send Error and Repairs reports (dafault false)"
+                                          , multivalued = false
+                                          , isUniqueVariable = true
+                                          , constraint = Constraint(typeName = BooleanVType, default=Some("false"))
+      )
   )
 
   private[this] val varSpecsMap = varSpecs.map(x => (x.name -> x)).toMap
