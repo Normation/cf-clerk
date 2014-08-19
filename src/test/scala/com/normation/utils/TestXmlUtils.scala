@@ -91,7 +91,7 @@ class TestXmlUtils {
     assertTrue(msg(test), test.isEmpty)
   }
 
-  @Test def testGetOne : Unit = {
+  @Test def testGetOne() : Unit = {
 
     //C is unique in the subtree
     sameNodes(c_n, child_C, false)
