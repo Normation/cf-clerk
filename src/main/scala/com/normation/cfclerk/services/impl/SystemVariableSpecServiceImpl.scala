@@ -164,6 +164,10 @@ class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
                                             , default=Some("full-compliance")
                                           )
       )
+    , SystemVariableSpec("RUDDER_NODE_CONFIG_ID", "Store the node configuration version (actually an identifier) of a node"
+                                          , multivalued = false
+                                          , isUniqueVariable = true
+      )
   )
 
   private[this] val varSpecsMap = varSpecs.map(x => (x.name -> x)).toMap
