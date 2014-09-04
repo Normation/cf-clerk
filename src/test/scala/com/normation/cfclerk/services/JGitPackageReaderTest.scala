@@ -64,13 +64,13 @@ trait JGitPackageReaderSpec extends Specification with Loggable {
   def ptLib : File
   def relativePathArg : Option[String]
 
-  def deleteDir = {
+  def deleteDir() = {
     logger.info("Deleting directory " + gitRoot.getAbsoluteFile)
     FileUtils.deleteDirectory(gitRoot)
   }
 
   //hook to allows to make some more initialisation
-  def postInitHook : Unit
+  def postInitHook() : Unit
 
   override def map(fs: =>Fragments) = fs ^ Step(deleteDir)
 
@@ -188,7 +188,7 @@ class JGitPackageReader_SameRootTest extends JGitPackageReaderSpec {
   lazy val gitRoot = new File("/tmp/test-jgit", System.currentTimeMillis.toString)
   lazy val ptLib = gitRoot
   lazy val relativePathArg = None
-  def postInitHook : Unit = {}
+  def postInitHook() : Unit = {}
 }
 
 /**
@@ -204,7 +204,7 @@ class JGitPackageReader_ChildRootTest extends JGitPackageReaderSpec {
   lazy val ptLib = new File(gitRoot, ptLibDirName)
   lazy val relativePathArg = Some("  /" + ptLibDirName + "/  ")
 
-  def postInitHook : Unit = {
+  def postInitHook() : Unit = {
     //add dummy files
     val destName = "phantomTechniquess"
     val dest = new File(gitRoot, destName)
@@ -214,5 +214,6 @@ class JGitPackageReader_ChildRootTest extends JGitPackageReaderSpec {
     val git = new Git(repo.db)
     git.add.addFilepattern(destName).call
     git.commit.setMessage("Commit something looking like a technique but outside PT root directory").call
+    ()
   }
 }

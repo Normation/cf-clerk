@@ -79,7 +79,7 @@ class Cf3PromisesFileTemplateTest {
   val tmlDependencies = new Cf3PromisesFileWriterServiceImpl(new DummyTechniqueRepository(), new SystemVariableSpecServiceImpl() )
 
   @Test
-  def parseDoc {
+  def parseDoc() {
     val templateMap = new HashMap[Cf3PromisesFileTemplateId, Cf3PromisesFileTemplate]
 
     for (elt <- (doc \\"TMLS"\ "TML")) {
