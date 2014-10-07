@@ -261,7 +261,7 @@ class Cf3PromisesFileWriterServiceImpl(
    */
   private[this] def getGenerationVariable() : Seq[STVariable]= {
     // compute the generation timestamp
-    val promiseGenerationTimestamp = DateTime.now()
+    val promiseGenerationTimestamp = DateTime.now().getMillis()
 
     Seq(STVariable(generationTimestampVariable, false, Seq(promiseGenerationTimestamp), true))
   }
