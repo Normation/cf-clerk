@@ -74,22 +74,42 @@ class TechniqueParser(
 
           val rootSection = sectionSpecParser.parseSectionsInPolicy(node, id, name)
 
+          val description = ??!((node \ TECHNIQUE_DESCRIPTION).text).getOrElse(name)
+
+          val templates = (node \ PROMISE_TEMPLATES_ROOT \\ PROMISE_TEMPLATE).map(xml => cf3PromisesFileTemplateParser.parseXml(id, xml) )
+
+          val bundlesequence = (node \ BUNDLES_ROOT \\ BUNDLE_NAME).map(xml => Bundle(xml.text) )
+
+          val trackerVariableSpec = parseTrackerVariableSpec(node)
+
+          val systemVariableSpecs = parseSysvarSpecs(node,id)
+
+          val isMultiInstance = ((node \ TECHNIQUE_IS_MULTIINSTANCE).text.equalsIgnoreCase("true") )
+
+          val longDescription = ??!((node \ TECHNIQUE_LONG_DESCRIPTION).text).getOrElse("")
+
+          val isSystem = ((node \ TECHNIQUE_IS_SYSTEM).text.equalsIgnoreCase("true"))
+
+          //the technique provides its expected reports if at least one section has a variable of type REPORT_KEYS
+          val providesExpectedReports = checkIfProvidesExpectedReports(rootSection)
+
+          val deprecationInfo = parseDeprecrationInfo(node)
 
           val technique = Technique(
               id
             , name
-            , rootSection = rootSection
-            , description = ??!((node \ TECHNIQUE_DESCRIPTION).text).getOrElse(name)
-            , compatible = compatible
-            , templates = (node \ PROMISE_TEMPLATES_ROOT \\ PROMISE_TEMPLATE).map(xml => cf3PromisesFileTemplateParser.parseXml(id, xml) )
-            , bundlesequence = (node \ BUNDLES_ROOT \\ BUNDLE_NAME).map(xml => Bundle(xml.text) )
-            , trackerVariableSpec = parseTrackerVariableSpec(node)
-            , systemVariableSpecs = parseSysvarSpecs(node,id)
-            , isMultiInstance = ((node \ TECHNIQUE_IS_MULTIINSTANCE).text.equalsIgnoreCase("true") )
-            , longDescription = ??!((node \ TECHNIQUE_LONG_DESCRIPTION).text).getOrElse("")
-            , isSystem = ((node \ TECHNIQUE_IS_SYSTEM).text.equalsIgnoreCase("true"))
-              //the technique provides its expected reports if at least one section has a variable of type REPORT_KEYS
-            , providesExpectedReports = checkIfProvidesExpectedReports(rootSection)
+            , description
+            , templates
+            , bundlesequence
+            , trackerVariableSpec
+            , rootSection
+            , deprecationInfo
+            , systemVariableSpecs
+            , compatible
+            , isMultiInstance
+            , longDescription
+            , isSystem
+            , providesExpectedReports
           )
 
           /*
@@ -135,6 +155,20 @@ class TechniqueParser(
           throw new ParsingException( (e ?~! "Error when parsing <%s> tag".format(TRACKINGVAR)).messageChain )
       }
     } else throw new ParsingException("Only one <%s> tag is allowed the the document, but found %s".format(TRACKINGVAR,trackerVariableSpecs.size))
+  }
+
+  private[this] def parseDeprecrationInfo(node: Node): Option[TechniqueDeprecationInfo] = {
+    for {
+      deprecationInfo <- (node \ TECHNIQUE_DEPRECATION_INFO).headOption
+    } yield {
+      val message = deprecationInfo.text
+      if (message.size == 0) {
+          val errorMsg = s"Error when parsing <${TECHNIQUE_DEPRECATION_INFO}> tag, text is empty and is mandatory"
+          throw new ParsingException( errorMsg )
+      } else {
+        TechniqueDeprecationInfo(message)
+      }
+    }
   }
 
   /*

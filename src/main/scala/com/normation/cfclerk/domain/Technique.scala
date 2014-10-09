@@ -38,6 +38,7 @@ import scala.xml._
 import com.normation.utils.Utils._
 import com.normation.utils.HashcodeCaching
 
+
 /**
  * A name, used as an identifier, for a policy.
  * The name must be unique among all policies!
@@ -67,6 +68,11 @@ case class TechniqueId(name: TechniqueName, version: TechniqueVersion) extends O
 }
 
 /**
+ * A structure containing all informations about a technique deprecation
+ */
+case class TechniqueDeprecationInfo (message : String)
+
+/**
  * A Policy is made of a name, a description, and the list of templates name relevant
  * The templates are found thanks to the Descriptor file which holds all the relevant
  * informations
@@ -82,6 +88,7 @@ case class Technique(
   , bundlesequence         : Seq[Bundle]
   , trackerVariableSpec    : TrackerVariableSpec
   , rootSection            : SectionSpec //be careful to not split it from the TechniqueId, else you will not have the good spec for the version
+  , deprecrationInfo       : Option[TechniqueDeprecationInfo]
   , systemVariableSpecs    : Set[SystemVariableSpec] = Set()
   , compatible             : Option[Compatible] = None
   , isMultiInstance        : Boolean = false // true if we can have several instance of this policy
