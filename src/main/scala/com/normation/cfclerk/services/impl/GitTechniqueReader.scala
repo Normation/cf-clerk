@@ -256,7 +256,7 @@ class GitTechniqueReader(
             is = repo.db.open(h).openStream
             Some(is)
           case _ =>
-            logger.error("More than exactly one ids were found in the git tree for metadata of technique %s, I can not know which one to choose. IDs: %s".format(techniqueId,ids.mkString(", ")))
+            logger.error(s"There is more than one Technique with ID '${techniqueId}', what is forbidden. Please check if several categories have that Technique, and rename or delete the clones.")
             None
       } }
     } catch {
@@ -335,7 +335,7 @@ class GitTechniqueReader(
             is = repo.db.open(h).openStream
             Some(is)
           case _ =>
-            logger.error("More than exactly one ids were found in the git tree for template %s, I can not know which one to choose. IDs: %s".format(cf3PromisesFileTemplateId,ids.mkString(", ")))
+            logger.error(s"There is more than one Technique with id '${cf3PromisesFileTemplateId.techniqueId}' which is forbidden. Please check if several categories have that Technique and rename or delete the clones")
             None
       } }
     } catch {
