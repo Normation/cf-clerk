@@ -61,7 +61,7 @@ class DirectiveAgregationTest {
     }
   }
 
-  def newTechnique(id: TechniqueId) = Technique(id, "tech" + id, "", Seq(), Seq(), TrackerVariableSpec(), SectionSpec("plop"), Set(), None)
+  def newTechnique(id: TechniqueId) = Technique(id, "tech" + id, "", Seq(), Seq(), TrackerVariableSpec(), SectionSpec("plop"), None, Set(), None)
 
   import scala.collection.immutable.Set
   val trackerVariableSpec = TrackerVariableSpec(Some("card"))
@@ -73,18 +73,26 @@ class DirectiveAgregationTest {
   val templateDependencies = new Cf3PromisesFileWriterServiceImpl(
     new DummyTechniqueRepository(Seq(
         Technique(
-          activeTechniqueId1,
-          "name", "DESCRIPTION", Seq(), Seq(),
-          trackerVariableSpec,
-          SectionSpec(name="root", children=Seq()),
-          isMultiInstance = true
+            activeTechniqueId1
+          , "name"
+          , "DESCRIPTION"
+          , Seq()
+          , Seq()
+          , trackerVariableSpec
+          , SectionSpec(name="root", children=Seq())
+          , None
+          , isMultiInstance = true
         )
       , Technique(
-          activeTechniqueId2,
-          "name", "DESCRIPTION", Seq(), Seq(),
-          trackerVariableSpec,
-          SectionSpec(name="root", children=Seq()),
-          isMultiInstance = true
+            activeTechniqueId2
+          , "name"
+          , "DESCRIPTION"
+          , Seq()
+          , Seq()
+          , trackerVariableSpec
+          , SectionSpec(name="root", children=Seq())
+          , None
+          , isMultiInstance = true
         )
     ) ),
     new SystemVariableSpecServiceImpl())

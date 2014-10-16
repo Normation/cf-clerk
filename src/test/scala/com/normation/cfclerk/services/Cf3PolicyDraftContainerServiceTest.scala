@@ -64,7 +64,7 @@ class Cf3PolicyDraftContainerServiceTest {
 
   var policy2 : Cf3PolicyDraft = null
 
-  def newTechnique(id: TechniqueId) = Technique(id, "tech" + id, "", Seq(), Seq(), TrackerVariableSpec(), SectionSpec("plop"), Set(), None)
+  def newTechnique(id: TechniqueId) = Technique(id, "tech" + id, "", Seq(), Seq(), TrackerVariableSpec(), SectionSpec("plop"), None, Set(), None)
 
   def config() {
 
