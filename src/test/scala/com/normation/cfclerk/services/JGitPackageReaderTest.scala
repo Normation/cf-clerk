@@ -108,7 +108,7 @@ trait JGitPackageReaderSpec extends Specification with Loggable {
             )
 
   val infos = reader.readTechniques
-  val § = RootTechniqueCategoryId
+  val R = RootTechniqueCategoryId
 
   "The test lib" should {
     "have 3 categories" in infos.subCategories.size === 3
@@ -126,7 +126,7 @@ trait JGitPackageReaderSpec extends Specification with Loggable {
   }
 
   "cat1 sub category" should {
-    val cat1 = infos.subCategories( § / "cat1" )
+    val cat1 = infos.subCategories( R / "cat1" )
     val packages = cat1.packageIds.toSeq
     val tmlId = Cf3PromisesFileTemplateId(packages(0), "theTemplate")
     "be named 'cat1'" in  cat1.name === "cat1"
@@ -144,14 +144,14 @@ trait JGitPackageReaderSpec extends Specification with Loggable {
   }
 
   "cat1/cat1_1 sub category" should {
-    val cat1_1 = infos.subCategories( § / "cat1" / "cat1_1" )
+    val cat1_1 = infos.subCategories( R / "cat1" / "cat1_1" )
     "be named 'Category 1.1 name'" in  cat1_1.name === "Category 1.1 name"
     "has description 'Category 1.1 description'" in cat1_1.description === "Category 1.1 description"
     "has 0 package " in cat1_1.packageIds.size === 0
   }
 
   "cat1/cat1_1/cat1_1_1 sub category" should {
-    val cat1_1_1 = infos.subCategories( § / "cat1" / "cat1_1" / "cat1_1_1" )
+    val cat1_1_1 = infos.subCategories( R / "cat1" / "cat1_1" / "cat1_1_1" )
     "be named 'Category 1.1 name'" in  cat1_1_1.name === "cat1_1_1"
     "has no description" in cat1_1_1.description === ""
     "has two packages..." in cat1_1_1.packageIds.size === 2
