@@ -54,16 +54,7 @@ class TechniqueParser(
   , systemVariableSpecService    : SystemVariableSpecService
 ) extends Loggable {
 
-  //the technique provides its expected reports if at least one section has a variable of type REPORT_KEYS
-  private[this] def checkIfProvidesExpectedReports(section: SectionChildSpec) : Boolean = {
-    section match {
-      case _: PredefinedValuesVariableSpec => true
-      case s: SectionSpec => s.children.exists(checkIfProvidesExpectedReports)
-      case _ => false
-    }
-  }
-
-  def parseXml(node: Node, id: TechniqueId): Technique = {
+  def parseXml(node: Node, id: TechniqueId, expectedReportCsvExists: Boolean): Technique = {
     //check that node is <TECHNIQUE> and has a name attribute
     if (node.label.toUpperCase == TECHNIQUE_ROOT) {
       node.attribute(TECHNIQUE_NAME) match {
@@ -91,7 +82,7 @@ class TechniqueParser(
           val isSystem = ((node \ TECHNIQUE_IS_SYSTEM).text.equalsIgnoreCase("true"))
 
           //the technique provides its expected reports if at least one section has a variable of type REPORT_KEYS
-          val providesExpectedReports = checkIfProvidesExpectedReports(rootSection)
+          val providesExpectedReports = expectedReportCsvExists
 
           val deprecationInfo = parseDeprecrationInfo(node)
 

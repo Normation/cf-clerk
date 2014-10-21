@@ -131,7 +131,7 @@ class GitTechniqueReader(
   repo                       : GitRepositoryProvider,
   val techniqueDescriptorName: String, //full (with extension) conventional name for policy descriptor
   val categoryDescriptorName : String, //full (with extension) name of the descriptor for categories
-  val reportingDescriptorName: String,
+  val reportingDescriptorName: String, //the name of the file for expected_report.csv. It must be only the name, not the path.
   val relativePathToGitRepos : Option[String]
   ) extends TechniqueReader with Loggable {
 
@@ -526,7 +526,10 @@ class GitTechniqueReader(
 
       val techniqueId = TechniqueId(policyName,policyVersion)
 
-      val pack = if(parseDescriptor) techniqueParser.parseXml(loadDescriptorFile(is, filePath), techniqueId)
+      //check if the expected_report.csv file exists
+      val hasExpectedReportCsv = getReportingDetailsContent(techniqueId)( _.isDefined)
+
+      val pack = if(parseDescriptor) techniqueParser.parseXml(loadDescriptorFile(is, filePath), techniqueId, hasExpectedReportCsv)
                  else dummyTechnique
 
       def updateParentCat() : Boolean = {

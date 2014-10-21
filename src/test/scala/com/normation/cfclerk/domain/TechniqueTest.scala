@@ -63,7 +63,7 @@ class TechniqueTest extends Specification {
 
   val id = TechniqueId(TechniqueName("foo"), TechniqueVersion("1.0"))
 
-  val technique = techniqueParser.parseXml(doc, id)
+  val technique = techniqueParser.parseXml(doc, id, true)
 
 
   "The technique described" should {
