@@ -135,7 +135,9 @@ trait JGitPackageReaderSpec extends Specification with Loggable {
     "has two packages..." in cat1.packageIds.size === 2
     "...with the same name p1_1" in cat1.packageIds.forall(id => "p1_1" === id.name.value)
     "...and version 1.0" in packages(0).version === TechniqueVersion("1.0")
+    ".... that provides expected_reports.csv" in infos.techniques(packages(0).name)(packages(0).version).providesExpectedReports === true
     "...and version 2.0" in packages(1).version === TechniqueVersion("2.0")
+    ".... that DOES NOT provide expected_reports.csv" in infos.techniques(packages(1).name)(packages(1).version).providesExpectedReports === false
     "...with a template from which we can read 'The template content\\non two lines.'" in {
       reader.getTemplateContent(tmlId){
         case None => ko("Can not open an InputStream for " + tmlId.toString)

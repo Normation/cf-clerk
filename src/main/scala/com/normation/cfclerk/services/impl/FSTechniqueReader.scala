@@ -86,7 +86,7 @@ class FSTechniqueReader(
   val techniqueDirectoryPath : String,
   val techniqueDescriptorName: String, //full (with extension) conventional name for policy descriptor
   val categoryDescriptorName : String, //full (with extension) name of the descriptor for categories
-  val reportingDescriptorName: String
+  val reportingDescriptorName: String  //the name of the file for expected_report.csv. It must be only the name, not the path.
   ) extends TechniqueReader with Loggable {
 
   reader =>
@@ -230,7 +230,12 @@ class FSTechniqueReader(
   private def processTechnique(parentCategoryId: TechniqueCategoryId, packageRootDirectory: File, internalTechniquesInfo: InternalTechniquesInfo): Unit = {
     val name = TechniqueName(packageRootDirectory.getParentFile.getName)
     val id = TechniqueId(name, TechniqueVersion(packageRootDirectory.getName))
-    val pack = policyParser.parseXml(loadDescriptorFile(new File(packageRootDirectory, techniqueDescriptorName)), id)
+
+    val descriptorFile = new File(packageRootDirectory, techniqueDescriptorName)
+    //check if the expected_report.csv file exists
+    val expectedReportCsv = new File(descriptorFile.getParentFile, reportingDescriptorName)
+
+    val pack = policyParser.parseXml(loadDescriptorFile(descriptorFile), id, expectedReportCsv.exists)
 
       def updateParentCat() {
         parentCategoryId match {
