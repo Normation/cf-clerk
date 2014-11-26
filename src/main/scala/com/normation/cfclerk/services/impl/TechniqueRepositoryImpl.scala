@@ -56,7 +56,7 @@ class TechniqueRepositoryImpl(
   /**
    * Callback to call on PTLib update
    */
-  private[this] val callbacks = scala.collection.mutable.Buffer(refLibCallbacks:_*)
+  private[this] var callbacks = refLibCallbacks.sortBy( _.order )
 
 
   /*
@@ -86,19 +86,27 @@ class TechniqueRepositoryImpl(
 
 
   /**
-   * Register a new callback
+   * Register a new callback with a order.
+   * Sort by order after each registration
    */
   override def registerCallback(callback:TechniquesLibraryUpdateNotification) : Unit = {
-    callbacks.append(callback)
+    callbacks = (callbacks :+ callback).sortBy( _.order )
   }
 
-  override def update(modId: ModificationId, actor:EventActor, reason: Option[String]) : Box[Seq[TechniqueId]] = {
+  override def update(modId: ModificationId, actor:EventActor, reason: Option[String]) : Box[Map[TechniqueName, TechniquesLibraryUpdateType]] = {
     try {
       val modifiedPackages = techniqueReader.getModifiedTechniques
       if (modifiedPackages.nonEmpty || /* first time init */ null == techniqueInfosCache) {
         logger.info("Reloading technique library, " + {
           if (modifiedPackages.isEmpty) "no modified techniques found"
-          else "found modified technique(s): " + modifiedPackages.mkString(", ")
+          else {
+            val details = modifiedPackages.values.map {
+              case TechniqueDeleted(name, versions) => s"['${name}': deleted (${versions.mkString(", ")})]"
+              case TechniqueUpdated(name, mods)     => s"['${name}': updated (${mods.map(x => s"${x._1}: ${x._2}").mkString(", ")})]"
+            }
+
+            "found modified technique(s): " + details.mkString(", ")
+          }
         })
         techniqueInfosCache = techniqueReader.readTechniques
 
@@ -142,6 +150,8 @@ class TechniqueRepositoryImpl(
     }).toMap
   }
 
+  override def getTechniquesInfo() = techniqueInfosCache
+
   override def getTechniqueVersions(name: TechniqueName): SortedSet[TechniqueVersion] = {
     SortedSet[TechniqueVersion]() ++ techniqueInfosCache.techniques.get(name).toSeq.flatMap(_.keySet)
   }
@@ -174,7 +184,11 @@ class TechniqueRepositoryImpl(
   }
 
   override def getLastTechniqueByName(policyName: TechniqueName): Option[Technique] = {
-    techniqueInfosCache.techniques.get(policyName).map { versions => versions.last._2 }
+    for {
+      versions <- techniqueInfosCache.techniques.get(policyName)
+    } yield {
+      versions.last._2
+    }
   }
 
   //////////////////////////////////// categories /////////////////////////////

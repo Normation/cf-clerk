@@ -107,7 +107,7 @@ class FSTechniqueReader(
   }
 
   //we never know when to read again
-  override def getModifiedTechniques : Seq[TechniqueId] = Seq()
+  override def getModifiedTechniques : Map[TechniqueName, TechniquesLibraryUpdateType] = Map()
 
   /**
    * Read the policies

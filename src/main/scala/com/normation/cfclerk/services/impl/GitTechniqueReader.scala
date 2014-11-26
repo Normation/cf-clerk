@@ -71,6 +71,7 @@ import org.eclipse.jgit.diff.DiffEntry
 import scala.collection.JavaConversions._
 import org.eclipse.jgit.diff.DiffFormatter
 import org.eclipse.jgit.errors.MissingObjectException
+import org.eclipse.jgit.diff.DiffEntry.ChangeType
 
 /**
  *
@@ -185,9 +186,9 @@ class GitTechniqueReader(
 
   private[this] var nextTechniquesInfoCache : (ObjectId,TechniquesInfo) = (revisionProvider.currentRevTreeId, currentTechniquesInfoCache)
   //a non empty list IS the indicator of differences between current and next
-  private[this] var modifiedTechniquesCache : Seq[TechniqueId] = Seq()
+  private[this] var modifiedTechniquesCache : Map[TechniqueName, TechniquesLibraryUpdateType] = Map()
 
-  override def getModifiedTechniques : Seq[TechniqueId] = {
+  override def getModifiedTechniques : Map[TechniqueName, TechniquesLibraryUpdateType] = {
     val nextId = revisionProvider.getAvailableRevTreeId
     if(nextId == nextTechniquesInfoCache._1) modifiedTechniquesCache
     else reader.synchronized { //update next and calculate diffs
@@ -199,32 +200,78 @@ class GitTechniqueReader(
 
       val diffFmt = new DiffFormatter(null)
       diffFmt.setRepository(repo.db)
-      val diffPathEntries : Set[TechniquePath] =
+      val diffPathEntries : Set[(TechniquePath, ChangeType)] =
         diffFmt.scan(revisionProvider.currentRevTreeId,nextId).flatMap { diffEntry =>
-          Seq(toTechniquePath(diffEntry.getOldPath), toTechniquePath(diffEntry.getNewPath))
+          Seq( (toTechniquePath(diffEntry.getOldPath), diffEntry.getChangeType), (toTechniquePath(diffEntry.getNewPath), diffEntry.getChangeType))
         }.toSet
       diffFmt.release
 
-      val modifiedTechniquePath = scala.collection.mutable.Set[TechniquePath]()
       /*
        * now, group diff entries by TechniqueId to find which were updated
        * we take into account any modifications, as anything among a
        * delete, rename, copy, add, modify must be accepted and the matching
        * datetime saved.
        */
-      diffPathEntries.foreach { path =>
-        allKnownTechniquePaths.find { TechniquePath =>
-          path.path.startsWith(TechniquePath.path)
-        }.foreach { TechniquePath =>
-          modifiedTechniquePath += TechniquePath
-        } //else nothing
+      val modifiedTechnique : Set[(TechniqueId, ChangeType)] = diffPathEntries.flatMap { case (path, changeType) =>
+        allKnownTechniquePaths.find { techniquePath =>
+          path.path.startsWith(techniquePath.path)
+        }.map { techniquePath =>
+          val parts = techniquePath.path.split("/")
+          val id = TechniqueId(TechniqueName(parts(parts.size - 2)), TechniqueVersion(parts(parts.size - 1)))
+
+          (id, changeType)
+        }
       }
 
+      //now, build the actual modification by techniques:
+      val techniqueMods = modifiedTechnique.groupBy( _._1.name ).map { case (name, mods) =>
+        //deduplicate mods by ids:
+        val versionsMods: Map[TechniqueVersion, TechniqueVersionModType] = mods.groupBy( _._1.version).map { case(version, pairs) =>
+          val modTypes = pairs.map( _._2 ).toSet
+
+          //merge logic
+          //delete + add (+mod) => have to check if still present
+          //delete (+ mod) => delete
+          //add (+ mod) => add
+          //other: mod
+          if(modTypes.contains(ChangeType.DELETE)) {
+            if(modTypes.contains(ChangeType.ADD)) {
+              if(currentTechniquesInfoCache.techniquesCategory.isDefinedAt(TechniqueId(name, version))) {
+                //it was present before mod, so can't have been added first, so
+                //it was deleted then added (certainly a move), so it is actually mod
+                (version, VersionUpdated)
+              } else {
+                //it was not here, so was added then deleted, so it's a noop.
+                //not sure we want to trace that ? As a deletion perhaps ?
+                (version, VersionDeleted)
+              }
+            } else {
+              (version, VersionDeleted)
+            }
+          } else if(modTypes.contains(ChangeType.ADD)) {
+            //add
+            (version, VersionAdded)
+          } else {
+            //mod
+            (version, VersionUpdated)
+          }
+        }.toMap
+
+        //now, build the technique mod.
+        //distinguish the case where all mod are deletion AND they represent the whole set of known version
+        //from other case (just simple updates)
+
+        if(versionsMods.values.forall( _ == VersionDeleted)
+           && currentTechniquesInfoCache.techniques.get(name).map( _.size) == Some(versionsMods.size)
+        ) {
+          (name, TechniqueDeleted(name, versionsMods.keySet))
+        } else {
+          (name, TechniqueUpdated(name, versionsMods))
+        }
+      }.toMap
+
       //Ok, now rebuild Technique !
-      modifiedTechniquesCache = modifiedTechniquePath.map { s =>
-        val parts = s.path.split("/")
-        TechniqueId(TechniqueName(parts(parts.size - 2)), TechniqueVersion(parts(parts.size - 1)))
-      }.toSeq
+      modifiedTechniquesCache = techniqueMods
       nextTechniquesInfoCache = (nextId, nextTechniquesInfo)
       modifiedTechniquesCache
     }
@@ -362,7 +409,7 @@ class GitTechniqueReader(
       if(modifiedTechniquesCache.nonEmpty) {
         currentTechniquesInfoCache = nextTechniquesInfoCache._2
         revisionProvider.setCurrentRevTreeId(nextTechniquesInfoCache._1)
-        modifiedTechniquesCache = Seq()
+        modifiedTechniquesCache = Map()
       }
       currentTechniquesInfoCache
     }

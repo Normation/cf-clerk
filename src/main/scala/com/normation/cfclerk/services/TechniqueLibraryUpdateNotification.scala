@@ -34,9 +34,37 @@
 
 package com.normation.cfclerk.services
 
-import com.normation.cfclerk.domain.TechniqueId
+import com.normation.cfclerk.domain.TechniqueName
+import com.normation.cfclerk.domain.TechniqueVersion
 import com.normation.eventlog.EventActor
 import com.normation.eventlog.ModificationId
+import com.normation.cfclerk.domain.TechniqueName
+
+
+sealed trait TechniqueVersionModType
+case object VersionDeleted extends TechniqueVersionModType
+case object VersionAdded extends TechniqueVersionModType
+case object VersionUpdated extends TechniqueVersionModType
+
+sealed trait TechniquesLibraryUpdateType {
+  val techniqueName: TechniqueName
+}
+
+/**
+ * All version of a technique were deleted, so the technique is
+ * full deleted
+ */
+case class TechniqueDeleted(techniqueName: TechniqueName, deletedVersion: Set[TechniqueVersion]) extends TechniquesLibraryUpdateType
+
+/**
+ * Some version of a technique were modified, either:
+ * - added,
+ * - deleted,
+ * - modified.
+ *
+ * One version can have only ONE state update.
+ */
+case class TechniqueUpdated(techniqueName: TechniqueName, diff: Map[TechniqueVersion, TechniqueVersionModType]) extends TechniquesLibraryUpdateType
 
 /**
  * A trait that allows its implementation to get notification
@@ -51,7 +79,13 @@ trait TechniquesLibraryUpdateNotification {
   /**
    * A name to identify that callback
    */
-  def name:String
+  def name: String
+
+  /**
+   * Order:
+   * higher value for order mean the callback will happen latter
+   */
+  def order: Int
 
   /**
    * That method will be called when techniques are updated.
@@ -60,6 +94,6 @@ trait TechniquesLibraryUpdateNotification {
    * Description is a log description to explain why techniques should be updated
    * (user action, commit, etc).
    */
-  def updatedTechniques(TechniqueIds:Seq[TechniqueId], modId: ModificationId, actor: EventActor, reason: Option[String]) : Unit
+  def updatedTechniques(techniqueIds: Map[TechniqueName, TechniquesLibraryUpdateType], modId: ModificationId, actor: EventActor, reason: Option[String]) : Unit
 
 }
