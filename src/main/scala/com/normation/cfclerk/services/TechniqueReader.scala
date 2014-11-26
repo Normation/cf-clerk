@@ -101,6 +101,11 @@ trait TechniqueReader {
   def getReportingDetailsContent[T](techniqueId: TechniqueId)(useIt : Option[InputStream] => T) : T
 
   /**
+   * Check if the file expected_reports.csv exists for the technique
+   */
+  def checkreportingDescriptorExistence(techniqueId: TechniqueId) : Boolean
+
+  /**
    * Read the content of a template, if the template is known by that
    * TechniqueReader.
    * If the template exists, then a Some(input stream), open at the

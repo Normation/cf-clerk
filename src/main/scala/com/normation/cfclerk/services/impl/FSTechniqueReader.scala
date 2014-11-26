@@ -151,6 +151,13 @@ class FSTechniqueReader(
     }
   }
 
+  override def checkreportingDescriptorExistence(techniqueId: TechniqueId) : Boolean = {
+    readTechniques.techniquesCategory.get(techniqueId).map { catPath =>
+      (new File(techniqueDirectory.getAbsolutePath + "/" + catPath + "/" + reportingDescriptorName)).exists
+    }.getOrElse(false)
+  }
+
+
   override def getReportingDetailsContent[T](techniqueId: TechniqueId)(useIt : Option[InputStream] => T) : T = {
     var is: InputStream = null
     try {
