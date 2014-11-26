@@ -170,23 +170,23 @@ sealed trait TechniqueCategory {
 }
 
 case class RootTechniqueCategory(
-  name : String,
-  description : String,
-  subCategoryIds: Set[SubTechniqueCategoryId] = Set(),
-  packageIds : SortedSet[TechniqueId] = SortedSet(),
-  isSystem : Boolean = false
+    name          : String
+  , description   : String
+  , subCategoryIds: Set[SubTechniqueCategoryId] = Set()
+  , packageIds    : SortedSet[TechniqueId] = SortedSet()
+  , isSystem      : Boolean = false
 ) extends TechniqueCategory with HashcodeCaching {
   type A = RootTechniqueCategoryId.type
   override lazy val id : A = RootTechniqueCategoryId
 }
 
 case class SubTechniqueCategory(
-  override val id : SubTechniqueCategoryId,
-  name : String,
-  description : String,
-  subCategoryIds: Set[SubTechniqueCategoryId] = Set(),
-  packageIds : SortedSet[TechniqueId] = SortedSet(),
-  isSystem : Boolean = false
+    override val id : SubTechniqueCategoryId
+  , name            : String
+  , description     : String
+  , subCategoryIds  : Set[SubTechniqueCategoryId] = Set()
+  , packageIds      : SortedSet[TechniqueId] = SortedSet()
+  , isSystem        : Boolean = false
 ) extends TechniqueCategory with HashcodeCaching {
   type A = SubTechniqueCategoryId
 }

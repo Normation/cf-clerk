@@ -48,7 +48,9 @@ case class TechniquesInfo(
   , techniques: Map[TechniqueName, SortedMap[TechniqueVersion, Technique]]
     //head of categories is the root category
   , subCategories: Map[SubTechniqueCategoryId, TechniqueCategory]
-) extends HashcodeCaching
+) extends HashcodeCaching {
+  val allCategories = Map[TechniqueCategoryId, TechniqueCategory]() ++ subCategories + (rootCategory.id -> rootCategory)
+}
 
 //a mutable version of TechniquesInfo, for internal use only !
 private[services] class InternalTechniquesInfo(
@@ -117,6 +119,6 @@ trait TechniqueReader {
    * If the sequence is empty, then nothing changed. Else, the list of Technique with
    * *any* change will be given
    */
-  def getModifiedTechniques : Seq[TechniqueId]
+  def getModifiedTechniques : Map[TechniqueName, TechniquesLibraryUpdateType]
 }
 
