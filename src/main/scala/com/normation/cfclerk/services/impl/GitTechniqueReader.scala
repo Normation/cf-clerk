@@ -356,6 +356,27 @@ class GitTechniqueReader(
     }
   }
 
+  override def checkreportingDescriptorExistence(techniqueId: TechniqueId) : Boolean = {
+    //build a treewalk with the path, given by reportingDescriptorName
+    val path = techniqueId.toString + "/" + reportingDescriptorName
+    //has package id are unique among the whole tree, we are able to find a
+    //template only base on the packageId + name.
+
+    val tw = new TreeWalk(repo.db)
+    tw.setFilter(new FileTreeFilter(canonizedRelativePath, path))
+    tw.setRecursive(true)
+    tw.reset(revisionProvider.currentRevTreeId)
+    var ids = List.empty[ObjectId]
+    while(tw.next) {
+      ids = tw.getObjectId(0) :: ids
+    }
+    ids match {
+      case Nil => false
+      case h :: Nil => true
+      case _ => false
+    }
+  }
+
   override def getTemplateContent[T](cf3PromisesFileTemplateId: Cf3PromisesFileTemplateId)(useIt : Option[InputStream] => T) : T = {
     //build a treewalk with the path, given by Cf3PromisesFileTemplateId.toString
     val path = cf3PromisesFileTemplateId.toString + Cf3PromisesFileTemplate.templateExtension
@@ -574,7 +595,7 @@ class GitTechniqueReader(
       val techniqueId = TechniqueId(policyName,policyVersion)
 
       //check if the expected_report.csv file exists
-      val hasExpectedReportCsv = getReportingDetailsContent(techniqueId)( _.isDefined)
+      val hasExpectedReportCsv = checkreportingDescriptorExistence(techniqueId)
 
       val pack = if(parseDescriptor) techniqueParser.parseXml(loadDescriptorFile(is, filePath), techniqueId, hasExpectedReportCsv)
                  else dummyTechnique
