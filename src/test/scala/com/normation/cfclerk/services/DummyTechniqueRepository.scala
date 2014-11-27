@@ -87,21 +87,8 @@ class DummyTechniqueRepository(policies: Seq[Technique] = Seq()) extends Techniq
 
   def getByName(policyName: TechniqueName) = ???
 
-//  def getVariables(policyName: TechniqueId, includeSystemVar: Boolean = false): Seq[VariableSpec] =
-//    policyName.name.value match {
-//      case "policy1" =>
-//        List(InputVariableSpec("$variable1", "a variable1"))
-//      case "policy2" =>
-//        val variable = InputVariableSpec("$variable2", "a variable2", multivalued = true)
-//        List(variable, InputVariableSpec("$variable22", "a variable22"))
-//      case "policy3" =>
-//        List(InputVariableSpec("$variable3", "a variable3"))
-//      case "policy4" =>
-//        List(InputVariableSpec("$variable4", "an variable4"))
-//      case "foo" =>
-//        List(InputVariableSpec("$bar", "bar"))
-//    }
-//
+  def getTechniquesInfo = ???
+
   override def getTechniqueVersions(name:TechniqueName) : SortedSet[TechniqueVersion] = SortedSet.empty[TechniqueVersion]
 
   def manageDependencies(chosenTemplate: Seq[Cf3PromisesFileTemplateId] , includeExternalDependencies : Boolean = true) : Seq[Cf3PromisesFileTemplateId] = {

@@ -45,10 +45,6 @@ import scala.collection.SortedSet
  *
  *
  */
-/**
- * @author vincent
- *
- */
 trait TechniqueRepository {
 
   /**
@@ -69,6 +65,15 @@ trait TechniqueRepository {
   def getReportingDetailsContent[T](techniqueId: TechniqueId)(useIt: Option[InputStream] => T): T
 
   //  def packageDirectory : File
+
+
+  /*
+   * Return the full information about technique.
+   * That TechniquesInfo data structure is self-consistent by construction,
+   * so any category reference as a subcategory of an other is
+   * defined in the map, all techniques in categories is also accessible. etc.
+   */
+  def getTechniquesInfo(): TechniquesInfo
 
   /**
    * Return all the policies available
