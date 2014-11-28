@@ -168,6 +168,10 @@ class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
                                           , multivalued = false
                                           , isUniqueVariable = true
       )
+    , SystemVariableSpec("SEND_METRICS", "Should the server agent send metrics to Rudder development team"
+                                          , multivalued = false
+                                          , isUniqueVariable = true
+      )
   )
 
   private[this] val varSpecsMap = varSpecs.map(x => (x.name -> x)).toMap
