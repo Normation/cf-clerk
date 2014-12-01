@@ -164,6 +164,11 @@ class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
                                             , default=Some("full-compliance")
                                           )
       )
+    , SystemVariableSpec("RUDDER_HEARTBEAT_INTERVAL", "Interval between two heartbeat sending in changes-only mode (in number of runs)"
+                                          , multivalued = false
+                                          , isUniqueVariable = true
+                                          , constraint = Constraint(typeName = IntegerVType())
+      )
     , SystemVariableSpec("RUDDER_NODE_CONFIG_ID", "Store the node configuration version (actually an identifier) of a node"
                                           , multivalued = false
                                           , isUniqueVariable = true
