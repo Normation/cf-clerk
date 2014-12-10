@@ -83,6 +83,10 @@ class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
                                           , isUniqueVariable = true
                                           , constraint = Constraint(typeName = IntegerVType())
       )
+    , SystemVariableSpec(
+        "CONFIGURATION_REPOSITORY_FOLDER" , "The path to the configuration repository folder"
+                                          , constraint = Constraint(mayBeEmpty=true)
+      )
     , SystemVariableSpec("MANAGED_NODES_NAME", "Hostname of nodes managed by the policy server"
                                           , constraint = Constraint(mayBeEmpty=true)
       )
