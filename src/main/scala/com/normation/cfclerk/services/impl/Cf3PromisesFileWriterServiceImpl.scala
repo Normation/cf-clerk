@@ -312,8 +312,6 @@ class Cf3PromisesFileWriterServiceImpl(
    * @return
    */
   private[this] def prepareBundleVars(container: Cf3PolicyDraftContainer) : Map[String,Variable] = {
-  //prepareCf3PromisesFileTemplateAndBundleVars
-
     logger.trace("Preparing bundle list and input list for container : %s ".format(container))
 
     val inputs = scala.collection.mutable.Buffer[String]() // all the include file
@@ -324,9 +322,21 @@ class Cf3PromisesFileWriterServiceImpl(
     for {
       tml <- policies.flatMap(p => p.templates)
     } {
-//      files += Cf3PromisesFileTemplateCopyInfo(tml.name, tml.outPath)
       if (tml.included) inputs += tml.outPath
     }
+
+    // Compute the correct bundlesequence
+    // ncf technique must call before-hand a bundle to register which ncf technique is being called
+    // so we must keep an ordered bundle list, and have two specific bundlesequence
+    val NCF_REPORT_DEFINITION_BUNDLE_NAME = "current_technique_report_info"
+
+    val (ncfTechniques, techniques) = policies.partition(_.providesExpectedReports)
+
+    val ncfBundleSeqName = ncfTechniques.flatMap(x => x.bundlesequence.map(x =>x.name))
+    // We mustn't quote the call NCF_REPORT_DEFINITION_BUNDLE_NAME, otherwise CFEngine will assume it refers to the complete string (with parens)
+    val ncfBundleSeq     = ncfBundleSeqName.map(name => s"${NCF_REPORT_DEFINITION_BUNDLE_NAME}(${name}), ${name}").mkString(", ")
+
+    val nonNcfBundleSeq  = techniques.flatMap(x => x.bundlesequence.map(x =>x.name)).mkString(", \"", "\", \"", "\"")
 
     Map[String, Variable](
         // Add the built in values for the files to be included and the bundle to be executed
@@ -335,11 +345,7 @@ class Cf3PromisesFileWriterServiceImpl(
           (variable.spec.name, variable)
         }
       , {
-          val bundleSet = policies.flatMap(x => x.bundlesequence.map(x =>x.name))
-          val variable = SystemVariable(systemVariableSpecService.get("BUNDLELIST"), Seq(bundleSet.mkString(", \"", "\",\"", "\"")))
-
-//          if(value.length == 0) variable.saveValue(value)
-//          else variable.saveValue(", " + value)
+          val variable = SystemVariable(systemVariableSpecService.get("BUNDLELIST"), Seq(nonNcfBundleSeq + ", " + ncfBundleSeq))
 
           (variable.spec.name, variable)
         }
