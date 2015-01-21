@@ -330,10 +330,15 @@ class Cf3PromisesFileWriterServiceImpl(
     val (ncfTechniques, techniques) = policies.partition(_.providesExpectedReports)
 
     val ncfBundleSeqName = ncfTechniques.flatMap(x => x.bundlesequence.map(x =>x.name))
+
     // We mustn't quote the call NCF_REPORT_DEFINITION_BUNDLE_NAME, otherwise CFEngine will assume it refers to the complete string (with parens)
     val ncfBundleSeq     = ncfBundleSeqName.map(name => s"${NCF_REPORT_DEFINITION_BUNDLE_NAME}(${name}), ${name}").mkString(", ")
 
     val nonNcfBundleSeq  = techniques.flatMap(x => x.bundlesequence.map(x =>x.name)).mkString(", \"", "\", \"", "\"")
+
+    // We need to remove zero-length bundles from the bundlesequence (like, if there is no ncf bundles to call)
+    // to avoid having two successives commas in the bundlesequence
+    val bundleSeq = Seq[String](nonNcfBundleSeq, ncfBundleSeq).filter(_.length>0)
 
     Map[String, Variable](
         // Add the built in values for the files to be included and the bundle to be executed
@@ -342,7 +347,7 @@ class Cf3PromisesFileWriterServiceImpl(
           (variable.spec.name, variable)
         }
       , {
-          val variable = SystemVariable(systemVariableSpecService.get("BUNDLELIST"), Seq(nonNcfBundleSeq + ", " + ncfBundleSeq))
+          val variable = SystemVariable(systemVariableSpecService.get("BUNDLELIST"), Seq(bundleSeq.mkString(", ")))
 
           (variable.spec.name, variable)
         }
