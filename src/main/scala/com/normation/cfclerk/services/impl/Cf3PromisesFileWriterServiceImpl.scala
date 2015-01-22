@@ -329,10 +329,14 @@ class Cf3PromisesFileWriterServiceImpl(
 
     val (ncfTechniques, techniques) = policies.partition(_.providesExpectedReports)
 
-    val ncfBundleSeqName = ncfTechniques.flatMap(x => x.bundlesequence.map(x =>x.name))
-
-    // We mustn't quote the call NCF_REPORT_DEFINITION_BUNDLE_NAME, otherwise CFEngine will assume it refers to the complete string (with parens)
-    val ncfBundleSeq     = ncfBundleSeqName.map(name => s"${NCF_REPORT_DEFINITION_BUNDLE_NAME}(${name}), ${name}").mkString(", ")
+    // We must exclude, from the ncf technique, the bundle ending by _rudder_reporting
+    // from the call to NCF_REPORT_DEFINITION_BUNDLE_NAME
+    // So it is only relevant to call NCF_REPORT_DEFINITION_BUNDLE_NAME for the first bundle, which is the bundle with the technique name
+    val ncfBundleSeq     = ncfTechniques.map{ techniques => techniques.bundlesequence match {
+                              case head::cons => s"${NCF_REPORT_DEFINITION_BUNDLE_NAME}(${head})"::head::cons
+                              case Nil => Nil
+                            }
+                          }.flatten.mkString(", ")
 
     val nonNcfBundleSeq  = techniques.flatMap(x => x.bundlesequence.map(x =>x.name)).mkString(", \"", "\", \"", "\"")
 
