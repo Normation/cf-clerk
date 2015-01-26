@@ -335,7 +335,7 @@ class Cf3PromisesFileWriterServiceImpl(
     // We must exclude, from the ncf technique, the bundle ending by _rudder_reporting
     // from the call to NCF_REPORT_DEFINITION_BUNDLE_NAME
     // So it is only relevant to call NCF_REPORT_DEFINITION_BUNDLE_NAME for the first bundle, which is the bundle with the technique name
-    val ncfBundleSeq     = ncfTechniques.map{ techniques => techniques.bundlesequence match {
+    val ncfBundleSeq     = ncfTechniques.map{ techniques => techniques.bundlesequence.map(_.name) match {
                               case head::cons => s"${NCF_REPORT_DEFINITION_BUNDLE_NAME}(${head})"::head::cons
                               case Nil => Nil
                             }
