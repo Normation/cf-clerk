@@ -356,7 +356,14 @@ class GitTechniqueReader(
     }
   }
 
+  /*
+   * This one should not be used at all, it is generally not what we want !
+   */
   override def checkreportingDescriptorExistence(techniqueId: TechniqueId) : Boolean = {
+    gitCheckreportingDescriptorExistence(techniqueId, revisionProvider.currentRevTreeId)
+  }
+
+  private[this] def gitCheckreportingDescriptorExistence(techniqueId: TechniqueId, revTree: ObjectId) : Boolean = {
     //build a treewalk with the path, given by reportingDescriptorName
     val path = techniqueId.toString + "/" + reportingDescriptorName
     //has package id are unique among the whole tree, we are able to find a
@@ -365,7 +372,7 @@ class GitTechniqueReader(
     val tw = new TreeWalk(repo.db)
     tw.setFilter(new FileTreeFilter(canonizedRelativePath, path))
     tw.setRecursive(true)
-    tw.reset(revisionProvider.currentRevTreeId)
+    tw.reset(revTree)
     var ids = List.empty[ObjectId]
     while(tw.next) {
       ids = tw.getObjectId(0) :: ids
@@ -491,7 +498,7 @@ class GitTechniqueReader(
       //is valid
       while(tw.next) {
         val path = toTechniquePath(tw.getPathString) //we will need it to build the category id
-        processTechnique(repo.db.open(tw.getObjectId(0)).openStream, path.path, techniqueInfos, parseDescriptor)
+        processTechnique(repo.db.open(tw.getObjectId(0)).openStream, path.path, techniqueInfos, parseDescriptor, revTreeId)
       }
   }
 
@@ -585,6 +592,7 @@ class GitTechniqueReader(
     , filePath:String
     , techniquesInfo:InternalTechniquesInfo
     , parseDescriptor:Boolean // that option is a pure optimization for the case diff between old/new commit
+    , revTreeId: ObjectId
   ): Unit = {
     try {
       val descriptorFile = new File(filePath)
@@ -595,7 +603,7 @@ class GitTechniqueReader(
       val techniqueId = TechniqueId(policyName,policyVersion)
 
       //check if the expected_report.csv file exists
-      val hasExpectedReportCsv = checkreportingDescriptorExistence(techniqueId)
+      val hasExpectedReportCsv = gitCheckreportingDescriptorExistence(techniqueId, revTreeId)
 
       val pack = if(parseDescriptor) techniqueParser.parseXml(loadDescriptorFile(is, filePath), techniqueId, hasExpectedReportCsv)
                  else dummyTechnique
