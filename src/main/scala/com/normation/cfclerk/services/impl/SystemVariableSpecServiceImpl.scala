@@ -95,6 +95,9 @@ class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
     , SystemVariableSpec("MANAGED_NODES_ID", "UUID of nodes managed by the policy server"
                                           , constraint = Constraint(mayBeEmpty=true)
       )
+    , SystemVariableSpec("MANAGED_NODES_IP", "IP of nodes managed by the policy server. A node may have several IPs - they are all here."
+                                          , constraint = Constraint(mayBeEmpty=true)
+      )
     , SystemVariableSpec("MANAGED_NODES_ADMIN", "Administrator login of nodes managed by the policy server"
                                           , constraint = Constraint(mayBeEmpty=true)
       )
