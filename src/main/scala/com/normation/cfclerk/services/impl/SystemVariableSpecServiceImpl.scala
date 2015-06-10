@@ -184,7 +184,7 @@ class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
                                           , multivalued = false
                                           , isUniqueVariable = true
       )
-    , SystemVariableSpec("REPORT_PROTOCOL" , "Which protocol should reporting use"
+    , SystemVariableSpec("RUDDER_SYSLOG_PROTOCOL" , "Which protocol should syslog use"
                                           , multivalued = false
                                           , isUniqueVariable = true
       )
