@@ -184,6 +184,10 @@ class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
                                           , multivalued = false
                                           , isUniqueVariable = true
       )
+    , SystemVariableSpec("RUDDER_SYSLOG_PROTOCOL" , "Which protocol should syslog use"
+                                          , multivalued = false
+                                          , isUniqueVariable = true
+      )
   )
 
   private[this] val varSpecsMap = varSpecs.map(x => (x.name -> x)).toMap
