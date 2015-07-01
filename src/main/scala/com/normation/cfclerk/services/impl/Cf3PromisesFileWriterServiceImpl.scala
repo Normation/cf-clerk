@@ -404,6 +404,11 @@ class Cf3PromisesFileWriterServiceImpl(
         FileUtils.forceDelete(dest)
 
       FileUtils.moveDirectory(src, dest)
+
+      // force deletion of dandling new promise folder
+      if ( (src.getParentFile().isDirectory) && (src.getParent().endsWith("rules.new")))
+        FileUtils.forceDelete(src.getParentFile())
+
     } else {
       logger.error("Could not find freshly created promises at %s".format(sourceFolder))
       throw new IOException("Created promises not found !!!!")
