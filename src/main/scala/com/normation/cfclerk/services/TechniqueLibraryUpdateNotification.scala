@@ -37,6 +37,7 @@ package com.normation.cfclerk.services
 import com.normation.cfclerk.domain.TechniqueId
 import com.normation.eventlog.EventActor
 import com.normation.eventlog.ModificationId
+import net.liftweb.common.Box
 
 /**
  * A trait that allows its implementation to get notification
@@ -60,6 +61,6 @@ trait TechniquesLibraryUpdateNotification {
    * Description is a log description to explain why techniques should be updated
    * (user action, commit, etc).
    */
-  def updatedTechniques(TechniqueIds:Seq[TechniqueId], modId: ModificationId, actor: EventActor, reason: Option[String]) : Unit
+  def updatedTechniques(TechniqueIds:Seq[TechniqueId], modId: ModificationId, actor: EventActor, reason: Option[String]) : Box[Unit]
 
 }
