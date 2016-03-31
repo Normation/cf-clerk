@@ -35,9 +35,9 @@
 		<SECTION name="emptySect">
 		</SECTION>
 	</SECTION>
-  
+
   <SECTION name="component" component="true" componentKey="C" multivalued="true"/>
-  
+
   <SECTION name="sectF">
   	<INPUT>
   		<NAME>F</NAME>
