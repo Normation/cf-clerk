@@ -26,7 +26,7 @@
  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- 
+
  Modification 2010, Nicolas Charles
 */
 
@@ -87,13 +87,13 @@ public NormationAmpersandTemplateParser(ParserSharedInputState state) {
 	public final void template(
 		StringTemplate self
 	) throws RecognitionException, TokenStreamException {
-		
+
 		Token  s = null;
 		Token  nl = null;
-		
+
 			this.self = self;
-		
-		
+
+
 		try {      // for error handling
 			{
 			_loop3:
@@ -110,11 +110,11 @@ public NormationAmpersandTemplateParser(ParserSharedInputState state) {
 				{
 					nl = LT(1);
 					match(NEWLINE);
-					
+
 					if ( LA(1)!=ELSE && LA(1)!=ENDIF ) {
 						self.addChunk(new NewlineRef(self,nl.getText()));
 					}
-						
+
 					break;
 				}
 				case ACTION:
@@ -138,36 +138,36 @@ public NormationAmpersandTemplateParser(ParserSharedInputState state) {
 			recover(ex,_tokenSet_0);
 		}
 	}
-	
+
 	public final void action(
 		StringTemplate self
 	) throws RecognitionException, TokenStreamException {
-		
+
 		Token  a = null;
 		Token  i = null;
 		Token  ei = null;
 		Token  rr = null;
 		Token  rd = null;
-		
+
 		try {      // for error handling
 			switch ( LA(1)) {
 			case ACTION:
 			{
 				a = LT(1);
 				match(ACTION);
-				
+
 				String indent = ((ChunkToken)a).getIndentation();
 				ASTExpr c = self.parseAction(a.getText());
 				c.setIndentation(indent);
 				self.addChunk(c);
-				
+
 				break;
 			}
 			case IF:
 			{
 				i = LT(1);
 				match(IF);
-				
+
 				ConditionalExpr c = (ConditionalExpr)self.parseAction(i.getText());
 				// create and precompile the subtemplate
 				StringTemplate subtemplate =
@@ -175,7 +175,7 @@ public NormationAmpersandTemplateParser(ParserSharedInputState state) {
 				subtemplate.setEnclosingInstance(self);
 				subtemplate.setName(i.getText()+"_subtemplate");
 				self.addChunk(c);
-				
+
 				template(subtemplate);
 				if ( c!=null ) c.setSubtemplate(subtemplate);
 				{
@@ -184,21 +184,21 @@ public NormationAmpersandTemplateParser(ParserSharedInputState state) {
 					if ((LA(1)==ELSEIF)) {
 						ei = LT(1);
 						match(ELSEIF);
-						
+
 						ASTExpr ec = self.parseAction(ei.getText());
 						// create and precompile the subtemplate
 						StringTemplate elseIfSubtemplate =
 						new StringTemplate(self.getGroup(), null);
 						elseIfSubtemplate.setEnclosingInstance(self);
 						elseIfSubtemplate.setName(ei.getText()+"_subtemplate");
-						
+
 						template(elseIfSubtemplate);
 						if ( c!=null ) c.addElseIfSubtemplate(ec, elseIfSubtemplate);
 					}
 					else {
 						break _loop6;
 					}
-					
+
 				} while (true);
 				}
 				{
@@ -206,13 +206,13 @@ public NormationAmpersandTemplateParser(ParserSharedInputState state) {
 				case ELSE:
 				{
 					match(ELSE);
-					
+
 					// create and precompile the subtemplate
 					StringTemplate elseSubtemplate =
 							new StringTemplate(self.getGroup(), null);
 					elseSubtemplate.setEnclosingInstance(self);
 					elseSubtemplate.setName("else_subtemplate");
-					
+
 					template(elseSubtemplate);
 					if ( c!=null ) c.setElseSubtemplate(elseSubtemplate);
 					break;
@@ -234,7 +234,7 @@ public NormationAmpersandTemplateParser(ParserSharedInputState state) {
 			{
 				rr = LT(1);
 				match(REGION_REF);
-				
+
 						// define implicit template and
 						// convert <@r()> to <region__enclosingTemplate__r()>
 							String regionName = rr.getText();
@@ -271,7 +271,7 @@ public NormationAmpersandTemplateParser(ParserSharedInputState state) {
 				self.getGroup().defineImplicitRegionTemplate(self,regionName);
 				mangledRef = regionST.getName();
 				}
-				
+
 							if ( !err ) {
 								// treat as regular action: mangled template include
 								String indent = ((ChunkToken)rr).getIndentation();
@@ -279,14 +279,14 @@ public NormationAmpersandTemplateParser(ParserSharedInputState state) {
 								c.setIndentation(indent);
 								self.addChunk(c);
 							}
-					
+
 				break;
 			}
 			case REGION_DEF:
 			{
 				rd = LT(1);
 				match(REGION_DEF);
-				
+
 							String combinedNameTemplateStr = rd.getText();
 							int indexOfDefSymbol = combinedNameTemplateStr.indexOf("::=");
 							if ( indexOfDefSymbol>=1 ) {
@@ -308,7 +308,7 @@ public NormationAmpersandTemplateParser(ParserSharedInputState state) {
 							else {
 								self.error("embedded region definition screwed up");
 							}
-						
+
 				break;
 			}
 			default:
@@ -322,8 +322,8 @@ public NormationAmpersandTemplateParser(ParserSharedInputState state) {
 			recover(ex,_tokenSet_1);
 		}
 	}
-	
-	
+
+
 	public static final String[] _tokenNames = {
 		"<0>",
 		"EOF",
@@ -349,7 +349,7 @@ public NormationAmpersandTemplateParser(ParserSharedInputState state) {
 		"INDENT",
 		"COMMENT"
 	};
-	
+
 	private static final long[] mk_tokenSet_0() {
 		long[] data = { 1792L, 0L};
 		return data;
@@ -360,5 +360,5 @@ public NormationAmpersandTemplateParser(ParserSharedInputState state) {
 		return data;
 	}
 	public static final BitSet _tokenSet_1 = new BitSet(mk_tokenSet_1());
-	
+
 	}
