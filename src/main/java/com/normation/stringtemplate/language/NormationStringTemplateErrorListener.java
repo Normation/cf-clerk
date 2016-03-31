@@ -9,8 +9,8 @@ public class NormationStringTemplateErrorListener implements
 	public void error(String arg0, Throwable arg1) {
 		System.out.println(arg0);
 		System.out.println(arg1);
-		
-		
+
+
 
 	}
 
