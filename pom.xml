@@ -32,7 +32,7 @@ along with Rudder.  If not, see <http://www.gnu.org/licenses/>.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  
+
   <parent>
     <groupId>com.normation</groupId>
     <artifactId>parent-pom</artifactId>
@@ -40,7 +40,7 @@ along with Rudder.  If not, see <http://www.gnu.org/licenses/>.
   </parent>
 
   <artifactId>cfclerk</artifactId>
-  
+
 <!-- ====================================  PROJECT INFORMATION  ==================================== -->
 
   <description>
@@ -87,7 +87,7 @@ along with Rudder.  If not, see <http://www.gnu.org/licenses/>.
     </developer>
   </developers>
 <!-- TODO -->
-<!-- 
+<!--
   <mailingLists>
     <mailingList>
       <name>TODO</name>
@@ -145,7 +145,7 @@ along with Rudder.  If not, see <http://www.gnu.org/licenses/>.
       <artifactId>org.eclipse.jgit</artifactId>
       <version>${jgit-version}</version>
     </dependency>
-  
+
     <!-- Test dependencies -->
     <dependency>
       <groupId>com.normation</groupId>
@@ -161,5 +161,5 @@ along with Rudder.  If not, see <http://www.gnu.org/licenses/>.
       <scope>test</scope>
     </dependency>
   </dependencies>
-  
+
 </project>
