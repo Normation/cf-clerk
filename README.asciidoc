@@ -1,9 +1,9 @@
 CF-Clerk: templating for CFEngine promises
 ------------------------------------------
 
-This project is part of Rudder - configuration management made easy. 
- 
-See: http://rudder-project.org for more information. 
+This project is part of Rudder - configuration management made easy.
+
+See: http://rudder-project.org for more information.
 
 [horizontal]
 Bug report:: http://www.rudder-project.org/redmine/projects/clerk/issues
@@ -20,27 +20,27 @@ Normation http://normation.com
 === License
 
 This project is licensed under GPLv3 license,
-see the provided "LICENSE" file or 
+see the provided "LICENSE" file or
 http://www.gnu.org/licenses/gpl-3.0.txt
 
 === Contributing
 
 Thank you for your interest in our project!
-The contribution process is detailed here: 
+The contribution process is detailed here:
 http://www.rudder-project.org/HowToContribute
 
 === Synopsis
 
-The main goal of this project is to deals with Policy Template: 
+The main goal of this project is to deals with Policy Template:
 
-- on one hand, read template library, parse template files and build 
+- on one hand, read template library, parse template files and build
   object from them;
 - on the other hand, from these template and parameters, write final
-  CFEngine promises.  
+  CFEngine promises.
 
 === Usage
 
-This project is managed thanks to Maven software project management (http://maven.apache.org/). 
+This project is managed thanks to Maven software project management (http://maven.apache.org/).
 You will have to have a working Maven (version 2.2.x or 3.0.x) installation.
 
 .Clean, build and install on your local repository:
@@ -48,4 +48,4 @@ You will have to have a working Maven (version 2.2.x or 3.0.x) installation.
 % mvn clean install
 ----
 
-The project is only a library used in Rudder web application, so there is nothing more to do. 
+The project is only a library used in Rudder web application, so there is nothing more to do.
