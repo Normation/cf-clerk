@@ -160,6 +160,11 @@ along with Rudder.  If not, see <http://www.gnu.org/licenses/>.
       <version>${spring-version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>ca.mrvisser</groupId>
+      <artifactId>sealerate_${scala-binary-version}</artifactId>
+      <version>0.0.4</version>
+    </dependency>
   </dependencies>
 
 </project>
