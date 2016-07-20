@@ -37,7 +37,6 @@
 
 package com.normation.cfclerk.services
 
-import junit.framework.TestSuite
 import org.junit.Test
 import org.junit._
 import org.junit.Assert._
@@ -168,8 +167,6 @@ class DirectiveAgregationTest {
   def arrayedDirectiveTest() {
     val machineA = new Cf3PolicyDraftContainer("machineA", Set())
 
-    val instance = new Cf3PolicyDraft("id", newTechnique(TechniqueId(TechniqueName("name"), TechniqueVersion("1.0"))),
-        Map(), trackerVariable, priority = 0, serial = 0, order = List())
     machineA.add(createDirectiveWithArrayBinding(activeTechniqueId1,1))
     machineA.add(createDirectiveWithArrayBinding(activeTechniqueId1,2))
 

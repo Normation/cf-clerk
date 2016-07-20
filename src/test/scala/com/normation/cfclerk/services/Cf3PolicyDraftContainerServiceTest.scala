@@ -42,13 +42,9 @@ import com.normation.cfclerk.domain._
 import org.junit._
 import org.junit.Assert._
 import org.junit.runner.RunWith
-import org.junit.runners.BlockJUnit4ClassRunner
 import org.springframework.test.context.junit4._
 import org.springframework.test.context._
 import org.springframework.beans.factory.annotation._
-import com.normation.cfclerk._
-import com.normation.cfclerk.exceptions._
-import org.springframework.test.annotation._
 import net.liftweb.common._
 
 @RunWith(classOf[SpringJUnit4ClassRunner])
@@ -76,21 +72,21 @@ class Cf3PolicyDraftContainerServiceTest {
     val variable_22 = new InputVariable(InputVariableSpec("$variable22", "description"), Seq("var22"))
 
     policy1 = Cf3PolicyDraft(
-    		new Cf3PolicyDraftId("uuid1"),
-    		newTechnique(TechniqueId(TechniqueName("policy1"), TechniqueVersion("1.0"))),
-    		Map[String, Variable](variable_1.spec.name -> variable_1),
-    		TrackerVariable(TrackerVariableSpec(), Seq()),
-    		priority =0,
-    		serial = 0, order = List()
+        new Cf3PolicyDraftId("uuid1"),
+        newTechnique(TechniqueId(TechniqueName("policy1"), TechniqueVersion("1.0"))),
+        Map[String, Variable](variable_1.spec.name -> variable_1),
+        TrackerVariable(TrackerVariableSpec(), Seq()),
+        priority =0,
+        serial = 0, order = List()
     )
 
     policy2 = Cf3PolicyDraft(
-    		new Cf3PolicyDraftId("uuid2"),
-    		newTechnique(TechniqueId(TechniqueName("policy2"), TechniqueVersion("1.0"))),
-    		Map[String, Variable](variable_2.spec.name -> variable_2, variable_22.spec.name -> variable_22),
+        new Cf3PolicyDraftId("uuid2"),
+        newTechnique(TechniqueId(TechniqueName("policy2"), TechniqueVersion("1.0"))),
+        Map[String, Variable](variable_2.spec.name -> variable_2, variable_22.spec.name -> variable_22),
         TrackerVariable(TrackerVariableSpec(), Seq()),
-    		priority =0,
-    		serial = 0, order = List()
+        priority =0,
+        serial = 0, order = List()
     )
 
 

@@ -45,12 +45,8 @@ import com.normation.stringtemplate.language.formatter._
 import java.io._
 import net.liftweb.common._
 import org.antlr.stringtemplate._
-import org.antlr.stringtemplate.language._
 import org.apache.commons.io.{IOUtils,FileUtils}
 import org.joda.time._
-import org.xml.sax.SAXParseException
-import scala.io.Source
-import scala.xml._
 
 import com.normation.utils.Control.sequence
 
