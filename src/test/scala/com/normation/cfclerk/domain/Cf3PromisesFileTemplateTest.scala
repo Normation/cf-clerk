@@ -39,19 +39,14 @@ package com.normation.cfclerk.domain
 
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.beans.factory.annotation.Autowired
-import junit.framework.TestSuite
 import com.normation.cfclerk.services._
 import com.normation.cfclerk.services.impl._
 import org.junit.Test
 import org.junit._
-import org.junit.Assert._
 import org.junit.runner.RunWith
-import org.junit.runners.BlockJUnit4ClassRunner
 import com.normation.cfclerk.xmlparsers._
-import net.liftweb.common._
 import scala.collection.mutable._
 import scala.xml._
-import java.io.FileInputStream
 import org.xml.sax.SAXParseException
 import org.springframework.test.context.junit4._
 import java.io.FileNotFoundException

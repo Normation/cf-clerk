@@ -37,16 +37,13 @@
 
 package com.normation.cfclerk.services
 
-import junit.framework.TestSuite
 import org.junit.Test
 import org.junit._
 import org.junit.Assert._
 import org.junit.runner.RunWith
-import org.junit.runners.BlockJUnit4ClassRunner
 import scala.collection._
 import com.normation.cfclerk.domain._
 import com.normation.cfclerk.xmlparsers.TechniqueParser
-import org.springframework.context.{ ApplicationContext, ApplicationContextAware }
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
@@ -73,7 +70,6 @@ class TestPackageReader {
     val infos = reader.readTechniques
     assertEquals(3, infos.subCategories.size)
 
-    val rootDir = new File("src/test/resources/techniquesRoot")
     val rootCatId = RootTechniqueCategoryId
     val rootCat = infos.rootCategory
     assertEquals("Root category", rootCat.name)

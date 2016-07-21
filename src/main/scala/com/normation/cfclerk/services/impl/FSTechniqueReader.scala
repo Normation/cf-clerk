@@ -42,13 +42,10 @@ import com.normation.cfclerk.domain._
 import java.io.FileNotFoundException
 import org.xml.sax.SAXParseException
 import com.normation.cfclerk.exceptions._
-import org.slf4j.{ Logger, LoggerFactory }
 import java.io.File
-import org.apache.commons.io.FilenameUtils
 import com.normation.cfclerk.xmlparsers.TechniqueParser
 import net.liftweb.common._
 import scala.collection.mutable.{ Map => MutMap }
-import scala.collection.SortedSet
 import com.normation.utils.Utils
 import scala.collection.immutable.SortedMap
 import java.io.InputStream
@@ -219,7 +216,6 @@ class FSTechniqueReader(
 
   private def processDirectory(parentCategoryId: TechniqueCategoryId, f: File, internalTechniquesInfo: InternalTechniquesInfo): Unit = {
     val children = f.listFiles
-    val childrenName = children.map(_.getName)
     val versionsDir = children.filter(_.isDirectory).flatMap(_.listFiles).filter(f => f.getName == techniqueDescriptorName).map(_.getParentFile)
 
     if (versionsDir.size > 0) {

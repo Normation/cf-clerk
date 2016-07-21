@@ -40,9 +40,6 @@ package com.normation.cfclerk.domain
 
 import com.normation.cfclerk.exceptions.NotFoundException
 import org.joda.time.DateTime
-import org.joda.time.format._
-
-import scala.xml._
 import com.normation.utils.HashcodeCaching
 
 import net.liftweb.common._
