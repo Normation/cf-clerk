@@ -37,7 +37,6 @@
 
 package com.normation.cfclerk.xmlparsers
 import scala.xml._
-import net.liftweb.common._
 import com.normation.cfclerk.domain._
 import CfclerkXmlConstants._
 import com.normation.cfclerk.exceptions.ParsingException

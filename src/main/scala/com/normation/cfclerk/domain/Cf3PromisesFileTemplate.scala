@@ -37,12 +37,7 @@
 
 package com.normation.cfclerk.domain
 
-import net.liftweb.common._
-import org.slf4j.{Logger,LoggerFactory}
-import scala.xml._
 import com.normation.utils.HashcodeCaching
-
-
 
 
 /**

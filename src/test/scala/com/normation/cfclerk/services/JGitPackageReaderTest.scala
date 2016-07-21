@@ -46,8 +46,6 @@ import java.io.File
 import org.apache.commons.io.IOUtils
 import net.liftweb.common._
 import org.apache.commons.io.FileUtils
-import org.specs2.specification.AfterExample
-import org.specs2.specification.After
 import com.normation.cfclerk.xmlparsers._
 import com.normation.cfclerk.services.impl._
 import org.specs2.specification.Step
