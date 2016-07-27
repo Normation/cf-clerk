@@ -43,7 +43,6 @@ import net.liftweb.common._
 
 class ConstraintException(val msg: String) extends Exception(msg)
 
-
 trait VTypeWithRegex {
   def regex:Option[RegexConstraint]
 }
@@ -157,7 +156,6 @@ case class DateTimeVType(regex: Option[RegexConstraint] = None) extends VTypeCon
 }
 case class DateVType(regex: Option[RegexConstraint] = None) extends VTypeConstraint with VTypeWithRegex { override val name = "date" }
 case class TimeVType(regex: Option[RegexConstraint] = None) extends VTypeConstraint with VTypeWithRegex { override val name = "time" }
-
 
 //other types
 
