@@ -231,7 +231,7 @@ object AixPasswordHashAlgo extends Loggable {
       // was introduced in Java 8.
       // Fallback to ssha1 hash.
       logger.error("Your current Java installation does not support PBKDF2WithHmacSHA512 algorithm, " +
-          "which is necessary for {ssha256} hash. Falling back to {ssha1} hashing scheme")
+          "which is necessary for {ssha512} hash. Falling back to {ssha1} hashing scheme")
 
       ssha1impl
   }
