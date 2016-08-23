@@ -75,8 +75,12 @@ class SystemVariableSpecServiceImpl extends SystemVariableSpecService {
                               "DAVPASSWORD" , "Password for webdav user"
                                             , multivalued = false
                         )
+     , SystemVariableSpec(
+                   "RUDDER_REPORTS_DB_NAME" , "Name of the Rudder database (rudder by default)"
+                                            , multivalued = false
+                        )
     , SystemVariableSpec(
-                              "DB_PASSWORD" , "Password of the Rudder database user"
+                   "RUDDER_REPORTS_DB_USER" , "Login of the Rudder database user (rudder by default)"
                                             , multivalued = false
                         )
     , SystemVariableSpec(       "INPUTLIST" , "Input list")
