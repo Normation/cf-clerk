@@ -189,6 +189,19 @@ class Cf3PromisesFileWriterServiceImpl(
     , outPath             : String
     , expectedReportsLines: Seq[String]
   ): Unit = {
+
+    //utility method to set variable with StringTemplate, handling errors
+    //value is Any and can be null :(
+    def safeSetAttribute(fileEntry: Cf3PromisesFileTemplateCopyInfo, template: StringTemplate, name: String, value: Any): Unit = {
+      try {
+        template.setAttribute(name, value)
+      } catch {
+        case ex: IllegalArgumentException => // most likelly a problem with StringTemplate, typically a "." in the variable name
+          val msg = s"Error when processing system variable '${name}' with value '${value}' in Technique ${fileEntry.id.techniqueId} (file: ${fileEntry.destination}) cause is: ${ex.getMessage}"
+          throw new VariableException(msg)
+      }
+    }
+
     try {
       val generationVariable = getGenerationVariable()
 
@@ -200,16 +213,18 @@ class Cf3PromisesFileWriterServiceImpl(
         template.registerRenderer(classOf[LocalDate], new LocalDateRenderer());
         template.registerRenderer(classOf[LocalTime], new LocalTimeRenderer());
 
+
         for (variable <- variableSet++generationVariable) {
           // Only System Variables have nullable entries
           if ( variable.isSystem && variable.mayBeEmpty &&
               ( (variable.values.size == 0) || (variable.values.size ==1 && variable.values.head == "") ) ) {
-            template.setAttribute(variable.name, null)
+            safeSetAttribute(fileEntry, template, variable.name, null)
           } else if (!variable.mayBeEmpty && variable.values.size == 0) {
             throw new VariableException("Mandatory variable %s is empty, can not write %s".format(variable.name, fileEntry.destination))
           } else {
             logger.trace(s"Adding variable ${outPath + "/" + fileEntry.destination} : ${variable.name} values ${variable.values.mkString("[",",","]")}")
-            variable.values.foreach { value => template.setAttribute(variable.name, value)
+            variable.values.foreach { value =>
+              safeSetAttribute(fileEntry, template, variable.name, value)
             }
           }
         }
